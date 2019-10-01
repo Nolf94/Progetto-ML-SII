@@ -11,10 +11,22 @@ Tested on Windows with Python 3.7.3. To install and run the application
 
 * Provide dotenv in the root folder of the project(check dotenv.example)
 
-* Migrate db:
+* Migrate db (enter in .../Facebook_Django/project directory where manage.py is located):
 
 	python manage.py migrate
 
-* Launch the project (sslserver for launch localhost with https connection):
+* Run the project (sslserver for launch localhost with https connection):
 	
-	python manage.pu runsslserver
+	python manage.py runsslserver
+
+Doc for Facebook Api Graph:
+
+	https://developers.facebook.com/docs/graph-api/reference/v4.0/object/likes
+	https://developers.facebook.com/docs/graph-api/reference/post/
+	https://developers.facebook.com/docs/graph-api/reference/user/posts/
+	https://developers.facebook.com/docs/graph-api/reference/user/books/
+	https://developers.facebook.com/docs/graph-api/reference/user/movies/
+	https://developers.facebook.com/docs/graph-api/reference/user/music/
+	https://developers.facebook.com/docs/graph-api/reference/user/photos/
+	https://developers.facebook.com/docs/graph-api/reference/user/albums/
+	https://developers.facebook.com/docs/graph-api/reference/v4.0/user/feed/

@@ -17,11 +17,13 @@ class AboutView(LoginRequiredMixin, TemplateView):
         s_user = self.request.user.social_auth.get(provider='facebook')
         access_token = s_user.extra_data['access_token']
         context['avatar_url'] = f'https://graph.facebook.com/{s_user.uid}/picture?type=large'
-        #url = requests.get(f' https://graph.facebook.com/me?fields=books.limit(99999).summary(true)&access_token={access_token}')
-        #url = requests.get(f' https://graph.facebook.com/me?fields=movies.limit(99999).summary(true)&access_token={access_token}')
-        url = requests.get(f' https://graph.facebook.com/me?fields=music.limit(99999).summary(true)&access_token={access_token}')
+        #url = requests.get(f' https://graph.facebook.com/me?fields=likes.limit(99999).summary(true)&access_token={access_token}')
+        #url = requests.get(f' https://graph.facebook.com/me?fields=books.limit(99999)&access_token={access_token}')
+        #url = requests.get(f' https://graph.facebook.com/me?fields=movies.limit(99999)&access_token={access_token}')
+        #url = requests.get(f' https://graph.facebook.com/me?fields=music.limit(99999)&access_token={access_token}')
         #url = requests.get(f' https://graph.facebook.com/me?fields=albums.fields(photos.limit(99999).fields(alt_text))&limit=99999&access_token={access_token}')
         #url = requests.get(f' https://graph.facebook.com/me?fields=posts.fields(description).limit(99999)&access_token={access_token}')
+        url = requests.get(f' https://graph.facebook.com/me?fields=feed.limit(99999)&access_token={access_token}')
         likes = url.json
         context['likes'] = likes
         return context
