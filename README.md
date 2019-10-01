@@ -19,12 +19,13 @@ Tested on Windows with Python 3.7.3. To install and run the application
 		python manage.py runsslserver
 
 Doc for Facebook Api Graph:
-		*https://developers.facebook.com/docs/graph-api/reference/v4.0/object/likes
-		*https://developers.facebook.com/docs/graph-api/reference/post/
-		*https://developers.facebook.com/docs/graph-api/reference/user/posts/
-		*https://developers.facebook.com/docs/graph-api/reference/user/books/
-		*https://developers.facebook.com/docs/graph-api/reference/user/movies/
-		*https://developers.facebook.com/docs/graph-api/reference/user/music/
-		*https://developers.facebook.com/docs/graph-api/reference/user/photos/
-		*https://developers.facebook.com/docs/graph-api/reference/user/albums/
-		*https://developers.facebook.com/docs/graph-api/reference/v4.0/user/feed/
+
+		https://developers.facebook.com/docs/graph-api/reference/v4.0/object/likes
+		https://developers.facebook.com/docs/graph-api/reference/post/
+		https://developers.facebook.com/docs/graph-api/reference/user/posts/
+		https://developers.facebook.com/docs/graph-api/reference/user/books/
+		https://developers.facebook.com/docs/graph-api/reference/user/movies/
+		https://developers.facebook.com/docs/graph-api/reference/user/music/
+		https://developers.facebook.com/docs/graph-api/reference/user/photos/
+		https://developers.facebook.com/docs/graph-api/reference/user/albums/
+		https://developers.facebook.com/docs/graph-api/reference/v4.0/user/feed/
