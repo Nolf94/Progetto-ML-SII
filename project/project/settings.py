@@ -141,17 +141,7 @@ AUTHENTICATION_BACKENDS = (
 
 SOCIAL_AUTH_FACEBOOK_KEY = load_dotenv(SOCIAL_AUTH_FACEBOOK_KEY)
 SOCIAL_AUTH_FACEBOOK_SECRET = load_dotenv(SOCIAL_AUTH_FACEBOOK_SECRET)
-SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_likes','public_profile', 'user_friends', 'user_gender', 'user_hometown', 'user_likes', 'user_link', 'user_location', 'user_photos', 'user_posts', 'user_tagged_places', 'user_videos',
-'ads_management',
-'ads_read',
-'business_management',
-'leads_retrieval',
-'manage_pages',
-'pages_manage_cta',
-'pages_manage_instant_articles',
-'pages_show_list',
-'publish_pages',
-'read_insights' ]
+SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_likes','public_profile', 'user_friends', 'user_gender', 'user_hometown', 'user_likes', 'user_link', 'user_location', 'user_photos', 'user_posts', 'user_tagged_places', 'user_videos', 'ads_management', 'ads_read' 'business_management', 'leads_retrieval', 'manage_pages', 'pages_manage_cta', 'pages_manage_instant_articles', 'pages_show_list' 'publish_pages', 'read_insights' ]
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
   'locale': 'ru_RU',
   'fields': 'id,name,picture'
