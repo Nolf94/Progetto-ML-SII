@@ -26,7 +26,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'r&3)(8d*f_75*@%4j4=vrx@am$@sg@w$r2t^%w76re^#!1o1e#'
+SECRET_KEY = load_dotenv(SECRET_KEY)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -139,8 +139,8 @@ AUTHENTICATION_BACKENDS = (
 )
 
 
-SOCIAL_AUTH_FACEBOOK_KEY = '2579799482078632'
-SOCIAL_AUTH_FACEBOOK_SECRET = '9ff7ca5e93d249b07471d3ffad644f98'
+SOCIAL_AUTH_FACEBOOK_KEY = load_dotenv(SOCIAL_AUTH_FACEBOOK_KEY)
+SOCIAL_AUTH_FACEBOOK_SECRET = load_dotenv(SOCIAL_AUTH_FACEBOOK_SECRET)
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_likes','public_profile', 'user_friends', 'user_gender', 'user_hometown', 'user_likes', 'user_link', 'user_location', 'user_photos', 'user_posts', 'user_tagged_places', 'user_videos',
 'ads_management',
 'ads_read',
