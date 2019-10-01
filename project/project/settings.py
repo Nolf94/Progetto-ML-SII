@@ -15,7 +15,7 @@ from pathlib import Path
 from django.urls import reverse_lazy
 from dotenv import load_dotenv
 
-env_path = Path('..', '.env').resolve()
+env_path = Path('..', 'dotenv.example').resolve()
 load_dotenv(dotenv_path=env_path, verbose=True)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -26,7 +26,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = load_dotenv(SECRET_KEY)
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -139,9 +139,9 @@ AUTHENTICATION_BACKENDS = (
 )
 
 
-SOCIAL_AUTH_FACEBOOK_KEY = load_dotenv(SOCIAL_AUTH_FACEBOOK_KEY)
-SOCIAL_AUTH_FACEBOOK_SECRET = load_dotenv(SOCIAL_AUTH_FACEBOOK_SECRET)
-SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_likes','public_profile', 'user_friends', 'user_gender', 'user_hometown', 'user_likes', 'user_link', 'user_location', 'user_photos', 'user_posts', 'user_tagged_places', 'user_videos', 'ads_management', 'ads_read' 'business_management', 'leads_retrieval', 'manage_pages', 'pages_manage_cta', 'pages_manage_instant_articles', 'pages_show_list' 'publish_pages', 'read_insights' ]
+SOCIAL_AUTH_FACEBOOK_KEY = os.getenv("SOCIAL_AUTH_FACEBOOK_KEY")
+SOCIAL_AUTH_FACEBOOK_SECRET = os.getenv("SOCIAL_AUTH_FACEBOOK_SECRET")
+SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_likes','public_profile', 'user_friends', 'user_gender', 'user_hometown', 'user_likes', 'user_link', 'user_location', 'user_photos', 'user_posts', 'user_tagged_places', 'user_videos', 'ads_management', 'ads_read', 'business_management', 'leads_retrieval', 'manage_pages', 'pages_manage_cta', 'pages_manage_instant_articles', 'pages_show_list', 'publish_pages', 'read_insights' ]
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
   'locale': 'ru_RU',
   'fields': 'id,name,picture'
