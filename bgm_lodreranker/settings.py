@@ -4,7 +4,7 @@ from django.urls import reverse_lazy
 from dotenv import load_dotenv
 
 try:
-    env_path = Path('.', '.env').resolve()
+    env_path = Path('.', 'env.config').resolve()
 except:
     raise Exception("[BGM] Please provide a valid .env file")
 

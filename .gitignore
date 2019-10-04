@@ -1,4 +1,4 @@
-*.env
+env.config*
 reference/
 .vscode/
 
