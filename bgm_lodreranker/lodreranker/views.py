@@ -9,6 +9,7 @@ from django.views.generic import TemplateView, View
 from facepy import SignedRequest
 from facepy.exceptions import SignedRequestError
 from social_django.models import UserSocialAuth
+from lodreranker import misc 
 
 
 class AboutView(LoginRequiredMixin, TemplateView):
@@ -34,6 +35,11 @@ class AboutView(LoginRequiredMixin, TemplateView):
 
         # fb_query = FB_QUERIES['feed'] + access_token
         # context['fbdata'] = requests.get(fb_query).json
+
+        #film = "the amazing spider-man 2"
+        #abstract = misc.Lod_queries.retrieveFilmAbstract(film)
+        #context['querydata'] = abstract
+
         return context
 
 
