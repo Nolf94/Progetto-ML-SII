@@ -1,3 +1,6 @@
+*.env
+reference/
+.vscode/
 
 # Created by https://www.gitignore.io/api/macos,django,python
 # Edit at https://www.gitignore.io/?templates=macos,django,python
@@ -219,5 +222,3 @@ Temporary Items
 # Pyre type checker
 
 # End of https://www.gitignore.io/api/macos,django,python
-dotenv.example
-dotenv

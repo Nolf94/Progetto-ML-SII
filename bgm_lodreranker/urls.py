@@ -16,13 +16,13 @@ Including another URLconf
 from django.contrib import admin, auth
 from django.urls import path, include
 
-from . import views
+from lodreranker import views
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
     path('', views.IndexView.as_view(), name='index'),
     path('about/', views.AboutView.as_view(), name='about'),
     path('facebook/deauthorize/', views.DeauthorizeView.as_view(), name='deauthorize'),
-    path('admin/', admin.site.urls),
     path('', include('social_django.urls', namespace='social')),
     path('logout/', auth.views.LogoutView.as_view(), name='logout'),
 ]

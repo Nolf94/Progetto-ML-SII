@@ -1,15 +1,18 @@
-from django.views.generic import TemplateView, View
-from django.contrib.auth.mixins import LoginRequiredMixin
+import json
+import urllib.request
+
+import requests
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
+from django.views.generic import TemplateView, View
 from facepy import SignedRequest
 from facepy.exceptions import SignedRequestError
-import urllib.request, json 
 from social_django.models import UserSocialAuth
-import requests
+
 
 class AboutView(LoginRequiredMixin, TemplateView):
-    template_name="about.html"
+    template_name = "about.html"
     login_url = reverse_lazy('social:begin', args=['facebook'])
 
     def get_context_data(self, **kwargs):
@@ -30,7 +33,8 @@ class AboutView(LoginRequiredMixin, TemplateView):
 
 
 class IndexView(TemplateView):
-        template_name="index.html"
+    template_name = "index.html"
+
 
 class DeauthorizeView(View):
     def post(self, request, *args, **kwargs):
@@ -47,7 +51,8 @@ class DeauthorizeView(View):
             return HttpResponse(status=400, content='Invalid request')
         user_id = signed_request_data['user_id']
         try:
-            user = UserSocialAuth.objects.get(uid=user_id, provider=facebook).user
+            user = UserSocialAuth.objects.get(
+                uid=user_id, provider=facebook).user
         except(UserSocialAuth.DoesNotExist):
             return HttpResponse(status=400, content='Invalid request')
         user.update(is_active=False)
