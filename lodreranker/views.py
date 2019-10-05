@@ -9,7 +9,7 @@ from django.views.generic import TemplateView, View
 from facepy import SignedRequest
 from facepy.exceptions import SignedRequestError
 from social_django.models import UserSocialAuth
-from lodreranker import misc 
+from . import misc 
 
 
 class AboutView(LoginRequiredMixin, TemplateView):
