@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from django.urls import reverse_lazy
+
 from dotenv import load_dotenv
 
 try:
@@ -8,10 +8,13 @@ try:
 except:
     raise Exception("[BGM] Please provide a valid .env file")
 
+# Read keys from dotenv file
 load_dotenv(dotenv_path=env_path, verbose=True)
+SECRET_KEY = os.getenv('SECRET_KEY')
+SOCIAL_AUTH_FACEBOOK_KEY = os.getenv("SOCIAL_AUTH_FACEBOOK_KEY")
+SOCIAL_AUTH_FACEBOOK_SECRET = os.getenv("SOCIAL_AUTH_FACEBOOK_SECRET")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = [
@@ -20,7 +23,6 @@ ALLOWED_HOSTS = [
 ]
 
 INSTALLED_APPS = [
-    'lodreranker',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -28,7 +30,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'social_django',
-    'sslserver'
+    'lodreranker',
+    'sslserver',
 ]
 
 MIDDLEWARE = [
@@ -40,8 +43,6 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.middleware.security.SecurityMiddleware',
 ]
-
-ROOT_URLCONF = 'urls'
 
 TEMPLATES = [
     {
@@ -61,8 +62,12 @@ TEMPLATES = [
     },
 ]
 
+ROOT_URLCONF = 'urls'
 WSGI_APPLICATION = 'wsgi.application'
-
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static")
+]
 
 DATABASES = {
     'default': {
@@ -71,22 +76,12 @@ DATABASES = {
     }
 }
 
-
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
-
 
 LANGUAGE_CODE = 'en-us'
 
@@ -98,42 +93,44 @@ USE_L10N = True
 
 USE_TZ = True
 
-
-STATIC_URL = '/static/'
-AUTHENTICATION_BACKENDS = (
+AUTHENTICATION_BACKENDS = [
     'social_core.backends.facebook.FacebookOAuth2',
     'django.contrib.auth.backends.ModelBackend',
-)
+]
 
-SOCIAL_AUTH_FACEBOOK_KEY = os.getenv("SOCIAL_AUTH_FACEBOOK_KEY")
-SOCIAL_AUTH_FACEBOOK_SECRET = os.getenv("SOCIAL_AUTH_FACEBOOK_SECRET")
 SOCIAL_AUTH_FACEBOOK_SCOPE = [
-    'ads_management',
-    'ads_read',
+    'ads_management', 'ads_read',
     'business_management',
     'email',
     'leads_retrieval',
     'manage_pages',
-    'pages_manage_cta',
-    'pages_manage_instant_articles',
-    'pages_show_list',
+    'pages_manage_cta', 'pages_manage_instant_articles', 'pages_show_list',
     'public_profile',
     'publish_pages',
     'read_insights',
-    'user_friends',
-    'user_gender',
-    'user_hometown',
-    'user_likes',
-    'user_link',
-    'user_location',
-    'user_photos',
-    'user_posts',
-    'user_tagged_places',
-    'user_videos',
+    'user_friends','user_gender', 'user_hometown', 'user_likes', 'user_link', 'user_location', 'user_photos', 'user_posts', 'user_tagged_places', 'user_videos',
 ]
+
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
-    'locale': 'ru_RU',
-    'fields': 'id,name,picture'
+    'locale': 'it_IT',
+    'fields': 'id, name, email, picture.type(large), link, feed, posts, likes, albums, movies, books, music'
 }
 
-LOGOUT_REDIRECT_URL = reverse_lazy('index')
+SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [
+    ('name', 'name'),
+    ('email', 'email'),
+    ('picture', 'picture'),
+    ('link', 'profile_url'),
+    ('feed', 'feed'),
+    ('posts', 'posts'),
+    ('albums', 'albums'),
+    ('likes', 'likes'),
+    ('movies', 'movies'),
+    ('books', 'books'),
+    ('music', 'music'),
+]
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'userdata'
+LOGOUT_URL = 'logout'
+LOGOUT_REDIRECT_URL = 'login'
