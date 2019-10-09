@@ -14,6 +14,8 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 SOCIAL_AUTH_FACEBOOK_KEY = os.getenv("SOCIAL_AUTH_FACEBOOK_KEY")
 SOCIAL_AUTH_FACEBOOK_SECRET = os.getenv("SOCIAL_AUTH_FACEBOOK_SECRET")
 
+CORE_APP_NAME='lodreranker'
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DEBUG = True
 
@@ -30,8 +32,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'social_django',
-    'lodreranker',
     'sslserver',
+    'crispy_forms',
+    f'{CORE_APP_NAME}',
 ]
 
 MIDDLEWARE = [
@@ -62,6 +65,8 @@ TEMPLATES = [
     },
 ]
 
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
 ROOT_URLCONF = 'urls'
 WSGI_APPLICATION = 'wsgi.application'
 STATIC_URL = '/static/'
@@ -76,11 +81,14 @@ DATABASES = {
     }
 }
 
+AUTH_USER_MODEL = f'{CORE_APP_NAME}.CustomUser'
+
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
+    # NOT NEEDED ATM
+    # {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
+    # {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
+    # {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
+    # {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
 LANGUAGE_CODE = 'en-us'
@@ -99,21 +107,16 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 SOCIAL_AUTH_FACEBOOK_SCOPE = [
-    'ads_management', 'ads_read',
-    'business_management',
     'email',
-    'leads_retrieval',
-    'manage_pages',
-    'pages_manage_cta', 'pages_manage_instant_articles', 'pages_show_list',
     'public_profile',
-    'publish_pages',
-    'read_insights',
     'user_friends','user_gender', 'user_hometown', 'user_likes', 'user_link', 'user_location', 'user_photos', 'user_posts', 'user_tagged_places', 'user_videos',
 ]
 
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'locale': 'it_IT',
-    'fields': 'id, name, email, picture.type(large), link, feed, posts, likes, albums, movies, books, music'
+    'fields': 'id, name, email, picture.type(large), link'
+    # UNCOMMENT WHEN NEEDED
+    # 'fields': 'id, name, email, picture.type(large), link, feed, posts, likes, albums, movies, books, music'
 }
 
 SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [
@@ -121,16 +124,39 @@ SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [
     ('email', 'email'),
     ('picture', 'picture'),
     ('link', 'profile_url'),
-    ('feed', 'feed'),
-    ('posts', 'posts'),
-    ('albums', 'albums'),
-    ('likes', 'likes'),
-    ('movies', 'movies'),
-    ('books', 'books'),
-    ('music', 'music'),
+    # UNCOMMENT WHEN NEEDED
+    # ('feed', 'feed'),
+    # ('posts', 'posts'),
+    # ('albums', 'albums'),
+    # ('likes', 'likes'),
+    # ('movies', 'movies'),
+    # ('books', 'books'),
+    # ('music', 'music'),
 ]
 
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'userdata'
-LOGOUT_URL = 'logout'
-LOGOUT_REDIRECT_URL = 'login'
+# LOGIN_URL = 'register'
+# LOGOUT_URL = 'logout'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+
+SOCIAL_AUTH_FACEBOOK_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    # f'{CORE_APP_NAME}.custom_auth.can_skip_extra_form',  # custom step
+    'social_core.pipeline.social_auth.social_user',
+    'social_core.pipeline.user.get_username',
+    'social_core.pipeline.user.create_user',
+    'social_core.pipeline.social_auth.associate_user',
+    f'{CORE_APP_NAME}.custom_auth.s0',  # custom step
+    f'{CORE_APP_NAME}.custom_auth.s1',  # custom step
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details',
+
+    # 'social_core.pipeline.debug.debug',
+)
+
+SOCIAL_AUTH_FIELDS_STORED_IN_SESSION = [
+    'local_password',
+    'ok'
+]

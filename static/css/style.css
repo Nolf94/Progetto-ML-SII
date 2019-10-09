@@ -31,6 +31,10 @@ p {
   font-size: 2em;
 }
 
+.header__buttons {
+  flex-grow: 0;
+}
+
 .content {
   flex-grow: 1;
 }

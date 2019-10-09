@@ -1,30 +1,20 @@
-"""
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-
+# urls.py
 from django.contrib import admin
-from django.urls import path, include
 from django.contrib.auth import views as auth_views
-from lodreranker import views
+from django.urls import include, path
+
+from lodreranker import views as core_views
 
 urlpatterns = [
-    path("admin/", admin.site.urls),         
-    path("login/", views.login, name="login"),
-    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
-    path("social-auth/", include("social_django.urls", namespace="social")),
-    path("", views.userdata, name="userdata"),
-]   
-    # UNUSED
-    # path('', views.IndexView.as_view(), name='index'),
-    # path('facebook/deauthorize/', views.DeauthorizeView.as_view(), name='deauthorize'),
-    # path('', include('social_django.urls', namespace='social')),
-    # path('logout/', auth.views.LogoutView.as_view(), name='logout'),
-    # path('about/', views.AboutView.as_view(), name='about'),
+    path('admin/', admin.site.urls),     
+    path('', core_views.home, name='home'),
+    
+    path('users/', include('django.contrib.auth.urls')),
+    path('users/signup/', core_views.SignUpView.as_view(), name='signup'),
+    path('users/signup/s0', core_views.s0_createpassword, name='s0_createpassword'),
+    path('users/signup/s1', core_views.s1_additionaldata, name='s1_additionaldata'),
+    path('users/logout/', auth_views.LogoutView.as_view(), name='logout'),
+
+    path('users/social-auth/', include('social_django.urls', namespace='social')),
+    # path('user/', core_views.userdata, name='userdata'),
+]

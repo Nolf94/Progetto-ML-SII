@@ -1,26 +1,76 @@
-import json
-import urllib.request
-
-from django.http.response import Http404
-from django.conf import settings
-from django.contrib.auth.mixins import LoginRequiredMixin
+# lodreranker/views.py
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import redirect, render, reverse
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, View
-from facepy import SignedRequest
-from facepy.exceptions import SignedRequestError
-from social_django.models import UserSocialAuth
+from django.views.generic.edit import CreateView
+from social_django.utils import load_strategy
 
-from . import misc
+from .forms import CreatePasswordForm, CustomUserCreationForm, DemographicForm
+from .misc import *
+from .auth_utils import renderto
 
 
-def login(request):
-    return render(request, 'login.html')
+def home(request):
+    return render(request, 'home.html')
 
-@login_required
-def userdata(request):
-    return render(request, 'userdata.html')
+
+class SignUpView(CreateView):
+    template_name = 'signup.html'
+    form_class = CustomUserCreationForm
+    success_url = reverse_lazy('home')
+
+
+def s0_createpassword(request):
+    strategy = load_strategy()
+    partial_token = request.GET.get('partial_token')
+    partial = strategy.partial_load(partial_token)
+
+    if request.method == 'POST':
+        form = CreatePasswordForm(request.POST)
+        if form.is_valid():
+            request.session['local_password'] = form.cleaned_data['password']
+            return redirect(reverse('social:complete', args=('facebook',)))
+    else:
+        form = CreatePasswordForm()
+
+    return render(request, "signup_s0_createpassword.html", {'form': form})
+
+
+def s1_additionaldata(request):
+    request.session['ok'] = 'ok'
+    return render(request, 'signup_s1_additionaldata.html' )
+
+
+# @login_required
+# def userdata(request):
+#     return render(request, 'userdata.html')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# import json
+# import urllib.request
+# from django.http.response import Http404
+# from django.conf import settings
+# from django.contrib.auth.models import User
+# from django.urls import reverse_lazy
+# from django.views.generic import TemplateView, View
+# from facepy import SignedRequest
+# from facepy.exceptions import SignedRequestError
+# from social_django.models import UserSocialAuth
+
+
+
 
 
 # UNUSED
@@ -57,9 +107,6 @@ context['querydata'] = abstract
 
         # return context
 
-# UNUSED
-# class IndexView(TemplateView):
-#     template_name = "index.html"
 
 # UNUSED
 # class DeauthorizeView(View):

@@ -1,0 +1,26 @@
+<!-- templates/signup.html -->
+
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %} Sign up {% endblock %}
+{% block content %}
+<div class="row mb-3">
+    <div class="col-8 mx-auto my-auto social-container my-2">
+
+    {% if request.session.uid %}
+        {{ request.session.uid }}
+    {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {{ form|crispy }}
+            
+            <div class="text-center">
+                <button type="submit" class="btn btn-success py-2">Sign up</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% comment %} <a class="btn btn-primary p-3" href="{% url 'social:begin' 'facebook' %}?next={{ request.path }}">Login with Facebook</a> {% endcomment %}
+<a class="btn btn-primary p-3" href="{% url 'social:begin' 'facebook' %}">Login with Facebook</a>
+{% endblock %}
