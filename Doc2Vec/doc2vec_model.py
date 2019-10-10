@@ -1,49 +1,38 @@
-from gensim.models.doc2vec import Doc2Vec, TaggedLineDocument
-#from nltk.tokenize import word_tokenize
+from gensim.models.doc2vec import TaggedLineDocument
+from gensim.models import Doc2Vec
+import os
+import gensim.models.doc2vec
+import multiprocessing
+from doc2vec_preprocessing import normalize_text, stopping
 
 
-#Dati di esempio:
-#data = ["I love machine learning. Its awesome.",
-#        "I love coding in python",
-#        "I love building chatbots",
-#        "they chat amagingly well"]
-
-
-
-#tagged_data = [TaggedDocument(words=word_tokenize(_d.lower()), tags=[str(i)]) for i, _d in enumerate(data)]
-
-
-#Per funzionare Doc2Vec accetta solamente TaggedDocument:
-#A single document, made up of `words` (a list of unicode string tokens)
+# Per funzionare Doc2Vec accetta solamente TaggedDocument:
+# A single document, made up of `words` (a list of unicode string tokens)
 # and `tags` (a list of tokens). Tags may be one or more unicode string
 # tokens, but typical practice (which will also be most memory-efficient) is
 # for the tags list to include a unique integer id as the only tag.
 
-tagged_data = TaggedLineDocument("movie.metadata.tsv")
+# TaggedLineDocument: Iterate over a file that contains documents: one line = TaggedDocument object.
 
-max_epochs = 10
-vec_size = 20
-alpha = 0.025
+os.system("rm -r doc2vec_data_film.model")
+os.system("rm -r data_film_result.txt")
 
-model = Doc2Vec(size=vec_size,
-                alpha=alpha,
-                min_alpha=0.00025,
-                min_count=1,
-                dm=1)
+cores = multiprocessing.cpu_count()
+
+f = open("data_film.txt", encoding='utf-8')
+with open("data_film_result.txt", 'a', encoding='utf-8') as file:
+    for line in f:
+        line = normalize_text(stopping(line))
+        file.write(line + "\n")
+
+tagged_data = TaggedLineDocument("data_film_result.txt")
+
+assert gensim.models.doc2vec.FAST_VERSION > -1, "This will be painfully slow otherwise"
+model = Doc2Vec(dm=1, vector_size=100, window=5, negative=5, hs=0, min_count=2, sample=0,
+                epochs=20, workers=cores)
 
 model.build_vocab(tagged_data)
 
-model.train(tagged_data, total_examples = model.corpus_count, epochs=max_epochs)
-model.save('doc2vec.model')
+model.train(tagged_data, total_examples=model.corpus_count, epochs=model.epochs)
+model.save('doc2vec_data_film.model')
 
-#for epoch in range(max_epochs):
-#    print('iteration {0}'.format(epoch))
-#    model.train(tagged_data,
-#                total_examples=model.corpus_count,
-#                epochs=model.iter)
-    # decrease the learning rate
-#    model.alpha -= 0.0002
-    # fix the learning rate, no decay
-#    model.min_alpha = model.alpha
-#model.save("d2v.model")
-print("Model Saved")
