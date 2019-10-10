@@ -16,23 +16,21 @@ class CustomUserCreationForm(UserCreationForm):
     #         self.fields[fieldname].help_text = None
 
 
-class CustomUserDemographicDataForm(UserChangeForm):
+class CustomUserDemographicDataForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = ('age','gender',)
+        fields = ('username','first_name','last_name','age','gender',)
 
     # tentative prepopulation with data from User Social Account
     # def __init__(self, *args, **kwargs):
-    #     super(UserCreationForm, self).__init__(*args, **kwargs)
+    #     super(CustomUserDemographicDataForm, self).__init__(*args, **kwargs)
     
-    #     if hasattr(self, 'sociallogin'):
-    #         print(True)
             
-    #         # if 'gender' in self.sociallogin.account.extra_data:
-    #         #     if self.sociallogin.account.extra_data['gender'] == 'male':
-    #         #         self.initial['gender'] = 'M'
-    #         #     elif self.sociallogin.account.extra_data['gender'] == 'female':
-    #         #         self.initial['gender'] = 'F'
+            # if 'gender' in self.sociallogin.account.extra_data:
+            #     if self.sociallogin.account.extra_data['gender'] == 'male':
+            #         self.initial['gender'] = 'M'
+            #     elif self.sociallogin.account.extra_data['gender'] == 'female':
+            #         self.initial['gender'] = 'F'
 
 
 class CustomUserChangeForm(UserChangeForm):

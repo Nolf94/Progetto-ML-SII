@@ -4,13 +4,22 @@
 {% block title %} Welcome! {% endblock %}
 {% block content %}
     {% if user.is_authenticated %}
-    Hello {{user.username}}, have you completed all the steps?
+    <p>Hello {{user.username}}, have you completed all the registration steps?</p>
 
     <ol>
-    <li>Connected to social: {{user.has_social}} </li>
-    <li>Compiled demographic form: {{user.has_demographic}} </li>
-    <li>Compiled images fomr: {{user.has_vector}}</li>
+    <li>Connected to social: {% if user.has_social %} <span class="fa fa-check"></span>
+    {% else %} TODO LINK TO RESUME {% endif %} </li>
+    <li>Compiled demographic form: {% if user.has_demographic %} <span class="fa fa-check"></span>
+    {% else %} TODO LINK TO RESUME {% endif %} </li>
+    <li>Compiled images form: {% if user.has_vector %} <span class="fa fa-check"></span>
+    {% else %} TODO LINK TO RESUME {% endif %} </li>
     </ol>
+
+    {% comment %} 
+    cambiare questa struttura.
+    - controllare tutti e tre i flag in or
+    - aggiungere un solo link di resume che porta allo step più a monte
+    {% endcomment %}
 
     {% else %}
     Please login or create an account.

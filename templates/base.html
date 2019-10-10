@@ -12,6 +12,8 @@
         integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous" />
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" 
         integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>    
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" 
+        integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.png' %}"/>
     <title>LODReranker</title>
@@ -20,7 +22,7 @@
 <body>
     <main class="main container-fluid p-0">
         <!-- header -->
-        <div class="header row w-100 flex-nowrap p-3 mb-5 bg-dark shadow">
+        <div class="header row w-100 flex-nowrap p-3 mb-4 bg-dark shadow">
             <div class="col p-0 my-auto">
             <a class='nav-link p-0' href='/'>
                 <h1 class="text-white m-0"><code class="text-danger">[ML-SII]</code> LOD Reranker</h1>
@@ -29,7 +31,7 @@
 
             <div class="header__buttons col p-0 my-auto d-flex flex-nowrap">
                 {% if user.is_authenticated %}
-                <div class="text-white text-right mx-2 my-auto" style="min-width: 200px"><i>Hello, {{ user.username }}</i></div>
+                <div class="text-white text-right mx-2 my-auto" style="min-width: 200px">Hello, <i>{{ user.username }}</i></div>
                 <a class="btn btn-danger mx-2 my-auto" href="{% url 'logout' %}">Logout</a>
                 {% else %}
                 <a class="btn btn-info mx-2 my-auto" href="{% url 'login' %}">Login</a>
@@ -41,7 +43,7 @@
 
         <!-- content -->
         <div class="content">
-            <h4 class="text-dark text-center mb-5">{% block title %}{% endblock %}</h4>
+            <h4 class="text-dark text-center mb-3">{% block title %}{% endblock %}</h4>
             <div class="card p-4 mb-5 shadow-sm">
                 {% block content %}
                 {% endblock %}

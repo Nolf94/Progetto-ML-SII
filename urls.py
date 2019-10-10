@@ -12,7 +12,8 @@ urlpatterns = [
     path('users/', include('django.contrib.auth.urls')),
     path('users/signup/', core_views.SignupS0View.as_view(), name='signup'),
     path('users/signup/connect_social', core_views.signup_s1, name='signup_s1'),
-    path('users/signup/demographic_data', core_views.SignupS2View.as_view(), name='signup_s2'),
+    path('users/signup/demographic_data/', core_views.SignupS2View.as_view(), name='signup_s2'),
+    path('users/settings/', core_views.settings, name='settings'),
 
     path('users/signup/social-auth/', include('social_django.urls', namespace='social')),
     path('users/logout/', auth_views.LogoutView.as_view(), name='logout'),

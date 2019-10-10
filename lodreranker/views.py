@@ -1,13 +1,18 @@
 # lodreranker/views.py
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
-from django.shortcuts import redirect, render, reverse
+from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView
+from django.views.generic.base import TemplateView
+from django.views.generic.edit import CreateView, UpdateView
+from social_django.models import UserSocialAuth
 from social_django.utils import load_strategy
 
 from .forms import CreatePasswordForm, CustomUserCreationForm, CustomUserDemographicDataForm
 from .misc import *
+from .models import CustomUser
 
 
 def home(request):
@@ -19,49 +24,48 @@ class SignupS0View(CreateView):
     form_class = CustomUserCreationForm
 
     def form_valid(self, form):
-        form.save()
+        form.save() 
         username = self.request.POST['username']
         password = self.request.POST['password1']
         user = authenticate(username=username, password=password)
         login(self.request, user)
         return redirect(reverse_lazy('signup_s1'))
 
+@login_required
 def signup_s1(request):
     template_name = 'registration/signup_s1.html'
     return render(request, template_name)
 
-class SignupS2View(CreateView):
+
+class SignupS2View(LoginRequiredMixin, UpdateView):
     template_name = 'registration/signup_s2.html'
     form_class = CustomUserDemographicDataForm
+    success_url = reverse_lazy('home')
 
-    # def form_valid(self, form):
-    #     form.save()
-    #     username = self.request.POST['username']
-    #     password = self.request.POST['password1']
-    #     user = authenticate(username=username, password=password)
-    #     login(self.request, user)
-    #     return redirect(reverse_lazy('signup_s1'))
+    def get_object(self, queryset=None):
+        return get_object_or_404(CustomUser, pk=self.request.user.id)
 
-
-
-
+    def render_to_response(self, context, **response_kwargs):
+        user = self.request.user
+        user.has_demographic = True
+        user.save()
+        return super().render_to_response(context, **response_kwargs)
 
 
-
-
-# def s0_createpassword(request):
-#     if request.method == 'POST':
-#         form = CreatePasswordForm(request.POST)
-#         if form.is_valid():
-#             request.session['local_password'] = form.cleaned_data['password']
-#             return redirect(reverse('social:complete', args=('facebook',)))
-#     else:
-#         form = CreatePasswordForm()
-
-#     return render(request, "signup_s0_createpassword.html", {'form': form})
-
-
-
+@login_required
+def settings(request):
+    user = request.user
+    
+    try:
+        facebook_login = user.social_auth.get(provider='facebook')
+    except UserSocialAuth.DoesNotExist:
+        facebook_login = None
+    
+    can_disconnect = (user.social_auth.count() > 1 or user.has_usable_password())
+    return render(request, '/settings.html', {
+        'facebook_login': facebook_login,
+        'can_disconnect': can_disconnect
+    })
 
 
 
@@ -81,10 +85,6 @@ class SignupS2View(CreateView):
 # from facepy import SignedRequest
 # from facepy.exceptions import SignedRequestError
 # from social_django.models import UserSocialAuth
-
-
-
-
 
 # UNUSED
 # class AboutView(LoginRequiredMixin, TemplateView):
