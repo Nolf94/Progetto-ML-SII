@@ -1,34 +1,37 @@
-from django.shortcuts import redirect, reverse
 from .models import CustomUser
-from social_core.pipeline.partial import partial
 
-from pprint import pprint
-
-@partial
-def s0(strategy, backend, request, details, *args, **kwargs):
-    local_password = strategy.session_get('local_password', None)
-    if not local_password:
-        return redirect(reverse('s0_createpassword'))
-
-    user = CustomUser.objects.get(id=kwargs['user'].id)
-    user.set_password(local_password)
+def save_uid(backend, user, response, *args, **kwargs):
+    # user = CustomUser.objects.get(id=kwargs['user'].id)
+    user.social_uid = kwargs['uid']
+    user.has_social = True
     user.save()
-
-    return
-
-
-@partial
-def s1(strategy, backend, request, details, *args, **kwargs):
-    ok = strategy.session_get('ok', None)
-
-    if not ok:
-        return redirect(reverse('s1_additionaldata'))
-    
     return
 
 
 
 ####################################################################################################
+
+# @partial
+# def s0(strategy, backend, request, details, *args, **kwargs):
+#     local_password = strategy.session_get('local_password', None)
+#     if not local_password:
+#         return redirect(reverse('s0_createpassword'))
+
+#     user = CustomUser.objects.get(id=kwargs['user'].id)
+#     user.set_password(local_password)
+#     user.save()
+
+#     return
+
+
+# @partial
+# def s1(strategy, backend, request, details, *args, **kwargs):
+#     ok = strategy.session_get('ok', None)
+
+#     if not ok:
+#         return redirect(reverse('s1_additionaldata'))
+    
+#     return
 
 
 

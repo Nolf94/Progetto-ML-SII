@@ -3,12 +3,16 @@
 {% extends 'base.html' %}
 {% block title %} Welcome! {% endblock %}
 {% block content %}
-
     {% if user.is_authenticated %}
-    {% comment %} show something else {% endcomment %}
+    Hello {{user.username}}, have you completed all the steps?
+
+    <ol>
+    <li>Connected to social: {{user.has_social}} </li>
+    <li>Compiled demographic form: {{user.has_demographic}} </li>
+    <li>Compiled images fomr: {{user.has_vector}}</li>
+    </ol>
+
+    {% else %}
+    Please login or create an account.
     {% endif %}
-    
-    Click on the button below to begin.
-    {% comment %} <a class="btn btn-primary p-3" href="{% url 'social:begin' 'facebook' %}?next={{ request.path }}">Login with Facebook</a> {% endcomment %}
-    <a class="btn btn-primary p-3" href="{% url 'social:begin' 'facebook' %}">Login with Facebook</a>
 {% endblock %}

@@ -10,11 +10,11 @@ urlpatterns = [
     path('', core_views.home, name='home'),
     
     path('users/', include('django.contrib.auth.urls')),
-    path('users/signup/', core_views.SignUpView.as_view(), name='signup'),
-    path('users/signup/s0', core_views.s0_createpassword, name='s0_createpassword'),
-    path('users/signup/s1', core_views.s1_additionaldata, name='s1_additionaldata'),
-    path('users/logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('users/signup/', core_views.SignupS0View.as_view(), name='signup'),
+    path('users/signup/connect_social', core_views.signup_s1, name='signup_s1'),
+    path('users/signup/demographic_data', core_views.SignupS2View.as_view(), name='signup_s2'),
 
-    path('users/social-auth/', include('social_django.urls', namespace='social')),
+    path('users/signup/social-auth/', include('social_django.urls', namespace='social')),
+    path('users/logout/', auth_views.LogoutView.as_view(), name='logout'),
     # path('user/', core_views.userdata, name='userdata'),
 ]

@@ -143,20 +143,16 @@ SOCIAL_AUTH_FACEBOOK_PIPELINE = (
     'social_core.pipeline.social_auth.social_details',
     'social_core.pipeline.social_auth.social_uid',
     'social_core.pipeline.social_auth.auth_allowed',
-    # f'{CORE_APP_NAME}.custom_auth.can_skip_extra_form',  # custom step
     'social_core.pipeline.social_auth.social_user',
     'social_core.pipeline.user.get_username',
     'social_core.pipeline.user.create_user',
     'social_core.pipeline.social_auth.associate_user',
-    f'{CORE_APP_NAME}.custom_auth.s0',  # custom step
-    f'{CORE_APP_NAME}.custom_auth.s1',  # custom step
     'social_core.pipeline.social_auth.load_extra_data',
     'social_core.pipeline.user.user_details',
+    'social_core.pipeline.debug.debug',
+    f'{CORE_APP_NAME}.custom_auth.save_uid',
 
-    # 'social_core.pipeline.debug.debug',
 )
 
 SOCIAL_AUTH_FIELDS_STORED_IN_SESSION = [
-    'local_password',
-    'ok'
 ]

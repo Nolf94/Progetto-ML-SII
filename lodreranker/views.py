@@ -1,51 +1,64 @@
 # lodreranker/views.py
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render, reverse
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView
 from social_django.utils import load_strategy
 
-from .forms import CreatePasswordForm, CustomUserCreationForm, DemographicForm
+from .forms import CreatePasswordForm, CustomUserCreationForm, CustomUserDemographicDataForm
 from .misc import *
-from .auth_utils import renderto
 
 
 def home(request):
     return render(request, 'home.html')
 
 
-class SignUpView(CreateView):
-    template_name = 'signup.html'
+class SignupS0View(CreateView):
+    template_name = 'registration/signup_s0.html'
     form_class = CustomUserCreationForm
-    success_url = reverse_lazy('home')
+
+    def form_valid(self, form):
+        form.save()
+        username = self.request.POST['username']
+        password = self.request.POST['password1']
+        user = authenticate(username=username, password=password)
+        login(self.request, user)
+        return redirect(reverse_lazy('signup_s1'))
+
+def signup_s1(request):
+    template_name = 'registration/signup_s1.html'
+    return render(request, template_name)
+
+class SignupS2View(CreateView):
+    template_name = 'registration/signup_s2.html'
+    form_class = CustomUserDemographicDataForm
+
+    # def form_valid(self, form):
+    #     form.save()
+    #     username = self.request.POST['username']
+    #     password = self.request.POST['password1']
+    #     user = authenticate(username=username, password=password)
+    #     login(self.request, user)
+    #     return redirect(reverse_lazy('signup_s1'))
 
 
-def s0_createpassword(request):
-    strategy = load_strategy()
-    partial_token = request.GET.get('partial_token')
-    partial = strategy.partial_load(partial_token)
-
-    if request.method == 'POST':
-        form = CreatePasswordForm(request.POST)
-        if form.is_valid():
-            request.session['local_password'] = form.cleaned_data['password']
-            return redirect(reverse('social:complete', args=('facebook',)))
-    else:
-        form = CreatePasswordForm()
-
-    return render(request, "signup_s0_createpassword.html", {'form': form})
 
 
-def s1_additionaldata(request):
-    request.session['ok'] = 'ok'
-    return render(request, 'signup_s1_additionaldata.html' )
 
 
-# @login_required
-# def userdata(request):
-#     return render(request, 'userdata.html')
 
 
+# def s0_createpassword(request):
+#     if request.method == 'POST':
+#         form = CreatePasswordForm(request.POST)
+#         if form.is_valid():
+#             request.session['local_password'] = form.cleaned_data['password']
+#             return redirect(reverse('social:complete', args=('facebook',)))
+#     else:
+#         form = CreatePasswordForm()
+
+#     return render(request, "signup_s0_createpassword.html", {'form': form})
 
 
 
