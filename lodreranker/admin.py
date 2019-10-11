@@ -9,7 +9,7 @@ class CustomUserAdmin(UserAdmin):
     model = CustomUser
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
-    list_display = ['username', 'has_social', 'social_uid', 'has_demographic', 'has_vector']
+    list_display = ['username', 'has_social', 'has_demographic', 'has_vector']
     fieldsets = ((('User'), {'fields': ('age', 'gender')}),) + UserAdmin.fieldsets
 
 admin.site.register(CustomUser, CustomUserAdmin)

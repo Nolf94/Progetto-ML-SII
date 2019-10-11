@@ -19,6 +19,12 @@ def home(request):
     return render(request, 'home.html')
 
 
+def social_login(request):
+    is_skip = request.GET.get('skip', False)
+    request.session['skip_creation'] = True if is_skip else False
+    return redirect(reverse('social:begin', args=('facebook',)))
+
+
 class SignupS0View(CreateView):
     template_name = 'registration/signup_s0.html'
     form_class = CustomUserCreationForm

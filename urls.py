@@ -10,6 +10,7 @@ urlpatterns = [
     path('', core_views.home, name='home'),
     
     path('users/', include('django.contrib.auth.urls')),
+    path('users/social_login', core_views.social_login, name='social_login'),
     path('users/signup/', core_views.SignupS0View.as_view(), name='signup'),
     path('users/signup/connect_social', core_views.signup_s1, name='signup_s1'),
     path('users/signup/demographic_data/', core_views.SignupS2View.as_view(), name='signup_s2'),

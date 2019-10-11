@@ -5,12 +5,23 @@
 {% block title %} Login {% endblock %}
 {% block content %}
 <div class="row my-auto">
-    <div class="col-md-8 mx-auto my-auto social-container my-2">
+    <div class="col-md-6 mx-auto my-auto social-container my-2 text-center">
+        <a class="btn btn-primary" href="{% url 'social_login' %}?skip=1&next={{request.path}}">Login with Facebook</a>
+        <p class="mt-1 small">(only works if you have connected your Facebook account)</p>
+    </div>
+</div>
+<div class="row my-auto">
+    <div class="col-md-6 mx-auto my-auto social-container my-2 p-3 text-center">
+        or sign in directly
+    </div>
+</div>
+<div class="row my-auto">
+    <div class="col-md-6 mx-auto my-auto social-container my-2 pb-2 border">
         <form method="post">
             {% csrf_token %}
             {{ form|crispy }}
-             <div class="text-center">
-                <button type="submit" class="btn btn-success py-2">Login</button>
+            <div class="text-center">
+                <button type="submit" class="btn btn-block btn-success py-2">Login</button>
             </div>
         </form>
     </div>

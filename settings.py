@@ -104,6 +104,7 @@ USE_TZ = True
 AUTHENTICATION_BACKENDS = [
     'social_core.backends.facebook.FacebookOAuth2',
     'django.contrib.auth.backends.ModelBackend',
+    f'{CORE_APP_NAME}.custom_auth.HashedPasswordAuthBackend',
 ]
 
 SOCIAL_AUTH_FACEBOOK_SCOPE = [
@@ -141,6 +142,7 @@ LOGOUT_REDIRECT_URL = 'home'
 SOCIAL_AUTH_FACEBOOK_PIPELINE = (
     'social_core.pipeline.social_auth.social_details',
     'social_core.pipeline.social_auth.social_uid',
+    f'{CORE_APP_NAME}.custom_auth.is_skip',
     'social_core.pipeline.social_auth.auth_allowed',
     'social_core.pipeline.social_auth.social_user',
     'social_core.pipeline.user.get_username',
@@ -148,9 +150,11 @@ SOCIAL_AUTH_FACEBOOK_PIPELINE = (
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
     'social_core.pipeline.user.user_details',
-    'social_core.pipeline.debug.debug',
-    f'{CORE_APP_NAME}.custom_auth.save_uid',
+    # 'social_core.pipeline.debug.debug',
+    f'{CORE_APP_NAME}.custom_auth.redirect_registration',
 
 )
 
-SOCIAL_AUTH_FIELDS_STORED_IN_SESSION = []
+SOCIAL_AUTH_FIELDS_STORED_IN_SESSION = [
+    'skip_creation'
+]
