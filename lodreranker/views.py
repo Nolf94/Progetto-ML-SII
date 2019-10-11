@@ -51,6 +51,9 @@ class SignupS2View(LoginRequiredMixin, UpdateView):
         user.save()
         return super().render_to_response(context, **response_kwargs)
 
+def signup_s3(request):
+    return redirect(reverse('home'))
+
 
 @login_required
 def settings(request):

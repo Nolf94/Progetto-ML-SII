@@ -4,23 +4,25 @@
 {% block title %} Welcome! {% endblock %}
 {% block content %}
     {% if user.is_authenticated %}
-    <p>Hello {{user.username}}, have you completed all the registration steps?</p>
+        <p>Hello <i>{{user.username}}</i>, have you completed all the registration steps?</p>
 
-    <ol>
-    <li>Connected to social: {% if user.has_social %} <span class="fa fa-check"></span>
-    {% else %} TODO LINK TO RESUME {% endif %} </li>
-    <li>Compiled demographic form: {% if user.has_demographic %} <span class="fa fa-check"></span>
-    {% else %} TODO LINK TO RESUME {% endif %} </li>
-    <li>Compiled images form: {% if user.has_vector %} <span class="fa fa-check"></span>
-    {% else %} TODO LINK TO RESUME {% endif %} </li>
-    </ol>
+        <ol>
+        <li>Connected to social: <span class="fa fa-{% if user.has_social %}check text-success{% else %}times text-danger{% endif %}"></span></li>
+        <li>Compiled demographic form: <span class="fa fa-{% if user.has_demographic %}check text-success{% else %}times text-danger{% endif %}"></span></li>
+        <li>Compiled images form: <span class="fa fa-{% if user.has_vector %}check text-success{% else %}times text-danger{% endif %}"></span></li>
+        </ol>
 
-    {% comment %} 
-    cambiare questa struttura.
-    - controllare tutti e tre i flag in or
-    - aggiungere un solo link di resume che porta allo step più a monte
-    {% endcomment %}
-
+        <p>
+        {% if not user.has_social or not user.has_demographic or not user.has_vector %}
+        Please resume your registration <a href ="
+            {% if not user.has_social %}{% url 'signup_s1' %}
+            {% elif not user.has_demographic %}{% url 'signup_s2' %}
+            {% elif not user.has_vector %}{% url 'signup_s3' %}{% endif %}
+        ">here</a>.
+        {% else %}
+        You're good to go!
+        {% endif %}
+        </p>
     {% else %}
     Please login or create an account.
     {% endif %}
