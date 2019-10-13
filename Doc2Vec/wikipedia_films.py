@@ -27,7 +27,7 @@ for column in saved_column:
 
         abstract = re.sub('\n', '', abstract)
 
-        with open('data_film.txt', 'a', encoding='utf-8') as f:
+        with open('data_films.txt', 'a', encoding='utf-8') as f:
                 print(str(i) + abstract)
                 f.write(abstract + '\n')
 

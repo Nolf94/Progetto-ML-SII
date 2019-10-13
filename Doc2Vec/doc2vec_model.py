@@ -19,8 +19,8 @@ os.system("rm -r data_film_result.txt")
 
 cores = multiprocessing.cpu_count()
 
-f = open("data_film.txt", encoding='utf-8')
-with open("data_film_result.txt", 'a', encoding='utf-8') as file:
+f = open("data_films.txt", encoding='utf-8')
+with open("data_films_result.txt", 'a', encoding='utf-8') as file:
     for line in f:
         line = normalize_text(stopping(line))
         file.write(line + "\n")
