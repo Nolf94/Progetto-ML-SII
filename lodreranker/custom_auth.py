@@ -33,7 +33,7 @@ def is_skip(strategy, backend, user, response, *args, **kwargs):
             hashed_pwd = user.password # password from model is hashed
             authenticated_user = HashedPasswordAuthBackend().authenticate(username, hashed_pwd)
             login(strategy.request, authenticated_user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect(reverse_lazy('home'))
+            return redirect(reverse_lazy('profile'))
         else:
             # TODO add a parameter to render the error in the login page
             return redirect(reverse_lazy('login')) 

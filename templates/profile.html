@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %} Your profile {% endblock %}
+{% block content %}
+    <div class="row my-auto mb-3">
+        <div class="col-sm-8 mx-auto">
+            <p>Hello <i>{{user.username}}</i>, have you completed all the registration steps?</p>
+            <ol>
+            <li>Connected to social: <span class="fa fa-{% if user.has_social %}check text-success{% else %}times text-danger{% endif %}"></span></li>
+            <li>Compiled demographic form: <span class="fa fa-{% if user.has_demographic %}check text-success{% else %}times text-danger{% endif %}"></span></li>
+            <li>Compiled images form: <span class="fa fa-{% if user.has_vector %}check text-success{% else %}times text-danger{% endif %}"></span></li>
+            </ol>
+
+            <p>
+            {% if not user.has_social or not user.has_demographic or not user.has_vector %}
+            Please resume your registration <a href ="
+                {% if not user.has_social %}{% url 'signup_s1' %}
+                {% elif not user.has_demographic %}{% url 'signup_s2' %}
+                {% elif not user.has_vector %}{% url 'signup_s3' %}{% endif %}
+            ">here</a>.
+            {% else %}
+            You're good to go!
+            {% endif %}
+            </p>
+        </div>
+    </div>
+
+    {% for data in backends.associated %}
+    {% if data.provider == "facebook" %}
+    <div class="row mt-3 mb-5 border p-2">
+        <div class="col-md-3 mx-auto my-auto">
+            <img src="{{data.extra_data.picture.data.url}}" alt="" width="100" height="100" style="border-radius: 10%">
+        </div>
+        <div class="col-md-9 social-container text-left">
+            <p> <b>Name:</b> {{ data.extra_data.name }} </p>
+            <p> <b>Email:</b> {{ data.extra_data.email }} </p>
+            <p> <b>Provider url:</b> <a href="{{data.extra_data.profile_url}}">link</a></p>
+            <p><a class="btn btn-outline-primary" href="{% url 'social_disconnect' %}">Disconnect</a></p>
+        </div>
+    </div>
+    {% for key, value in data.extra_data.items %}
+    {% if forloop.counter >= 12 %}
+    <div class ="row-sm-12 my-3 text-left">
+        <p><b>{{ key }}</b></p>
+        <p><textarea class="query-content">{{ value }}</textarea></p>
+    </div>
+    {% endif %}
+    {% endfor %}
+    </div>   
+    {% endif %}
+    {% endfor %}
+{% endblock %}

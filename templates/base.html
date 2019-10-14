@@ -1,5 +1,3 @@
-<!-- templates/base.html -->
-
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -37,7 +35,7 @@
                 <a class="btn btn-info mx-2 my-auto" href="{% url 'login' %}">Login</a>
                 <a class="btn btn-success mx-2 my-auto" href="{% url 'signup' %}">Sign up</a>
                 {% endif %}
-                <a class="btn btn-secondary mx-2 my-auto" href="{% url 'admin:index' %}">Admin</a>
+                <a class="btn btn-outline-secondary mx-2 my-auto" href="{% url 'admin:index' %}">Admin</a>
             </div>
         </div>
 

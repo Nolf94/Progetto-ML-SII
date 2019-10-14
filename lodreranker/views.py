@@ -2,18 +2,14 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.urls import reverse_lazy
-from django.views.generic.base import TemplateView
 from django.views.generic.edit import CreateView, UpdateView
 from social_django.models import UserSocialAuth
-from social_django.utils import load_strategy
 
 from .forms import CreatePasswordForm, CustomUserCreationForm, CustomUserDemographicDataForm
 from .misc import *
 from .models import CustomUser
-
 
 def home(request):
     return render(request, 'home.html')
@@ -46,7 +42,7 @@ def signup_s1(request):
 class SignupS2View(LoginRequiredMixin, UpdateView):
     template_name = 'registration/signup_s2.html'
     form_class = CustomUserDemographicDataForm
-    success_url = reverse_lazy('home')
+    success_url = reverse_lazy('profile')
 
     def get_object(self, queryset=None):
         return get_object_or_404(CustomUser, pk=self.request.user.id)
@@ -57,12 +53,15 @@ class SignupS2View(LoginRequiredMixin, UpdateView):
         user.save()
         return super().render_to_response(context, **response_kwargs)
 
+
+# TODO images form
 def signup_s3(request):
-    return redirect(reverse('home'))
+    template_name = 'registration/signup_s3.html'
+    return render(request, template_name)
 
 
 @login_required
-def settings(request):
+def profile(request):
     user = request.user
     
     try:
@@ -71,12 +70,18 @@ def settings(request):
         facebook_login = None
     
     can_disconnect = (user.social_auth.count() > 1 or user.has_usable_password())
-    return render(request, '/settings.html', {
+    return render(request, 'profile.html', {
         'facebook_login': facebook_login,
         'can_disconnect': can_disconnect
     })
 
-
+@login_required
+def social_disconnect(request):
+    user = request.user
+    soc_auths = UserSocialAuth.objects.filter(user=user.id)[0].delete()  
+    user.has_social = False
+    user.save()
+    return redirect(reverse_lazy('profile'))
 
 
 # FB_QUERIES = {

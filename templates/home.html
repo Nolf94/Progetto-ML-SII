@@ -1,28 +1,8 @@
-<!-- templates/home.html -->
-
 {% extends 'base.html' %}
 {% block title %} Welcome! {% endblock %}
 {% block content %}
     {% if user.is_authenticated %}
-        <p>Hello <i>{{user.username}}</i>, have you completed all the registration steps?</p>
-
-        <ol>
-        <li>Connected to social: <span class="fa fa-{% if user.has_social %}check text-success{% else %}times text-danger{% endif %}"></span></li>
-        <li>Compiled demographic form: <span class="fa fa-{% if user.has_demographic %}check text-success{% else %}times text-danger{% endif %}"></span></li>
-        <li>Compiled images form: <span class="fa fa-{% if user.has_vector %}check text-success{% else %}times text-danger{% endif %}"></span></li>
-        </ol>
-
-        <p>
-        {% if not user.has_social or not user.has_demographic or not user.has_vector %}
-        Please resume your registration <a href ="
-            {% if not user.has_social %}{% url 'signup_s1' %}
-            {% elif not user.has_demographic %}{% url 'signup_s2' %}
-            {% elif not user.has_vector %}{% url 'signup_s3' %}{% endif %}
-        ">here</a>.
-        {% else %}
-        You're good to go!
-        {% endif %}
-        </p>
+    <p> View your profile <a href="{% url 'profile' %}">here</a>.</p>
     {% else %}
     Please login or create an account.
     {% endif %}
