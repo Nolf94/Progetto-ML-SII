@@ -1,17 +1,29 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
+{% load static %}
 {% block title %} Images form {% endblock %}
 {% block content %}
-<div class="row mb-3">
-    <div class="col-7 mx-auto my-auto social-container my-2">
-    <p>Choose at least 5 images</p>
-        <form method="post" novalidate>
+<div class="row mb-3s">
+    <div class="col-12 mx-auto my-auto social-container my-2 text-center">
+        <p>Choose at least {{min_choices}} types of places you would like to visit on your travels.</p>
+        <form class="poiform" name='aoo' method="post" action="{% url 'signup_s3' %}" novalidate>
+            <div class="poiform__content d-flex flex-wrap">
             {% csrf_token %}
-            {{ form|crispy }}
+            <input type="hidden" id="selected" name="selected"/>
+            <div id="preload" hidden>{{preload}}</div>
+            {% for choice in choices %}
+                <input type="checkbox" id={{choice.id}} name={{choice.id}} />
+                <label class="m-3" id={{choice.id}} name={{choice.name}} for={{choice.id}}>
+                <img src="{% static choice.img %}" /></label>
+            {% endfor %}
+            </div>
+
             <div class="text-center">
+                {% if error %}<p class="text-center text-danger">Please choose at least {{min_choices}} types of places.</p>{% endif %}
                 <button type="submit" class="btn btn-block btn-success py-2">Confirm</button>
             </div>
         </form>
     </div>
 </div>
+<script src="{% static 'js/js.js' %}"></script>
 {% endblock %}

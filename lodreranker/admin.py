@@ -10,7 +10,7 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     list_display = ['username', 'has_social', 'has_demographic', 'has_vector']
-    fieldsets = ((('User'), {'fields': ('age', 'gender')}),) + UserAdmin.fieldsets
+    fieldsets = ((('User'), {'fields': ('age', 'gender', 'poi_weights')}),) + UserAdmin.fieldsets
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.unregister(Group)

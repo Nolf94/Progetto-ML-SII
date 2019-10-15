@@ -28,7 +28,7 @@
     {% if data.provider == "facebook" %}
     <div class="row mt-3 mb-5 border p-2">
         <div class="col-md-3 mx-auto my-auto">
-            <img src="{{data.extra_data.picture.data.url}}" alt="" width="100" height="100" style="border-radius: 10%">
+            <img class="profilepic" src="{{data.extra_data.picture.data.url}}" alt="" width="100" height="100" style="border-radius: 10%">
         </div>
         <div class="col-md-9 social-container text-left">
             <p> <b>Name:</b> {{ data.extra_data.name }} </p>

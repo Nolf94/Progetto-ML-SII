@@ -12,6 +12,7 @@ class CustomUser(AbstractUser):
     has_social = models.BooleanField(default=False)
     has_demographic = models.BooleanField(default=False)
     has_vector = models.BooleanField(default=False)
+    poi_weights = models.TextField(blank=True)
 
     # UNUSED
     # social_uid = models.CharField(max_length=100, blank=True, null=True)

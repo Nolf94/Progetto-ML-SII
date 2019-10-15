@@ -2,14 +2,18 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.staticfiles import finders
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView, UpdateView
+from django.views.generic import TemplateView
+from django.views.generic.edit import CreateView, FormView, UpdateView
 from social_django.models import UserSocialAuth
 
-from .forms import CreatePasswordForm, CustomUserCreationForm, CustomUserDemographicDataForm
+from .forms import CustomUserCreationForm, CustomUserDemographicDataForm
 from .misc import *
 from .models import CustomUser
+from .utils import get_poi_choices, get_poi_weights
+
 
 def home(request):
     return render(request, 'home.html')
@@ -42,7 +46,7 @@ def signup_s1(request):
 class SignupS2View(LoginRequiredMixin, UpdateView):
     template_name = 'registration/signup_s2.html'
     form_class = CustomUserDemographicDataForm
-    success_url = reverse_lazy('profile')
+    success_url = reverse_lazy('signup_s3')
 
     def get_object(self, queryset=None):
         return get_object_or_404(CustomUser, pk=self.request.user.id)
@@ -54,16 +58,45 @@ class SignupS2View(LoginRequiredMixin, UpdateView):
         return super().render_to_response(context, **response_kwargs)
 
 
-# TODO images form
+@login_required
 def signup_s3(request):
     template_name = 'registration/signup_s3.html'
-    return render(request, template_name)
+    MIN_CHOICES = 5
+    poi_choices = get_poi_choices()
+    context = {
+        'choices': poi_choices,
+        'min_choices': MIN_CHOICES
+    }
+   
+    if request.method == 'POST':
+        selected_images = []
+        
+        try:
+            selected_images = list(map(int, request.POST.get('selected').split(',')))
+            if len(selected_images) < MIN_CHOICES:
+                raise ValueError
+       
+        except ValueError:
+            context['error'] = True
+            if selected_images:
+                context['preload'] = ','.join(str(x) for x in selected_images)
+            return render(request, template_name, context)
+            
+        weights = get_poi_weights(selected_images, poi_choices)
+        user = request.user
+        user.has_vector = True
+        user.poi_weights = weights
+        user.save()
+        return redirect(reverse_lazy('profile'))
+    
+    else:
+        return render(request, template_name, context)
 
 
 @login_required
 def profile(request):
     user = request.user
-    
+
     try:
         facebook_login = user.social_auth.get(provider='facebook')
     except UserSocialAuth.DoesNotExist:
