@@ -14,18 +14,19 @@ from doc2vec_preprocessing import normalize_text, stopping
 
 # TaggedLineDocument: Iterate over a file that contains documents: one line = TaggedDocument object.
 
-os.system("rm -r doc2vec_data_film.model")
-os.system("rm -r data_film_result.txt")
+os.system("rm -r doc2vec_data_artists.model")
+os.system("rm -r data_artists_result.txt")
 
 cores = multiprocessing.cpu_count()
 
-f = open("data_films.txt", encoding='utf-8')
-with open("data_films_result.txt", 'a', encoding='utf-8') as file:
+f = open("data_artists.txt", encoding='utf-8')
+with open("data_artists_result.txt", 'a', encoding='utf-8') as file:
     for line in f:
         line = normalize_text(stopping(line))
         file.write(line + "\n")
 
-tagged_data = TaggedLineDocument("data_film_result.txt")
+
+tagged_data = TaggedLineDocument("data_artists_result.txt")
 
 assert gensim.models.doc2vec.FAST_VERSION > -1, "This will be painfully slow otherwise"
 model = Doc2Vec(dm=1, vector_size=100, window=5, negative=5, hs=0, min_count=2, sample=0,
@@ -34,5 +35,5 @@ model = Doc2Vec(dm=1, vector_size=100, window=5, negative=5, hs=0, min_count=2, 
 model.build_vocab(tagged_data)
 
 model.train(tagged_data, total_examples=model.corpus_count, epochs=model.epochs)
-model.save('doc2vec_data_film.model')
+model.save('doc2vec_data_artists.model')
 
