@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %} Welcome! {% endblock %}
+{% block content %}
+    {% if user.is_authenticated %}
+    <p> View your profile <a href="{% url 'profile' %}">here</a>.</p>
+    {% else %}
+    Please login or create an account.
+    {% endif %}
+{% endblock %}

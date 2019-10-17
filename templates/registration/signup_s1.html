@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %} Sign up {% endblock %}
+{% block content %}
+<div class="row mb-3">
+    <div class="col-8 mx-auto my-auto social-container my-2">
+    <p>Now let's connect your Facebook account, so that we can retrieve your social data.</p>
+    <a class="btn btn-primary p-3" href="{% url 'social_login' %}">Connect with Facebook</a>
+    </div>
+</div>
+{% endblock %}

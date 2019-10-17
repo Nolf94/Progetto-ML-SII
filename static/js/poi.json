@@ -1,0 +1,182 @@
+[
+    {
+        "id": 1,
+        "name": "art1",
+        "img":  "img/art1.jpg",
+        "weights": [0, 0, 0.1, 0.3, 0, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 2,
+        "name": "art2",
+        "img":  "img/art2.jpg",
+        "weights": [0, 0, 0, 0.3, 0, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 3,
+        "name": "art3",
+        "img":  "img/art3.jpg",
+        "weights": [0, 0, 0, 0.3, 0, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 4,
+        "name": "church1",
+        "img":  "img/church1.jpg",
+        "weights": [0, 0.3, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 5,
+        "name": "church2",
+        "img":  "img/church2.jpg",
+        "weights": [0, 0.3, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 6,
+        "name": "church3",
+        "img":  "img/church3.jpg",
+        "weights": [0, 0.3, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 7,
+        "name": "entertainment1",
+        "img":  "img/entertainment1.jpg",
+        "weights": [0, 0, 0, 0, 0, 0, 0.3, 0, 0, 0]
+    },
+    {
+        "id": 8,
+        "name": "entertainment2",
+        "img":  "img/entertainment2.jpg",
+        "weights": [0, 0, 0, 0, 0, 0, 0.3, 0, 0, 0]
+    },
+    {
+        "id": 9,
+        "name": "entertainment3",
+        "img":  "img/entertainment3.jpg",
+        "weights": [0, 0, 0, 0, 0, 0, 0.3, 0, 0, 0]
+    },
+    {
+        "id": 10,
+        "name": "food1",
+        "img":  "img/food1.jpg",
+        "weights": [0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0]
+    },
+        {
+        "id": 11,
+        "name": "food2",
+        "img":  "img/food2.jpg",
+        "weights": [0, 0, 0, 0, 0, 0.3, 0, 0.1, 0, 0]
+    },
+    {
+        "id": 12,
+        "name": "food3",
+        "img":  "img/food3.jpg",
+        "weights": [0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0]
+    },
+    {
+        "id": 13,
+        "name": "monument1",
+        "img":  "img/monument1.jpg",
+        "weights": [0, 0, 0.3, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 14,
+        "name": "monument2",
+        "img":  "img/monument2.jpg",
+        "weights": [0, 0, 0.3, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 15,
+        "name": "monument3",
+        "img":  "img/monument3.jpg",
+        "weights": [0, 0, 0.3, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 16,
+        "name": "museum1",
+        "img":  "img/museum1.jpg",
+        "weights": [0.3, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 17,
+        "name": "museum2",
+        "img":  "img/museum2.jpg",
+        "weights": [0.3, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 18,
+        "name": "museum3",
+        "img":  "img/museum3.jpg",
+        "weights": [0.3, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 19,
+        "name": "night1",
+        "img":  "img/night1.jpg",
+        "weights": [0, 0, 0, 0, 0, 0, 0, 0.3, 0, 0]
+    },
+    {
+        "id": 20,
+        "name": "night2",
+        "img":  "img/night2.jpg",
+        "weights": [0, 0, 0, 0, 0, 0, 0.1, 0.3, 0, 0]
+    },
+    {
+        "id": 21,
+        "name": "night3",
+        "img":  "img/night3.jpg",
+        "weights": [0, 0, 0, 0, 0, 0, 0, 0.3, 0, 0]
+    },
+    {
+        "id": 22,
+        "name": "outdoors1",
+        "img":  "img/outdoors1.jpg",
+        "weights": [0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 23,
+        "name": "outdoors2",
+        "img":  "img/outdoors2.jpg",
+        "weights": [0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 24,
+        "name": "outdoors3",
+        "img":  "img/outdoors3.jpg",
+        "weights": [0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0]
+    },
+    {
+        "id": 25,
+        "name": "shop1",
+        "img":  "img/shop1.jpg",
+        "weights": [0, 0, 0, 0, 0, 0, 0, 0, 0.3, 0]
+    },
+    {
+        "id": 26,
+        "name": "shop2",
+        "img":  "img/shop2.jpg",
+        "weights": [0, 0, 0, 0, 0, 0, 0, 0, 0.3, 0]
+    },
+    {
+        "id": 27,
+        "name": "shop3",
+        "img":  "img/shop3.jpg",
+        "weights": [0, 0, 0, 0, 0, 0, 0, 0, 0.3, 0]
+    },
+    {
+        "id": 28,
+        "name": "sport1",
+        "img":  "img/sport1.jpg",
+        "weights": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0.3]
+    },
+    {
+        "id": 29,
+        "name": "sport2",
+        "img":  "img/sport2.jpg",
+        "weights": [0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0.3]
+    },
+    {
+        "id": 30,
+        "name": "sport3",
+        "img":  "img/sport3.jpg",
+        "weights": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0.3]
+    }
+]
