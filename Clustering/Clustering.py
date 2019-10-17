@@ -15,12 +15,12 @@ string7 = "pride prejudice 2005 romance film directed joe wright based jane aust
 
 
 vec1 = np.array(d2v_film_model.infer_vector(string1.split()))
-vec2 = d2v_film_model.infer_vector(string2.split())
-vec3 = d2v_film_model.infer_vector(string3.split())
-vec4 = d2v_film_model.infer_vector(string4.split())
-vec5 = d2v_film_model.infer_vector(string5.split())
-vec6 = d2v_film_model.infer_vector(string6.split())
-vec7 = d2v_film_model.infer_vector(string7.split())
+vec2 = np.array(d2v_film_model.infer_vector(string2.split()))
+vec3 = np.array(d2v_film_model.infer_vector(string3.split()))
+vec4 = np.array(d2v_film_model.infer_vector(string4.split()))
+vec5 = np.array(d2v_film_model.infer_vector(string5.split()))
+vec6 = np.array(d2v_film_model.infer_vector(string6.split()))
+vec7 = np.array(d2v_film_model.infer_vector(string7.split()))
 
 output = []
 ordered_vectors = np.array([])
