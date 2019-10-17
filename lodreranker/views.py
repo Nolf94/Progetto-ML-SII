@@ -62,24 +62,29 @@ class SignupS2View(LoginRequiredMixin, UpdateView):
 def signup_s3(request):
     template_name = 'registration/signup_s3.html'
     MIN_CHOICES = 5
-    poi_choices = get_poi_choices()
+
+    # choices are stored in session so that the random chosen order is kept during the process.
+    session = request.session
+    if 'choices' in session:
+        poi_choices = session['choices']
+    else:
+        poi_choices = get_poi_choices()
+        session['choices'] = poi_choices
+
     context = {
-        'choices': poi_choices,
         'min_choices': MIN_CHOICES
     }
    
     if request.method == 'POST':
         selected_images = []
-        
         try:
-            selected_images = list(map(int, request.POST.get('selected').split(',')))
+            selected_images = list(request.POST.get('selected').split(','))
             if len(selected_images) < MIN_CHOICES:
                 raise ValueError
-       
         except ValueError:
             context['error'] = True
             if selected_images:
-                context['preload'] = ','.join(str(x) for x in selected_images)
+                context['selected'] = ','.join(x for x in selected_images)
             return render(request, template_name, context)
             
         weights = get_poi_weights(selected_images, poi_choices)
@@ -87,8 +92,9 @@ def signup_s3(request):
         user.has_vector = True
         user.poi_weights = weights
         user.save()
+        session.pop('choices')
+        session.modified = True
         return redirect(reverse_lazy('profile'))
-    
     else:
         return render(request, template_name, context)
 

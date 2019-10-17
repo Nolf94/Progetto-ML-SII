@@ -2,34 +2,38 @@ $( document ).ready(function() {
     // selected array aggregates checkbox values
     var selected = [];
 
-    // pre-check previously checked inputs if form is invalid
-    preload = $("#preload").text()
-    if (preload) {
-        ids = preload.split(',');
-        ids.forEach(id => {
-            $('input#'+id).attr('checked', true)
-        });
-   }
-
-    // pre-populate selected array if page is refreshed
-    $("input[type=checkbox]").each(function() {
-        if (this.checked == true) {
-            selected.push(this.id)
+    // read from last request and check all previously selected items
+    pre_selected = $("#selected").val()
+    if (pre_selected.length) {
+        pre_selected = pre_selected.split(',')
+        pre_selected.forEach(function(id) {
+            $("input:checkbox#"+id).prop('checked', true);
+        })
+    }
+    
+    // load selected array with checked items
+    $("input:checkbox").each(function () {
+        if ($(this).is(":checked")) {
+            id = $(this).attr('id');
+            selected.push($(this).attr('id'));
+            // $("label[for="+id+"]").addClass("active")
         }
     });
+    console.log(selected);
+    
 
-    // update selected array on click
-    $("label").click(function () {
-        if ($(this).data("selected")) {
-            $(this).removeClass("selected");
-            $(this).data("selected", false);
-            selected = selected.filter(x => this.id!=x);
+    // update selected array when an item is checked or un-checked
+    $('input:checkbox').change(function(){        
+        id = $(this).attr('id');
+        label = $("label[for="+this.id+"]")
+        if($(this).is(":checked")) {
+            selected.push(id);
+            // label.addClass("active");
         } else {
-            $(this).addClass("selected");
-            $(this).data("selected", true);
-            selected.push(this.id);
+            selected.splice(selected.indexOf(id), 1)
+            // label.removeClass("active");
         }
-        console.log(selected)
+        console.log(selected);
         $("#selected").val(selected);
     });
 });
