@@ -7,7 +7,9 @@
             <ol>
             <li>Connected to social: <span class="fa fa-{% if user.has_social %}check text-success{% else %}times text-danger{% endif %}"></span></li>
             <li>Compiled demographic form: <span class="fa fa-{% if user.has_demographic %}check text-success{% else %}times text-danger{% endif %}"></span></li>
-            <li>Compiled images form: <span class="fa fa-{% if user.has_vector %}check text-success{% else %}times text-danger{% endif %}"></span></li>
+            <li>Compiled images form: <span class="fa fa-{% if user.has_vector %}check text-success{% else %}times text-danger{% endif %}"></span>
+                {% if user.has_vector %}<span> (<a href="{% url 'signup_s3' %}">Repeat form</a>)</span>{% endif %}
+            </li>           
             </ol>
 
             <p>
