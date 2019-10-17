@@ -19,12 +19,14 @@ def home(request):
     return render(request, 'home.html')
 
 
+# wrapper for social:begin to conditionally skip user social login if already existing.
 def social_login(request):
     is_skip = request.GET.get('skip', False)
     request.session['skip_creation'] = True if is_skip else False
     return redirect(reverse('social:begin', args=('facebook',)))
 
 
+# handles user creation. automatically logins the new user after submit.
 class SignupS0View(CreateView):
     template_name = 'registration/signup_s0.html'
     form_class = CustomUserCreationForm
@@ -37,12 +39,16 @@ class SignupS0View(CreateView):
         login(self.request, user)
         return redirect(reverse_lazy('signup_s1'))
 
+
+# user social auth creation (connect to facebook)
 @login_required
 def signup_s1(request):
     template_name = 'registration/signup_s1.html'
     return render(request, template_name)
 
 
+# updates user profile with demographic data
+# TODO add new fields (geolocalization?)
 class SignupS2View(LoginRequiredMixin, UpdateView):
     template_name = 'registration/signup_s2.html'
     form_class = CustomUserDemographicDataForm
@@ -58,6 +64,7 @@ class SignupS2View(LoginRequiredMixin, UpdateView):
         return super().render_to_response(context, **response_kwargs)
 
 
+# cold-start form #1 (POI images)
 @login_required
 def signup_s3(request):
     template_name = 'registration/signup_s3.html'
@@ -99,6 +106,8 @@ def signup_s3(request):
         return render(request, template_name, context)
 
 
+# recap user profile data and social data
+# TODO show more fields 
 @login_required
 def profile(request):
     user = request.user
@@ -114,6 +123,8 @@ def profile(request):
         'can_disconnect': can_disconnect
     })
 
+
+# handle Facebook disconnect and disassociate social auth from user
 @login_required
 def social_disconnect(request):
     user = request.user
@@ -121,6 +132,18 @@ def social_disconnect(request):
     user.has_social = False
     user.save()
     return redirect(reverse_lazy('profile'))
+
+
+@login_required
+def reset(request):
+    user = request.user
+    user.poi_weights = None
+    user.has_vector = False
+    for name in {f.name: None for f in user._meta.fields if f.null}:
+        setattr(user, name, None)
+    user.has_demographic = False
+    user.save()
+    return redirect(reverse_lazy('social_disconnect'))
 
 
 # FB_QUERIES = {

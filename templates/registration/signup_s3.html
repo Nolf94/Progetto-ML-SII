@@ -6,20 +6,21 @@
 <div class="row mb-3s">
     <div class="col-12 mx-auto my-auto social-container my-2 text-center">
         <p>Choose at least {{min_choices}} types of places you would like to visit on your travels.</p>
+        {% if error %}<p class="text-center text-danger font-italic">Please choose at least {{min_choices}} types of places.</p>{% endif %}
         <form class="poiform" name='aoo' method="post" action="{% url 'signup_s3' %}" novalidate>
             <div class="poiform__content d-flex flex-wrap">
             {% csrf_token %}
-            <input type="hidden" id="selected" name="selected"/>
-            <div id="preload" hidden>{{preload}}</div>
-            {% for choice in choices %}
+            <input type="hidden" id="selected" name="selected" value="{{selected}}"/>
+            {% comment %} <div id="preload" hidden>{{preload}}</div> {% endcomment %}
+            {% for choice in request.session.choices %}
                 <input type="checkbox" id={{choice.id}} name={{choice.id}} />
-                <label class="m-3" id={{choice.id}} name={{choice.name}} for={{choice.id}}>
+                <label class="m-3" name={{choice.name}} for={{choice.id}}>
                 <img src="{% static choice.img %}" /></label>
             {% endfor %}
             </div>
 
             <div class="text-center">
-                {% if error %}<p class="text-center text-danger">Please choose at least {{min_choices}} types of places.</p>{% endif %}
+                {% if error %}<p class="text-center text-danger font-italic">Please choose at least {{min_choices}} types of places.</p>{% endif %}
                 <button type="submit" class="btn btn-block btn-success py-2">Confirm</button>
             </div>
         </form>

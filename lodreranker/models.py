@@ -4,15 +4,15 @@ from django.contrib.auth.models import AbstractUser
 
 
 class CustomUser(AbstractUser):
-    first_name = models.CharField(max_length=180, blank=True)
-    last_name = models.CharField(max_length=180, blank=True)
+    first_name = models.CharField(max_length=180, blank=True, null=True)
+    last_name = models.CharField(max_length=180, blank=True, null=True)
     age = models.SmallIntegerField(blank=True, null=True)
     GENDER_CHOICES = [('M', 'Male'), ('F', 'Female')]
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True, null=True)
     has_social = models.BooleanField(default=False)
     has_demographic = models.BooleanField(default=False)
     has_vector = models.BooleanField(default=False)
-    poi_weights = models.TextField(blank=True)
+    poi_weights = models.TextField(blank=True, null=True)
 
     # UNUSED
     # social_uid = models.CharField(max_length=100, blank=True, null=True)

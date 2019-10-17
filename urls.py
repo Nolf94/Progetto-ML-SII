@@ -20,4 +20,6 @@ urlpatterns = [
 
     path('users/signup/social-auth/', include('social_django.urls', namespace='social')),
     path('users/logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('users/reset/', core_views.reset, name='reset'),
+
 ]
