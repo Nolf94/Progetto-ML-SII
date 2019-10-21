@@ -67,11 +67,11 @@ input[type="checkbox"] {
   display: none;
 }
 
-.poiform__content {
+.form__content {
   justify-content: center;
 }
 
-.poiform__content img {
+.form__content img {
   position: relative;
   object-fit: contain;
   width: 15em;
@@ -83,6 +83,11 @@ input[type="checkbox"] {
   box-shadow: 0 0 2px rgba(0,0,0,.05);
   background-color: rgba(0,0,0,.05);
   transition-duration: 0.05s;
+}
+
+.movie img {
+  width: 10em;
+  height: 15em;
 }
 
 label {

@@ -12,7 +12,7 @@ from social_django.models import UserSocialAuth
 from .forms import CustomUserCreationForm, CustomUserDemographicDataForm
 from .misc import *
 from .models import CustomUser
-from .utils import get_poi_choices, get_poi_weights
+from .utils import get_poi_choices, get_poi_weights, get_movie_choices
 
 
 def home(request):
@@ -100,6 +100,51 @@ def signup_s3(request):
         user.poi_weights = weights
         user.save()
         session.pop('choices')
+        session.modified = True
+        return redirect(reverse_lazy('signup_s4'))
+    else:
+        return render(request, template_name, context)
+
+
+
+@login_required
+def signup_s4(request):
+    template_name = 'registration/signup_s4.html'
+    MIN_CHOICES = 5
+
+    # choices are stored in session so that the random chosen order is kept during the process.
+    session = request.session
+    if 'm_choices' in session:
+        movie_choices = session['m_choices']
+    else:
+        movie_choices = get_movie_choices()
+        session['m_choices'] = movie_choices
+
+    context = {
+        'min_choices': MIN_CHOICES,
+    }
+   
+    if request.method == 'POST':
+        selected_images = []
+        try:
+            selected_images = list(request.POST.get('selected').split(','))
+            if len(selected_images) < MIN_CHOICES:
+                raise ValueError
+        except ValueError:
+            context['error'] = True
+            if selected_images:
+                context['selected'] = ','.join(x for x in selected_images)
+            return render(request, template_name, context)
+
+
+        # ########## TODO vector clustering (including social data vectors, maybe move code to another script)
+        # weights = get_poi_weights(selected_images, movie_choices)
+        # user = request.user
+        # user.has_vector = True
+        # user.poi_weights = weights
+        # user.save()
+        
+        session.pop('m_choices')
         session.modified = True
         return redirect(reverse_lazy('profile'))
     else:

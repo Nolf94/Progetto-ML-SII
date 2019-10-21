@@ -15,6 +15,7 @@ urlpatterns = [
     path('users/signup/social_connect', core_views.signup_s1, name='signup_s1'),
     path('users/signup/demographic_data/', core_views.SignupS2View.as_view(), name='signup_s2'),
     path('users/signup/images_form/', core_views.signup_s3, name='signup_s3'),
+    path('users/signup/movies_form/', core_views.signup_s4, name='signup_s4'),
     path('users/profile', core_views.profile, name='profile'),
     path('users/social_disconnect/', core_views.social_disconnect, name='social_disconnect'),
 

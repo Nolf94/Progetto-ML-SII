@@ -28,3 +28,16 @@ def get_poi_weights(selection, choices):
 
     weights = sum(vectors)
     return json.dumps(weights.tolist())
+
+
+
+def get_movie_choices():
+    data = open(finders.find("js/movies.json")).read()
+    json_data = json.loads(data)
+    opts = []
+
+    # json_data = json_data[:3]
+    for item in random.sample(json_data, len(json_data)):
+    # for item in json_data:
+        opts.append(item)
+    return opts
