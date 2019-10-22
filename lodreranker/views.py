@@ -12,7 +12,7 @@ from social_django.models import UserSocialAuth
 from .forms import CustomUserCreationForm, CustomUserDemographicDataForm
 from .misc import *
 from .models import CustomUser
-from .utils import get_poi_choices, get_poi_weights, get_movie_choices
+from .utils import get_choices, get_poi_weights, get_wikipedia_abstract
 
 
 def home(request):
@@ -75,7 +75,7 @@ def signup_s3(request):
     if 'choices' in session:
         poi_choices = session['choices']
     else:
-        poi_choices = get_poi_choices()
+        poi_choices = get_choices('poi')
         session['choices'] = poi_choices
 
     context = {
@@ -96,7 +96,7 @@ def signup_s3(request):
             
         weights = get_poi_weights(selected_images, poi_choices)
         user = request.user
-        user.has_vector = True
+        user.has_poivector = True
         user.poi_weights = weights
         user.save()
         session.pop('choices')
@@ -106,7 +106,7 @@ def signup_s3(request):
         return render(request, template_name, context)
 
 
-
+# cold-start form #2 (Movies)
 @login_required
 def signup_s4(request):
     template_name = 'registration/signup_s4.html'
@@ -117,7 +117,7 @@ def signup_s4(request):
     if 'm_choices' in session:
         movie_choices = session['m_choices']
     else:
-        movie_choices = get_movie_choices()
+        movie_choices = get_choices('movies')
         session['m_choices'] = movie_choices
 
     context = {
@@ -139,10 +139,11 @@ def signup_s4(request):
 
         # ########## TODO vector clustering (including social data vectors, maybe move code to another script)
         # weights = get_poi_weights(selected_images, movie_choices)
-        # user = request.user
-        # user.has_vector = True
+        user = request.user
+        user.has_movvector = True
         # user.poi_weights = weights
-        # user.save()
+        user.save()
+
         
         session.pop('m_choices')
         session.modified = True
@@ -183,7 +184,9 @@ def social_disconnect(request):
 def reset(request):
     user = request.user
     user.poi_weights = None
-    user.has_vector = False
+    user.has_poivector = False
+    user.mov_weights = None
+    user.has_movvector = False
     for name in {f.name: None for f in user._meta.fields if f.null}:
         setattr(user, name, None)
     user.has_demographic = False
@@ -191,15 +194,26 @@ def reset(request):
     return redirect(reverse_lazy('social_disconnect'))
 
 
-# FB_QUERIES = {
-#     'feed': f'https://graph.facebook.com/me?fields=feed.limit(99999)&access_token=',
-#     'posts': f'https://graph.facebook.com/me?fields=feed.limit(99999)&access_token=',
-#     'likes': f'https://graph.facebook.com/me?fields=likes.limit(99999).summary(true)&access_token=',
-#     'movies': f'https://graph.facebook.com/me?fields=movies.limit(99999)&access_token=',
-#     'books': f'https://graph.facebook.com/me?fields=likes.limit(99999).summary(true)&access_token=',
-#     'albums': f'https://graph.facebook.com/me?fields=albums.fields(photos.limit(99999).fields(alt_text))&limit=99999&access_token=',
-#     'music': f'https://graph.facebook.com/me?fields=music.limit(99999)&access_token=',
-# }
+
+@login_required
+def test(request):
+    user = request.user
+    social_auth = UserSocialAuth.objects.filter(user=user.id)[0]
+
+    # print(social_auth.extra_data.keys())
+    from pprint import pprint
+    pprint(social_auth.extra_data['movies'])
+
+    ####### TODO improve abstract retrieval (see utils.py)
+    for movie in social_auth.extra_data['movies']['data']:
+        abstract = get_wikipedia_abstract(movie['name'])
+        print(abstract)
+
+    return redirect(reverse_lazy('profile'))
+
+
+
+
 """
 film = "the amazing spider-man 2"
 abstract = misc.Lod_queries.retrieveFilmAbstract(film)

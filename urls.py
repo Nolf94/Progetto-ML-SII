@@ -17,7 +17,11 @@ urlpatterns = [
     path('users/signup/images_form/', core_views.signup_s3, name='signup_s3'),
     path('users/signup/movies_form/', core_views.signup_s4, name='signup_s4'),
     path('users/profile', core_views.profile, name='profile'),
-    path('users/social_disconnect/', core_views.social_disconnect, name='social_disconnect'),
+    path('users/social_disconnect/', core_views.social_disconnect, name='social_disconnect'),\
+
+
+    path('test/', core_views.test, name='test'),
+    
 
     path('users/signup/social-auth/', include('social_django.urls', namespace='social')),
     path('users/logout/', auth_views.LogoutView.as_view(), name='logout'),

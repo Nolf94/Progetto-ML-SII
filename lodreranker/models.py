@@ -11,8 +11,11 @@ class CustomUser(AbstractUser):
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True, null=True)
     has_social = models.BooleanField(default=False)
     has_demographic = models.BooleanField(default=False)
-    has_vector = models.BooleanField(default=False)
+    has_poivector = models.BooleanField(default=False)
+    has_movvector = models.BooleanField(default=False)
     poi_weights = models.TextField(blank=True, null=True)
+    mov_weights = models.TextField(blank=True, null=True)
+    
 
     # UNUSED
     # social_uid = models.CharField(max_length=100, blank=True, null=True)

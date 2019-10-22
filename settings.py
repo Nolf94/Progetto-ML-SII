@@ -115,9 +115,9 @@ SOCIAL_AUTH_FACEBOOK_SCOPE = [
 
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'locale': 'it_IT',
-    'fields': 'id, name, email, picture.type(large), link'
+    # 'fields': 'id, name, email, picture.type(large), link'
     # UNCOMMENT WHEN NEEDED
-    # 'fields': 'id, name, email, picture.type(large), link, feed, posts, likes, albums, movies, books, music'
+    'fields': 'id, name, email, picture.type(large), link, feed, posts, likes, albums, movies, books, music'
 }
 
 SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [
@@ -126,13 +126,13 @@ SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [
     ('picture', 'picture'),
     ('link', 'profile_url'),
     # UNCOMMENT WHEN NEEDED
-    # ('feed', 'feed'),
-    # ('posts', 'posts'),
-    # ('albums', 'albums'),
-    # ('likes', 'likes'),
-    # ('movies', 'movies'),
-    # ('books', 'books'),
-    # ('music', 'music'),
+    ('feed', 'feed'),
+    ('posts', 'posts'),
+    ('albums', 'albums'),
+    ('likes', 'likes'),
+    ('movies', 'movies'),
+    ('books', 'books'),
+    ('music', 'music'),
 ]
 
 LOGIN_URL = '/users/login'
