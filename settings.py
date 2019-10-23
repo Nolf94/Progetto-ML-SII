@@ -126,13 +126,13 @@ SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [
     ('picture', 'picture'),
     ('link', 'profile_url'),
     # UNCOMMENT WHEN NEEDED
-    # ('feed', 'feed'),
-    # ('posts', 'posts'),
-     #('albums', 'albums'),
-     #('likes', 'likes'),
-     ('movies', 'movies'),
-     ('books', 'books'),
-     ('music', 'music'),
+    ('feed', 'feed'),
+    ('posts', 'posts'),
+    ('albums', 'albums'),
+    ('likes', 'likes'),
+    ('movies', 'movies'),
+    ('books', 'books'),
+    ('music', 'music'),
 ]
 
 LOGIN_URL = '/users/login'
