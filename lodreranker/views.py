@@ -8,11 +8,10 @@ from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 from social_django.models import UserSocialAuth
-
 from .forms import CustomUserCreationForm, CustomUserDemographicDataForm
 from .misc import *
 from .models import CustomUser
-from .utils import get_choices, get_poi_weights, get_wikipedia_abstract
+from .utils import get_choices, get_poi_weights, get_wikipedia_abstract, get_like_vectors, get_vectors
 
 
 def home(request):
@@ -205,17 +204,5 @@ def test(request):
     pprint(social_auth.extra_data['movies'])
 
     ####### TODO improve abstract retrieval (see utils.py)
-    for movie in social_auth.extra_data['movies']['data']:
-        abstract = get_wikipedia_abstract(movie['name'])
-        print(abstract)
-
+    print(get_like_vectors(social_auth.extra_data["movies"]["data"]))
     return redirect(reverse_lazy('profile'))
-
-
-
-
-"""
-film = "the amazing spider-man 2"
-abstract = misc.Lod_queries.retrieveFilmAbstract(film)
-context['querydata'] = abstract
-"""
