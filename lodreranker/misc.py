@@ -7,22 +7,20 @@ from SPARQLWrapper import JSON, SPARQLWrapper
 
 class Lod_queries:
     def retrieveFilmAbstract(self, film):
-        sparql = SPARQLWrapper("https://dbpedia.org/sparql")
-        sparql.setQuery("""
-               prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-               prefix dbpedia-owl: <http://dbpedia.org/ontology/>
-               SELECT DISTINCT ?film ?abstract  WHERE  {
-                   ?film a dbpedia-owl:Film.
-                   ?film rdfs:label ?label .
-                   FILTER regex( str(?label),"""f'"{film}"'""", "i")
-                   ?film dbpedia-owl:abstract ?abstract .
-                   FILTER langMatches(lang(?abstract),"en")
-                   }
-                   LIMIT 10
-                        """)
+        sparql = SPARQLWrapper("https://query.wikidata.org")
+        sparql.setQuery
+        ("""
+                SELECT DISTINCT ?item ?name WHERE {
+                VALUES ?type {wd:Q11424} ?item wdt:P31 ?type .
+                ?item rdfs:label ?queryByTitle.
+                ?item wdt:P1476 ?name.
+                FILTER(REGEX(?queryByTitle, """f'"{film}"'""", "i"))
+                }
+                LIMIT 100
+        """)
         sparql.setReturnFormat(JSON)
         results = sparql.query().convert()
         data =[]
         for result in results["results"]["bindings"]:
-            data.append(result["abstract"]["value"])
+            data.append(result["item"]["value"])
         return data
