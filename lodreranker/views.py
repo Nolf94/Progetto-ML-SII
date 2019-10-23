@@ -11,7 +11,7 @@ from social_django.models import UserSocialAuth
 from .forms import CustomUserCreationForm, CustomUserDemographicDataForm
 from .misc import *
 from .models import CustomUser
-from .utils import get_choices, get_poi_weights, get_wikipedia_abstract, get_likes_vectors, get_vectors
+from .utils import get_choices, get_poi_weights, get_likes_vectors
 
 
 def home(request):
@@ -200,9 +200,12 @@ def test(request):
     social_auth = UserSocialAuth.objects.filter(user=user.id)[0]
 
     # print(social_auth.extra_data.keys())
-    from pprint import pprint
-    pprint(social_auth.extra_data['movies'])
+    # from pprint import pprint
+    # pprint(social_auth.extra_data['movies'])
 
-    ####### TODO improve abstract retrieval (see utils.py)
-    print(get_likes_vectors(social_auth.extra_data["movies"]["data"]))
+    ## TODO iterate over full likes list (if extra_data has next)
+    vectors = get_likes_vectors(social_auth.extra_data["movies"]["data"])
+    print(vectors)
+    ## TODO plug vectors in clustering algorithm and save result into user model.
+
     return redirect(reverse_lazy('profile'))
