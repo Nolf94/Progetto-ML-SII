@@ -1,4 +1,6 @@
 import re
+import nltk
+# nltk.download('stopwords') # uncomment if running project for the first time
 from nltk.corpus import stopwords
 
 def normalize_text(text):
