@@ -18,7 +18,7 @@ def retrieveFilmAbstract(film):
         sparql.setQuery(query)
         sparql.setReturnFormat(JSON)
         results = sparql.query().convert()
-        data =""
+        data = ""
         for result in results["results"]["bindings"]:
                 data = (result["item"]["value"])
         return data

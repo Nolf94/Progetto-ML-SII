@@ -56,8 +56,7 @@ def get_wikipedia_abstract(querystring):
                 abstract = re.sub('\n', '', abstract)
             except KeyError as keyerror:
                 return
-
-
+                
         except HTTPError as error:
             if error.code == 404:
                 return
