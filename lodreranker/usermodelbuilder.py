@@ -9,6 +9,7 @@ from SPARQLWrapper import JSON, SPARQLWrapper
 
 from Doc2Vec.doc2vec_films_vectors import create_vector
 from Doc2Vec.doc2vec_preprocessing import normalize_text, stopping
+from Clustering.Clustering import clusterize
 
 from .sparql_utils import get_movie_query
 
@@ -87,7 +88,5 @@ class UserModelBuilder(object):
             vectors.append(create_vector(abstract))
         return vectors
 
-
     def build_model(self, vector_list):
-        ## TODO plug vectors in clustering algorithm and return model.
-        return
+        return clusterize(vector_list)

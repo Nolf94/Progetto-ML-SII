@@ -11,6 +11,7 @@ def get_movie_query(element):
             ?item rdfs:label ?queryByTitle.
             ?item wikibase:sitelinks ?sitelinks
             VALUES ?type { """f'{filmtypes}'""" }
+            FILTER(lang(?queryByTitle) = 'it')
             FILTER(REGEX(?queryByTitle, """f'"{element}"'""", "i"))
         }    
         ORDER BY DESC(?sitelinks) 

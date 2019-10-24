@@ -214,5 +214,5 @@ def test(request):
     # TODO save model into user model 
     model_movies = builder.build_model(vectors)
     print(model_movies)
-    
+    print()
     return redirect(reverse_lazy('profile'))

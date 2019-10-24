@@ -25,20 +25,19 @@ def generate_weights(elements, vectors_number):
 
 
 def clusterize(vectors):
-    output = []
-    ordered_vectors = np.array([])
+    centroids = []
+    ordered_clusters = np.array([])
     X = np.array(vectors)
     db = DBSCAN(algorithm='auto', eps=0.49, leaf_size=30, metric='cosine', min_samples=1)
-    print(db.fit_predict(X))
     clustered = db.fit_predict(X)
     labels = db.labels_
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 
     clusters = [np.array(X[labels == i]) for i in range(n_clusters_)]
-    ordered_vectors = sorted(clusters, key=len, reverse=True)
-    for i in range(len(ordered_vectors)):
-        output.append(np.mean(ordered_vectors[i], axis=0))
+    ordered_clusters = sorted(clusters, key=len, reverse=True)
+    for i in range(len(ordered_clusters)):
+        centroids.append(np.mean(ordered_clusters[i], axis=0))
 
-    print(output)
-    print(generate_weights(ordered_vectors, X))
-    plot_clustering(X, labels, n_clusters_)
+    #generate_weights(ordered_vectors, X)
+    #plot_clustering(X, labels, n_clusters_)
+    return centroids
