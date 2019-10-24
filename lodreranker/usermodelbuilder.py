@@ -10,6 +10,8 @@ from SPARQLWrapper import JSON, SPARQLWrapper
 from Doc2Vec.doc2vec_films_vectors import create_vector
 from Doc2Vec.doc2vec_preprocessing import normalize_text, stopping
 
+from .sparql_utils import get_movie_query
+
 class UserModelBuilder(object):
     MOVIE = 'movie'
     BOOK = 'book'
@@ -19,17 +21,7 @@ class UserModelBuilder(object):
         sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36")
         
         if media_type == UserModelBuilder.MOVIE:  
-            query = """
-                SELECT DISTINCT ?item
-                WHERE   {
-                    ?item p:P31/ps:P31/wdt:P279* wd:Q11424 .
-                    ?item rdfs:label ?queryByTitle.
-                    ?item wikibase:sitelinks ?sitelinks 
-                FILTER(REGEX(?queryByTitle, """f'"{element}"'""", "i"))
-                        }    
-                ORDER BY DESC(?sitelinks) 
-                LIMIT 1
-                """
+            query = get_movie_query(element)
         sparql.setQuery(query)
         sparql.setReturnFormat(JSON)
         bindings = sparql.query().convert()['results']['bindings']
