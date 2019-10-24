@@ -9,9 +9,10 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 from social_django.models import UserSocialAuth
 from .forms import CustomUserCreationForm, CustomUserDemographicDataForm
-from .misc import *
+
 from .models import CustomUser
-from .utils import get_choices, get_poi_weights, get_likes_vectors
+from .utils import get_choices, get_poi_weights
+from .usermodelbuilder import UserModelBuilder
 
 
 def home(request):
@@ -202,10 +203,16 @@ def test(request):
     # print(social_auth.extra_data.keys())
     # from pprint import pprint
     # pprint(social_auth.extra_data['movies'])
-
-    ## TODO iterate over full likes list (if extra_data has next)
-    vectors = get_likes_vectors(social_auth.extra_data["movies"]["data"])
+    
+    builder = UserModelBuilder()
+    vectors = [] # include here vectors from form
+    social_movies = social_auth.extra_data['movies']['data']
+    social_movies_vectors = builder.get_vectors_from_social(social_movies, builder.MOVIE)
+    vectors.extend(social_movies_vectors)
     print(vectors)
-    ## TODO plug vectors in clustering algorithm and save result into user model.
 
+    # TODO save model into user model 
+    model_movies = builder.build_model(vectors)
+    print(model_movies)
+    
     return redirect(reverse_lazy('profile'))
