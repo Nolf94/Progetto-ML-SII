@@ -9,10 +9,10 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 from social_django.models import UserSocialAuth
 from .forms import CustomUserCreationForm, CustomUserDemographicDataForm
-
 from .models import CustomUser
 from .utils import get_choices, get_poi_weights
 from .usermodelbuilder import UserModelBuilder
+import requests
 
 
 def home(request):
@@ -207,9 +207,19 @@ def test(request):
     builder = UserModelBuilder()
     vectors = [] # include here vectors from form
     social_movies = social_auth.extra_data['movies']['data']
+    if('next' in social_auth.extra_data['movies']['paging'].keys()):
+        social_movies_info = requests.get(social_auth.extra_data['movies']['paging']['next']).json()
+        while social_movies_info['data']:
+            for movie in social_movies_info['data']:
+                 social_movies.append(movie)
+            if 'next' in social_movies_info['paging'].keys():
+                social_movies_info = requests.get(social_movies_info['paging']['next']).json()
+            else:
+                break
     social_movies_vectors = builder.get_vectors_from_social(social_movies, builder.MOVIE)
     vectors.extend(social_movies_vectors)
     print(vectors)
+   
 
     # TODO save model into user model 
     model_movies = builder.build_model(vectors)
