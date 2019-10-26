@@ -14,14 +14,16 @@ from Clustering.Clustering import clusterize
 from .sparql_utils import get_movie_query
 
 class UserModelBuilder(object):
-    MOVIE = 'movie'
-    BOOK = 'book'
+    MOVIES = 'movies'
+    BOOKS = 'books'
     MUSIC = 'music'
+
+    MEDIA_TYPES = [MOVIES, BOOKS, MUSIC]
 
     def retrieveWikidataItem(self, element, media_type):
         sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36")
         
-        if media_type == UserModelBuilder.MOVIE:  
+        if media_type == self.MOVIES:  
             query = get_movie_query(element)
         sparql.setQuery(query)
         sparql.setReturnFormat(JSON)
@@ -34,7 +36,7 @@ class UserModelBuilder(object):
 
     def get_wikipedia_abstract(self, querystring, media_type):
         try:
-            print(f'Retrieving abstract for: "{querystring}"...')
+            print(f'- "{querystring}"')
             wiki_url = self.retrieveWikidataItem(querystring, media_type)
             if wiki_url:
                 wkd_id = re.sub('http://www.wikidata.org/entity/','', wiki_url)
@@ -47,11 +49,10 @@ class UserModelBuilder(object):
                 # We use the old wikipedia API because the following query:
                 #   https://en.wikipedia.org/api/rest_v1/page/summary/{quote(wiki_title)}
                 # returns just the first paragraph of the summary. We need the whole block instead.
-
                 # Parameters:
-                # exintro -> return only the content before the first section (our abstract)
-                # explaintext -> extract plain text instead of HTML
-                # indexpageids -> include additional page ids section listing all returned page IDS (useful since we don't want to know the page ID).
+                #   exintro -> return only the content before the first section (our abstract)
+                #   explaintext -> extract plain text instead of HTML
+                #   indexpageids -> include additional page ids section listing all returned page IDS (useful since we don't want to know the page ID).
 
                 wiki_extracts_query = 'https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&indexpageids&redirects=1&titles=' \
                     + quote(wiki_page_title)
@@ -73,20 +74,34 @@ class UserModelBuilder(object):
             return
 
 
-    def get_vectors_from_social(self, social_data, media_type=MOVIE):
-        abstracts = []
-        ## TODO iterate over full likes list (if extra_data has next)
+    def get_vectors_from_social(self, extra_data_media, media_type):
+        if media_type not in self.MEDIA_TYPES:
+            print('Error: bad media type')
+            return
 
-        for element in social_data:
+        media = extra_data_media['data']
+        has_next = 'next' in extra_data_media['paging'].keys()
+        while has_next:
+            next_page = json.loads(urlopen(extra_data_media['paging']['next']).read().decode('utf-8'))
+            media.extend(next_page['data'])
+            has_next = 'next' in next_page['paging'].keys()
+
+        abstracts = []
+        media = media[:5] #for testing purposes only
+
+        print(f'Retrieving abstracts for {len(media)} {media_type}:')
+        for element in media:
             # TODO improve query performance (or make it non-blocking)
             abstract = self.get_wikipedia_abstract(element['name'], media_type)
             if abstract:
                 abstracts.append(normalize_text(stopping(abstract)))
+        print(f'Retrieved {len(abstracts)} abstracts (number of non-{media_type} elements: {len(media)-len(abstracts)}).')
 
         vectors = []
         for abstract in abstracts:
             vectors.append(create_vector(abstract))
         return vectors
+
 
     def build_model(self, vector_list):
         return clusterize(vector_list)

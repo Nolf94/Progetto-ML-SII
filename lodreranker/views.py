@@ -8,11 +8,11 @@ from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 from social_django.models import UserSocialAuth
+
 from .forms import CustomUserCreationForm, CustomUserDemographicDataForm
 from .models import CustomUser
-from .utils import get_choices, get_poi_weights
 from .usermodelbuilder import UserModelBuilder
-import requests
+from .utils import get_choices, get_poi_weights
 
 
 def home(request):
@@ -137,11 +137,10 @@ def signup_s4(request):
             return render(request, template_name, context)
 
 
-        # ########## TODO vector clustering (including social data vectors, maybe move code to another script)
+        # ########## TODO INTEGRATE LOGIC FROM TEST
         # weights = get_poi_weights(selected_images, movie_choices)
         user = request.user
         user.has_movvector = True
-        # user.poi_weights = weights
         user.save()
 
         
@@ -194,7 +193,7 @@ def reset(request):
     return redirect(reverse_lazy('social_disconnect'))
 
 
-
+# TODO MOVE LOGIC TO SIGNUP_S4
 @login_required
 def test(request):
     user = request.user
@@ -205,24 +204,16 @@ def test(request):
     # pprint(social_auth.extra_data['movies'])
     
     builder = UserModelBuilder()
-    vectors = [] # include here vectors from form
-    social_movies = social_auth.extra_data['movies']['data']
-    if('next' in social_auth.extra_data['movies']['paging'].keys()):
-        social_movies_info = requests.get(social_auth.extra_data['movies']['paging']['next']).json()
-        while social_movies_info['data']:
-            for movie in social_movies_info['data']:
-                 social_movies.append(movie)
-            if 'next' in social_movies_info['paging'].keys():
-                social_movies_info = requests.get(social_movies_info['paging']['next']).json()
-            else:
-                break
-    social_movies_vectors = builder.get_vectors_from_social(social_movies, builder.MOVIE)
+    vectors = [] # TODO include here vectors from form
+
+    social_movies = social_auth.extra_data['movies']
+    social_movies_vectors = builder.get_vectors_from_social(social_movies, builder.MOVIES)
     vectors.extend(social_movies_vectors)
     print(vectors)
-   
 
     # TODO save model into user model 
     model_movies = builder.build_model(vectors)
     print(model_movies)
-    print()
+    
     return redirect(reverse_lazy('profile'))
+x
