@@ -17,15 +17,8 @@ def plot_clustering(X, labels, n_clusters_):
 
     plt.show()
 
-def generate_weights(elements, vectors_number):
-    weights = []
-    for i in range(len(elements)):
-        weights.append(len(elements[i])/len(vectors_number))
-    return weights
-
 
 def clusterize(vectors):
-    centroids = []
     ordered_clusters = np.array([])
     X = np.array(vectors)
     db = DBSCAN(algorithm='auto', eps=0.49, leaf_size=30, metric='cosine', min_samples=1)
@@ -35,9 +28,15 @@ def clusterize(vectors):
 
     clusters = [np.array(X[labels == i]) for i in range(n_clusters_)]
     ordered_clusters = sorted(clusters, key=len, reverse=True)
-    for i in range(len(ordered_clusters)):
-        centroids.append(np.mean(ordered_clusters[i], axis=0))
+    
+    # Calculate weight for each cluster
+    weighted_clusters = []
+    for cluster in ordered_clusters:
+        weighted_cluster = {
+            'centroid' : np.mean(cluster, axis=0),
+            'weight' : len(cluster)/len(X)
+        }
+        weighted_clusters.append(weighted_cluster)
 
-    #generate_weights(ordered_vectors, X)
     #plot_clustering(X, labels, n_clusters_)
-    return centroids
+    return weighted_clusters
