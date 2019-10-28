@@ -33,7 +33,7 @@ def clusterize(vectors):
     weighted_clusters = []
     for cluster in ordered_clusters:
         weighted_cluster = {
-            'centroid' : np.mean(cluster, axis=0),
+            'centroid' : np.mean(cluster, axis=0).tolist(),
             'weight' : len(cluster)/len(X)
         }
         weighted_clusters.append(weighted_cluster)

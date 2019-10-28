@@ -5,29 +5,28 @@
         <div class="col-sm-8 mx-auto">
             <p>Hello <i>{{user.username}}</i>, have you completed all the registration steps?</p>
             <ol>
-            <li>Connected to social: <span class="fa fa-{% if user.has_social %}check text-success{% else %}times text-danger{% endif %}"></span></li>
-            <li>Compiled demographic form: <span class="fa fa-{% if user.has_demographic %}check text-success{% else %}times text-danger{% endif %}"></span></li>
+            <li>Connected to Facebook: <span class="fa fa-{% if user.has_social_connect %}check text-success{% else %}times text-danger{% endif %}"></span>
+                {% if user.has_social_connect %}<span> <a href="{% url 'social_disconnect' %}">(disconnect)</a></span>{% endif %}</li>
+            <li>Compiled demographic form: <span class="fa fa-{% if user.has_demographic %}check text-success{% else %}times text-danger{% endif %}"></span>
+                {% if user.has_demographic %}<span> <a href="{% url 'signup_s2' %}">(edit)</a></span>{% endif %}</li>
             <li>Compiled images form: <span class="fa fa-{% if user.has_poivector %}check text-success{% else %}times text-danger{% endif %}"></span>
-                {% if user.has_poivector %}<span> (<a href="{% url 'signup_s3' %}">Repeat form</a>)</span>{% endif %}
-            <li>Compiled movies form: <span class="fa fa-{% if user.has_movvector %}check text-success{% else %}times text-danger{% endif %}"></span>
-                {% if user.has_poivector %}<span> (<a href="{% url 'signup_s4' %}">Repeat form</a>)</span>{% endif %}
+                {% if user.has_poivector %}<span> <a href="{% url 'signup_s3' %}">(repeat)</a></span>{% endif %}
+            <li>Compiled movies form: <span class="fa fa-{% if user.has_moviesmodel %}check text-success{% else %}times text-danger{% endif %}"></span>
+                {% if user.has_poivector %}<span> <a href="{% url 'signup_s4' %}">(repeat)</a></span>{% endif %}
             </li>           
             </ol>
-
-            <a href="{% url 'test' %}">test</a>
-
             <p>
-            {% if not user.has_social or not user.has_demographic or not user.has_poivector %}
-            Please resume your registration <a href ="
-                {% if not user.has_social %}{% url 'signup_s1' %}
+            {% if not user.has_social_connect or not user.has_demographic or not user.has_poivector or not user.has_moviesmodel %}
+            Please resume your registration <a href ="{% url 'resume' %}
+                {% comment %} {% if not user.has_social_connect %}{% url 'signup_s1' %}
                 {% elif not user.has_demographic %}{% url 'signup_s2' %}
-                {% elif not user.has_poivector %}{% url 'signup_s3' %}{% endif %}
+                {% elif not user.has_poivector %}{% url 'signup_s3' %}{% endif %} {% endcomment %}
             ">here</a>.
             {% else %}
             You're good to go!
             {% endif %}
             </p>
-            {% if user.has_social or user.has_demographic or user.has_poivector  %}
+            {% if user.has_social_connect or user.has_demographic or user.has_poivector  %}
             <a class="btn btn-outline-danger" href="{% url 'reset' %}">Reset all</a>
             {% endif %}
         </div>

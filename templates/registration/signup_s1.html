@@ -5,7 +5,39 @@
 <div class="row mb-3">
     <div class="col-8 mx-auto my-auto social-container my-2">
     <p>Now let's connect your Facebook account, so that we can retrieve your social data.</p>
-    <a class="btn btn-primary p-3" href="{% url 'social_login' %}">Connect with Facebook</a>
+    <a id="connect" class="btn btn-primary p-3" href="{% url 'social_login' %}">Connect with Facebook</a>
     </div>
 </div>
+
+<div id="js-progress" class="row mb-3 collapse" ajax_url="{% url 'signup_s1_ajax' %}">
+    <div class="col-8 mx-auto my-auto d-flex justify-content-center">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+        <div class="ml-2 my-auto">Please wait while we retrieve your likes...</div>
+    </div>
+</div>
+<div id="js-done" class="row mb-3 collapse" >
+    <div class="col-8 mx-auto my-auto d-flex justify-content-center">
+        <a id="connect" class="btn btn-success py-2" href="{% url 'resume' %}">Continue</a>
+    </div>
+</div>
+
+{% if user.has_social_connect and not user.has_social_data %}
+    <script type = "text/javascript">
+        $('#connect').attr('disabled', true);
+        $('#connect').addClass('disabled');
+
+        $("#js-progress").show("fast");
+
+        $.ajax({
+            url: $('#js-progress').attr('ajax_url'),
+            dataType: 'json',
+            success: function(data) {
+                $("#js-progress").hide("fast");
+                $("#js-done").show("fast");
+            }
+        })
+    </script>
+{% endif %}
 {% endblock %}

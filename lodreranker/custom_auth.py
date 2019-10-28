@@ -44,6 +44,6 @@ def is_skip(strategy, backend, user, response, *args, **kwargs):
 def redirect_registration(strategy, backend, user, response, *args, **kwargs):
     # UNUSED
     # user.social_uid = kwargs['uid']
-    user.has_social = True
+    user.has_social_connect = True
     user.save()
-    return redirect(reverse_lazy('signup_s2'))
+    return redirect(reverse_lazy('signup_s1'))
