@@ -17,6 +17,12 @@
         <div class="ml-2 my-auto">Please wait while we retrieve your likes...</div>
     </div>
 </div>
+<div id="js-data" class="row mb-3 collapse" >
+    <div class="col-8 mx-auto my-auto d-flex justify-content-center">
+       We retrieved&nbsp;<span id="js-data-numretrieved" class="text-success"></span>&nbsp;movies from your likes.
+    </div>
+</div>
+
 <div id="js-done" class="row mb-3 collapse" >
     <div class="col-8 mx-auto my-auto d-flex justify-content-center">
         <a id="connect" class="btn btn-success py-2" href="{% url 'resume' %}">Continue</a>
@@ -27,15 +33,15 @@
     <script type = "text/javascript">
         $('#connect').attr('disabled', true);
         $('#connect').addClass('disabled');
-
         $("#js-progress").show("fast");
-
         $.ajax({
             url: $('#js-progress').attr('ajax_url'),
             dataType: 'json',
             success: function(data) {
                 $("#js-progress").hide("fast");
                 $("#js-done").show("fast");
+                $("#js-data").show();
+                $("#js-data-numretrieved").text(data.num_retrieved_movies);  
             }
         })
     </script>

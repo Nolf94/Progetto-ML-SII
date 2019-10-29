@@ -1,7 +1,7 @@
 import json
 import re
 import urllib.error
-from urllib.parse import urlencode, quote
+from urllib.parse import urlencode
 from urllib.request import urlopen
 
 from SPARQLWrapper import JSON, SPARQLWrapper
@@ -61,7 +61,7 @@ def get_wikipedia_pagetitle_from_wikidata_itemid(wkd_id):
 
 def get_abstract_from_wikipedia_pagetitle(wiki_page_title):
     # We use the old wikipedia API because the following query:
-    #   https://en.wikipedia.org/api/rest_v1/page/summary/{quote(wiki_title)}
+    #   https://en.wikipedia.org/api/rest_v1/page/summary/{wiki_page_title}
     # returns just the first paragraph of the summary. We need the whole block instead.
     # Parameters:
     #   exintro -> return only the content before the first section (our abstract)
@@ -72,7 +72,7 @@ def get_abstract_from_wikipedia_pagetitle(wiki_page_title):
         'format': 'json',
         'prop': 'extracts',
         'redirects': 1,
-        'titles': quote(wiki_page_title)
+        'titles': wiki_page_title
     })
     wiki_extracts_query_params_additional = '&'.join(['exintro', 'explaintext', 'indexpageids'])
     wiki_extracts_query = f'https://en.wikipedia.org/w/api.php?{wiki_extracts_query_params}&{wiki_extracts_query_params_additional}'
@@ -93,12 +93,13 @@ def get_wikipedia_abstract(querystring, media_type):
             print(f'\t"{querystring}": found page "{wiki_page_title}".')
             print(f'\t"{wiki_page_title}": fetching abstract...')            
             abstract = get_abstract_from_wikipedia_pagetitle(wiki_page_title)
+            print(f'\t"{wiki_page_title}": retrieved {len(abstract)} characters.')            
             return re.sub('\n', '', abstract)
     except urllib.error.HTTPError as error:
         if error.code == 404:
             return
     except KeyError as e:
-        print(f'\t"{querystring}": keyerror, missing {str(e)}')
+        print(f'\t"{querystring}": KeyError, missing {str(e)}')
         return
     except Exception as e:
         print(str(e))

@@ -16,14 +16,8 @@ def get_choices(path='poi'):
     return opts
 
 
-def get_sum_vectors_from_selection(selection, choices):
+def get_vectors_from_selection(selection, choices):
     vectors = []
     for x in selection:
-        vectors.append(np.array(choices[int(x)-1]['weights']))    
-    return json.dumps(sum(vectors).tolist())
-
-def get_vectors_from_selection(selection, choices, getsum=False):
-    vectors = []
-    for x in selection:
-        vectors.append(np.array(choices[int(x)-1]['weights']).tolist())
+        vectors.append(np.array(choices[int(x)-1]['weights']))
     return vectors

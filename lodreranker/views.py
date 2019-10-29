@@ -1,4 +1,6 @@
 # lodreranker/views.py
+import json
+
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -13,7 +15,7 @@ from social_django.models import UserSocialAuth
 from .forms import CustomUserCreationForm, CustomUserDemographicDataForm
 from .models import CustomUser
 from .usermodelbuilder import UserModelBuilder
-from .utils import get_choices, get_vectors_from_selection, get_sum_vectors_from_selection
+from .utils import get_choices, get_vectors_from_selection
 
 
 def home(request):
@@ -63,7 +65,7 @@ def reset(request):
     user.poi_weights = None
     user.has_poivector = False
     user.mov_weights = None
-    user.has_moviesmodel = False
+    user.has_movies = False
     for name in {f.name: None for f in user._meta.fields if f.null}:
         setattr(user, name, None)
     user.has_demographic = False
@@ -86,7 +88,7 @@ def route(request):
         return redirect(s2)
     elif not user.has_poivector:
         return redirect(s3)
-    elif not user.has_moviesmodel:
+    elif not user.has_movies:
         return redirect(s4)
     else:
         return redirect(profile)
@@ -122,11 +124,10 @@ def signup_s1_ajax(request):
     user = request.user
     social_auth = UserSocialAuth.objects.filter(user=user.id)[0]
     movies_vectors = UserModelBuilder().get_vectors_from_social(social_auth.extra_data['movies'], 'movies')
-    user.social_movies = movies_vectors # TODO json serialization-deserialization
+    user.social_movies = json.dumps(list(map(lambda x: x.tolist(), movies_vectors))) # TODO json serialization-deserialization
     user.has_social_data = True
     user.save()
-
-    return JsonResponse({})    
+    return JsonResponse({'num_retrieved_movies': len(json.loads(user.social_movies))})    
 
 
 # Demographic data form
@@ -188,10 +189,10 @@ def signup_s3(request):
     result = handle_imgform(request, template_name, 5, 'poi_choices', 'poi')
     if result['success']: 
         selected_images, poi_choices = result['data'][0], result['data'][1]
-        weights = get_sum_vectors_from_selection(selected_images, poi_choices)
+        vectors = get_vectors_from_selection(selected_images, poi_choices)
         user = request.user
         user.has_poivector = True
-        user.poi_weights = weights
+        user.poi_weights = sum(vectors)
         user.save()
         return route(request)
     else:
@@ -206,12 +207,19 @@ def signup_s4(request):
     if result['success']: 
         selected_images, movie_choices = result['data'][0], result['data'][1]
         user = request.user
-        movie_vectors = get_vectors_from_selection(selected_images, movie_choices)
-        movie_vectors.extend(user.social_movies) # TODO json serialization-deserialization
-        movies_model = UserModelBuilder().build_model(movie_vectors)
-        user.moviesmodel = movies_model
-        user.has_moviesmodel = True
+                
+        movies_vectors = get_vectors_from_selection(selected_images, movie_choices)
+        user.form_movies = json.dumps(list(map(lambda x: x.tolist(), movies_vectors)))
+        user.has_movies = True
         user.save()
+
+        # test movies model build (we don't persist it)
+        vectors = []
+        vectors.extend(movies_vectors)
+        vectors.extend(json.loads(user.social_movies))
+        movies_model = UserModelBuilder().build_model(vectors)
+        print(movies_model)
+
         return route(request)
     else:
         return render(request, template_name, result['data'])

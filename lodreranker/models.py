@@ -13,13 +13,11 @@ class CustomUser(AbstractUser):
     has_social_data = models.BooleanField(default=False)
     has_demographic = models.BooleanField(default=False)
     has_poivector = models.BooleanField(default=False)
-    has_moviesmodel = models.BooleanField(default=False)
+    has_movies = models.BooleanField(default=False)
     poi_weights = JSONField(blank=True, null=True)
-    moviesmodel = JSONField(blank=True, null=True)
-
     social_movies = JSONField(blank=True, null=False)
+    form_movies = JSONField(blank=True, null=True)
     
-
     # UNUSED
     # social_uid = models.CharField(max_length=100, blank=True, null=True)
     # user = models.OneToOneField(User, on_delete=models.CASCADE)

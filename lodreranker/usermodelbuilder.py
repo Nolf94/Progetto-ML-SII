@@ -24,14 +24,17 @@ class UserModelBuilder(object):
             next_page = json.loads(urlopen(extra_data_media['paging']['next']).read().decode('utf-8'))
             media.extend(next_page['data'])
             has_next = 'next' in next_page['paging'].keys()
+        media = list(map(lambda x: x['name'], media))
 
+        #for testing purposes only
+        # media = ['Full Metal Jacket', 'Avatar', 'Shutter Island', 'Fast & Furious']
+        media = ['Full Metal Jacket']
+        
         abstracts = []
-        media = media[:5] #for testing purposes only
-
         print(f'Retrieving abstracts for {len(media)} {media_type}:')
         for element in media:
             # TODO improve query performance (or make it non-blocking)
-            abstract = get_wikipedia_abstract(element['name'], media_type)
+            abstract = get_wikipedia_abstract(element, media_type)
             if abstract:
                 abstracts.append(normalize_text(stopping(abstract)))
         print(f'Retrieved {len(abstracts)} abstracts (number of non-{media_type} elements: {len(media)-len(abstracts)}).')

@@ -11,12 +11,12 @@
                 {% if user.has_demographic %}<span> <a href="{% url 'signup_s2' %}">(edit)</a></span>{% endif %}</li>
             <li>Compiled images form: <span class="fa fa-{% if user.has_poivector %}check text-success{% else %}times text-danger{% endif %}"></span>
                 {% if user.has_poivector %}<span> <a href="{% url 'signup_s3' %}">(repeat)</a></span>{% endif %}
-            <li>Compiled movies form: <span class="fa fa-{% if user.has_moviesmodel %}check text-success{% else %}times text-danger{% endif %}"></span>
+            <li>Compiled movies form: <span class="fa fa-{% if user.has_movies %}check text-success{% else %}times text-danger{% endif %}"></span>
                 {% if user.has_poivector %}<span> <a href="{% url 'signup_s4' %}">(repeat)</a></span>{% endif %}
             </li>           
             </ol>
             <p>
-            {% if not user.has_social_connect or not user.has_demographic or not user.has_poivector or not user.has_moviesmodel %}
+            {% if not user.has_social_connect or not user.has_demographic or not user.has_poivector or not user.has_movies %}
             Please resume your registration <a href ="{% url 'resume' %}
                 {% comment %} {% if not user.has_social_connect %}{% url 'signup_s1' %}
                 {% elif not user.has_demographic %}{% url 'signup_s2' %}
