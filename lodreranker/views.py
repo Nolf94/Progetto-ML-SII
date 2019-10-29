@@ -111,7 +111,6 @@ class SignupS0View(CreateView):
 @login_required
 def signup_s1(request):
     template_name = 'registration/signup_s1.html'
-    
     user = request.user
     if user.has_social_connect and user.has_social_data:
         return route(request)
@@ -124,7 +123,7 @@ def signup_s1_ajax(request):
     user = request.user
     social_auth = UserSocialAuth.objects.filter(user=user.id)[0]
     movies_vectors = UserModelBuilder().get_vectors_from_social(social_auth.extra_data['movies'], 'movies')
-    user.social_movies = json.dumps(list(map(lambda x: x.tolist(), movies_vectors))) # TODO json serialization-deserialization
+    user.social_movies = json.dumps(list(map(lambda x: x.tolist(), movies_vectors)))
     user.has_social_data = True
     user.save()
     return JsonResponse({'num_retrieved_movies': len(json.loads(user.social_movies))})    
@@ -192,7 +191,7 @@ def signup_s3(request):
         vectors = get_vectors_from_selection(selected_images, poi_choices)
         user = request.user
         user.has_poivector = True
-        user.poi_weights = sum(vectors)
+        user.poi_weights = sum(vectors).tolist()
         user.save()
         return route(request)
     else:
@@ -206,8 +205,7 @@ def signup_s4(request):
     result = handle_imgform(request, template_name, 5, 'movie_choices', 'movies')
     if result['success']: 
         selected_images, movie_choices = result['data'][0], result['data'][1]
-        user = request.user
-                
+        user = request.user 
         movies_vectors = get_vectors_from_selection(selected_images, movie_choices)
         user.form_movies = json.dumps(list(map(lambda x: x.tolist(), movies_vectors)))
         user.has_movies = True

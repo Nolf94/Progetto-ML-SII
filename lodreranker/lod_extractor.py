@@ -12,7 +12,8 @@ MOVIES = 'movies'
 BOOKS = 'books'
 MUSIC = 'music'
 MEDIA_TYPES = [MOVIES, BOOKS, MUSIC]
-
+# set the query timeout (in seconds)
+SPARQL_TIMEOUT = 15
 
 def query_movies(element):
     filmtypes = ' '.join(f'wd:{x}' for x in filmtype_ids)
@@ -38,6 +39,7 @@ def get_wikidata_item_from_string(element, media_type):
         if media_type == MOVIES:  
             query = query_movies(element)
         sparql.setQuery(query)
+        sparql.setTimeout(SPARQL_TIMEOUT)
         sparql.setReturnFormat(JSON)
         bindings = sparql.query().convert()['results']['bindings']
         if bindings:
@@ -82,9 +84,9 @@ def get_abstract_from_wikipedia_pagetitle(wiki_page_title):
     return abstract
 
 
-def get_wikipedia_abstract(querystring, media_type):
+def get_wikipedia_abstract(querystring, media_type, index):
     try:
-        print(f'- "{querystring}"')
+        print(f'{index} - "{querystring}"')
         wkd_url = get_wikidata_item_from_string(querystring, media_type)
         if wkd_url:
             wkd_id = re.sub('http://www.wikidata.org/entity/','', wkd_url)

@@ -28,13 +28,13 @@ class UserModelBuilder(object):
 
         #for testing purposes only
         # media = ['Full Metal Jacket', 'Avatar', 'Shutter Island', 'Fast & Furious']
-        media = ['Full Metal Jacket']
+        # media = ['Full Metal Jacket']
         
         abstracts = []
         print(f'Retrieving abstracts for {len(media)} {media_type}:')
-        for element in media:
+        for i, element in enumerate(media):
             # TODO improve query performance (or make it non-blocking)
-            abstract = get_wikipedia_abstract(element, media_type)
+            abstract = get_wikipedia_abstract(element, media_type, i)
             if abstract:
                 abstracts.append(normalize_text(stopping(abstract)))
         print(f'Retrieved {len(abstracts)} abstracts (number of non-{media_type} elements: {len(media)-len(abstracts)}).')
