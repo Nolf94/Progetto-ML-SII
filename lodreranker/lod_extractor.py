@@ -32,6 +32,29 @@ def query_movies(element):
         """
     return query
 
+def query_movieFromPoi(lat1, lat2, long1, long2):
+    point1 = "Point(" + long1 + " " + lat1 + ")"
+    point2 = "Point(" + long2 + " " + lat2 + ")"
+    query = """
+        SELECT DISTINCT ?item ?itemLabel
+        WHERE {  
+				 ?item p:P31/ps:P31/wdt:P279* wd:Q11424 .  
+				 ?item wdt:P840 ?place . 
+                 ?item rdfs:label ?itemLabel.
+				 ?item wikibase:sitelinks ?link_count .
+                 SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en,fr,ar,be,bg,bn,ca,cs,da,de,el,es,et,fa,fi,he,hi,hu,hy,id,ja,jv,ko,nb,nl,eo,pa,pl,pt,ro,ru,sh,sk,sr,sv,sw,te,th,tr,uk,yue,vec,vi,zh" . } 
+				 SERVICE wikibase:box {  
+				 ?place wdt:P625 ?coord .  
+				 bd:serviceParam wikibase:cornerWest""" + point1 + """^^geo:wktLiteral.
+                 bd:serviceParam wikibase:cornerEast""" + point2 + """^^geo:wktLiteral.  
+				} 
+                 FILTER(lang(?itemLabel) = 'it')
+		}   
+        GROUP BY ?item ?itemLabel
+		ORDER BY DESC(?link_count)
+        """
+    return query
+
 
 def get_wikidata_item_from_string(element, media_type):
         sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36")
