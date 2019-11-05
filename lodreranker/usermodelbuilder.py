@@ -3,12 +3,14 @@ from urllib.request import urlopen
 
 import requests
 
+from Clustering.Clustering import clusterize
 from Doc2Vec.doc2vec_films_vectors import create_vector
 from Doc2Vec.doc2vec_preprocessing import normalize_text, stopping
-from Clustering.Clustering import clusterize
 
-from .lod_extractor import MEDIA_TYPES
-from .lod_extractor import get_wikipedia_abstract
+from .lod_extractor import (MEDIA_TYPES, get_wikidata_items_from_latlong,
+                            get_wikipedia_abstract_from_querystring,
+                            get_wikipedia_abstract_from_wikidata_item)
+
 
 class UserModelBuilder(object):
 
@@ -34,7 +36,7 @@ class UserModelBuilder(object):
         print(f'Retrieving abstracts for {len(media)} {media_type}:')
         for i, element in enumerate(media):
             # TODO improve query performance (or make it non-blocking)
-            abstract = get_wikipedia_abstract(element, media_type, i)
+            abstract = get_wikipedia_abstract_from_querystring(element, media_type, i+1)
             if abstract:
                 abstracts.append(normalize_text(stopping(abstract)))
         print(f'Retrieved {len(abstracts)} abstracts (number of non-{media_type} elements: {len(media)-len(abstracts)}).')
@@ -43,6 +45,24 @@ class UserModelBuilder(object):
         for abstract in abstracts:
             vectors.append(create_vector(abstract))
         return vectors
+
+
+    def get_vectors_from_coordinates(self, latitude, longitude, media_type):
+        try:
+            items = get_wikidata_items_from_latlong(latitude, longitude, media_type)
+            for i, item in enumerate(items):
+                abstract = get_wikipedia_abstract_from_wikidata_item(item, i+1)
+                if not abstract:
+                    continue
+                item['abstract'] = abstract
+                item['vector'] = create_vector(abstract)
+            size_before = len(items)
+            items = list(filter(lambda item: 'abstract' in item.keys(), items))
+            # print(f'before: {size_before}, after: {len(items)}')
+            return items
+        except Exception as e:
+            print(f'ERROR: {str(e)}')
+            return
 
 
     def build_model(self, vector_list):

@@ -17,16 +17,12 @@
             </ol>
             <p>
             {% if not user.has_social_connect or not user.has_demographic or not user.has_poivector or not user.has_movies %}
-            Please resume your registration <a href ="{% url 'resume' %}
-                {% comment %} {% if not user.has_social_connect %}{% url 'signup_s1' %}
-                {% elif not user.has_demographic %}{% url 'signup_s2' %}
-                {% elif not user.has_poivector %}{% url 'signup_s3' %}{% endif %} {% endcomment %}
-            ">here</a>.
+            Please resume your registration <a href ="{% url 'resume' %}">here</a>.
             {% else %}
             You're good to go!
             {% endif %}
             </p>
-            {% if user.has_social_connect or user.has_demographic or user.has_poivector  %}
+            {% if user.has_social_connect or user.has_demographic or user.has_poivector or user.has_movies  %}
             <a class="btn btn-outline-danger" href="{% url 'reset' %}">Reset all</a>
             {% endif %}
         </div>
@@ -48,7 +44,7 @@
                 </div>
             </div>
             {% for key, value in data.extra_data.items %}
-            {% if forloop.counter >= 12 and forloop.counter <= 16 %}
+            {% if forloop.counter >= 14 and forloop.counter <= 16 %}
             <div class ="row-sm-12 p-3 text-left bg-light">
                 <p><b>{{ key }}</b></p>
                 <p><textarea class="query-content">{{ value }}</textarea></p>

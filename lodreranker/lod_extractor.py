@@ -2,7 +2,7 @@ import json
 import re
 import urllib.error
 from urllib.parse import urlencode
-from urllib.request import urlopen
+from urllib.request import urlopen, HTTPHandler
 
 from SPARQLWrapper import JSON, SPARQLWrapper
 
@@ -12,14 +12,14 @@ MOVIES = 'movies'
 BOOKS = 'books'
 MUSIC = 'music'
 MEDIA_TYPES = [MOVIES, BOOKS, MUSIC]
-# set the query timeout (in seconds)
-SPARQL_TIMEOUT = 15
+SPARQL_TIMEOUT = 30  # set the query timeout (in seconds)
+SPARQL_LIMIT = 30 # TODO ONLY FOR TESTING
 
 def query_movies(element):
     filmtypes = ' '.join(f'wd:{x}' for x in filmtype_ids)
     query = """
         SELECT DISTINCT ?item
-        WHERE   {
+        WHERE {
             ?item wdt:P31 ?type.
             ?item rdfs:label ?queryByTitle.
             ?item wikibase:sitelinks ?sitelinks
@@ -32,43 +32,66 @@ def query_movies(element):
         """
     return query
 
-def query_movieFromPoi(lat1, lat2, long1, long2):
-    point1 = "Point(" + long1 + " " + lat1 + ")"
-    point2 = "Point(" + long2 + " " + lat2 + ")"
+def query_movies_geolocalized(latitude, longitude):
     query = """
-        SELECT DISTINCT ?item ?itemLabel
-        WHERE {  
-				 ?item p:P31/ps:P31/wdt:P279* wd:Q11424 .  
-				 ?item wdt:P840 ?place . 
-                 ?item rdfs:label ?itemLabel.
-				 ?item wikibase:sitelinks ?link_count .
-                 SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en,fr,ar,be,bg,bn,ca,cs,da,de,el,es,et,fa,fi,he,hi,hu,hy,id,ja,jv,ko,nb,nl,eo,pa,pl,pt,ro,ru,sh,sk,sr,sv,sw,te,th,tr,uk,yue,vec,vi,zh" . } 
-				 SERVICE wikibase:box {  
-				 ?place wdt:P625 ?coord .  
-				 bd:serviceParam wikibase:cornerWest""" + point1 + """^^geo:wktLiteral.
-                 bd:serviceParam wikibase:cornerEast""" + point2 + """^^geo:wktLiteral.  
-				} 
-                 FILTER(lang(?itemLabel) = 'it')
-		}   
+        SELECT DISTINCT ?item ?itemLabel 
+        WHERE {
+            ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q11424;
+                wdt:P840 ?place;
+                rdfs:label ?itemLabel;
+                wikibase:sitelinks ?linkCount.
+            SERVICE wikibase:label { 
+                bd:serviceParam wikibase:language "it,en,fr,ar,be,bg,bn,ca,cs,da,de,el,es,et,fa,fi,he,hi,hu,hy,id,ja,jv,ko,nb,nl,eo,pa,pl,pt,ro,ru,sh,sk,sr,sv,sw,te,th,tr,uk,yue,vec,vi,zh". 
+            }
+            SERVICE wikibase:around {
+                ?place wdt:P625 ?location.
+                    bd:serviceParam wikibase:center """f'"Point({longitude} {latitude})"'"""^^geo:wktLiteral;
+                    wikibase:radius "1".
+            }
+            FILTER((LANG(?itemLabel)) = "it")
+        }
         GROUP BY ?item ?itemLabel
-		ORDER BY DESC(?link_count)
-        """
+        ORDER BY DESC (?linkCount)
+        LIMIT """f'{SPARQL_LIMIT}'"""
+    """
     return query
 
 
-def get_wikidata_item_from_string(element, media_type):
-        sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36")
-        
-        if media_type == MOVIES:  
-            query = query_movies(element)
-        sparql.setQuery(query)
-        sparql.setTimeout(SPARQL_TIMEOUT)
-        sparql.setReturnFormat(JSON)
-        bindings = sparql.query().convert()['results']['bindings']
-        if bindings:
-            return bindings[0]['item']['value']
-        else:
-            raise Exception(f'\t"{element}": item not found')
+def get_wikidata_item_uri_from_string(element, media_type):
+    # sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36")
+    sparql = SPARQLWrapper("https://query.wikidata.org/sparql")
+    if media_type == MOVIES:  
+        query = query_movies(element)
+    sparql.setQuery(query)
+    sparql.setTimeout(SPARQL_TIMEOUT)
+    sparql.setReturnFormat(JSON)
+    bindings = sparql.query().convert()['results']['bindings']
+    if bindings:
+        return bindings[0]['item']['value']
+    else:
+        raise Exception(f'\t"{element}": item not found')
+
+
+def get_wikidata_items_from_latlong(latitude, longitude, media_type):
+    sparql = SPARQLWrapper("https://query.wikidata.org/sparql")
+    if media_type == MOVIES:
+        query = query_movies_geolocalized(latitude, longitude)
+    sparql.setQuery(query)
+    sparql.setTimeout(SPARQL_TIMEOUT)
+    sparql.setReturnFormat(JSON)
+    bindings = sparql.query().convert()['results']['bindings']
+    items = []
+    for binding in bindings:
+        item = {
+            'id': re.sub('http://www.wikidata.org/entity/', '', binding['item']['value']),
+            'name': binding['itemLabel']['value']
+        }
+        items.append(item)
+
+    if items:
+        return items
+    else:
+        raise Exception(f'\t"{latitude},{longitude}": no items found')
 
 
 def get_wikipedia_pagetitle_from_wikidata_itemid(wkd_id):
@@ -107,25 +130,40 @@ def get_abstract_from_wikipedia_pagetitle(wiki_page_title):
     return abstract
 
 
-def get_wikipedia_abstract(querystring, media_type, index):
+def get_wikipedia_abstract(wkd_id):
     try:
-        print(f'{index} - "{querystring}"')
-        wkd_url = get_wikidata_item_from_string(querystring, media_type)
-        if wkd_url:
-            wkd_id = re.sub('http://www.wikidata.org/entity/','', wkd_url)
-            print(f'\t"{querystring}" returned item: {wkd_id}.')
-            wiki_page_title = get_wikipedia_pagetitle_from_wikidata_itemid(wkd_id)
-            print(f'\t"{querystring}": found page "{wiki_page_title}".')
-            print(f'\t"{wiki_page_title}": fetching abstract...')            
-            abstract = get_abstract_from_wikipedia_pagetitle(wiki_page_title)
-            print(f'\t"{wiki_page_title}": retrieved {len(abstract)} characters.')            
-            return re.sub('\n', '', abstract)
+        wiki_page_title = get_wikipedia_pagetitle_from_wikidata_itemid(wkd_id)
+        print(f'\t"{wkd_id}": found page "{wiki_page_title}".')
+        print(f'\t"{wiki_page_title}": fetching abstract...')
+        abstract = get_abstract_from_wikipedia_pagetitle(wiki_page_title)
+        print(f'\t"{wiki_page_title}": retrieved {len(abstract)} characters.')
+        return re.sub('\n', '', abstract)
     except urllib.error.HTTPError as error:
         if error.code == 404:
             return
     except KeyError as e:
-        print(f'\t"{querystring}": KeyError, missing {str(e)}')
-        return
+        raise Exception(f'KeyError, missing {str(e)}')
+
+
+def get_wikipedia_abstract_from_wikidata_item(item, index):
+    try:
+        name = item['name']
+        print(f'{index} - "{name}"')
+        abstract = get_wikipedia_abstract(item['id'])
+        return abstract
     except Exception as e:
-        print(str(e))
+        print(f'\t"{name}": {e}')
+        return
+
+
+def get_wikipedia_abstract_from_querystring(querystring, media_type, index):
+    try:
+        print(f'{index} - "{querystring}"')
+        wkd_url = get_wikidata_item_uri_from_string(querystring, media_type)
+        wkd_id = re.sub('http://www.wikidata.org/entity/','', wkd_url)
+        print(f'\t"{querystring}" returned item: {wkd_id}.')
+        abstract = get_wikipedia_abstract(wkd_id)
+        return abstract
+    except Exception as e:
+        print(f'\t"{querystring}": {e}')
         return

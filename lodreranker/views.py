@@ -221,3 +221,13 @@ def signup_s4(request):
         return route(request)
     else:
         return render(request, template_name, result['data'])
+
+
+##### RECOMMENDATION
+@login_required
+def recommend_simple(request):
+    template_name = 'recommendation.html'
+
+    UserModelBuilder().get_vectors_from_coordinates(41.890278, 12.492222, 'movies')
+
+    return render(request, template_name)

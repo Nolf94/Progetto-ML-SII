@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %} Recommendation {% endblock %}
+{% block content %}
+  <div class="row my-auto mb-3">
+        <div class="col-sm-8 mx-auto text-center">
+            <p><a class="btn btn-success" href="{% url 'recommend_simple' %}">Recommend me something!</a></p>
+        </div>
+    </div>
+{% endblock %}
