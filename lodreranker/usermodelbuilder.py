@@ -65,5 +65,5 @@ class UserModelBuilder(object):
             return
 
 
-    def build_model(self, vector_list):
-        return clusterize(vector_list)
+    def build_model(self, vector_list, eps):
+        return clusterize(vector_list, eps)

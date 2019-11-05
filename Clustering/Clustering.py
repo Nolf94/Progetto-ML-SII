@@ -18,10 +18,10 @@ def plot_clustering(X, labels, n_clusters_):
     plt.show()
 
 
-def clusterize(vectors):
+def clusterize(vectors, eps=0.49):
     ordered_clusters = np.array([])
     X = np.array(vectors)
-    db = DBSCAN(algorithm='auto', eps=0.49, leaf_size=30, metric='cosine', min_samples=1)
+    db = DBSCAN(algorithm='auto', eps=eps, leaf_size=30, metric='cosine', min_samples=1)
     clustered = db.fit_predict(X)
     labels = db.labels_
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)

@@ -14,6 +14,7 @@ from social_django.models import UserSocialAuth
 
 from .forms import CustomUserCreationForm, CustomUserDemographicDataForm
 from .models import CustomUser
+from .recommender import Recommender
 from .usermodelbuilder import UserModelBuilder
 from .utils import get_choices, get_vectors_from_selection
 
@@ -210,14 +211,6 @@ def signup_s4(request):
         user.form_movies = json.dumps(list(map(lambda x: x.tolist(), movies_vectors)))
         user.has_movies = True
         user.save()
-
-        # test movies model build (we don't persist it)
-        vectors = []
-        vectors.extend(movies_vectors)
-        vectors.extend(json.loads(user.social_movies))
-        movies_model = UserModelBuilder().build_model(vectors)
-        print(movies_model)
-
         return route(request)
     else:
         return render(request, template_name, result['data'])
@@ -228,6 +221,20 @@ def signup_s4(request):
 def recommend_simple(request):
     template_name = 'recommendation.html'
 
-    UserModelBuilder().get_vectors_from_coordinates(41.890278, 12.492222, 'movies')
+    user = request.user
+    movie_vectors = json.loads(user.form_movies)
+    for vec in json.loads(user.social_movies):
+        if vec not in movie_vectors:
+            movie_vectors.append(vec)
+
+    movies_model = UserModelBuilder().build_model(movie_vectors, eps=0.50)
+    
+    print(f'Vectors: {len(movie_vectors)}, Clusters: {len(movies_model)}')
+    for item in movies_model:
+        print(item['weight'])
+
+    # geo_item_vectors = UserModelBuilder().get_vectors_from_coordinates(41.890278, 12.492222, 'movies')
+    # Recommender()
+
 
     return render(request, template_name)
