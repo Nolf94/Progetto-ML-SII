@@ -1,6 +1,7 @@
 # lodreranker/views.py
 import json
 
+from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -218,7 +219,13 @@ def signup_s4(request):
 
 ##### RECOMMENDATION
 @login_required
-def recommend_simple(request):
+def recommendation_start(request):
+    template_name = 'recommendation.html'
+    context = {'GOOGLE_MAPS_KEY': settings.GOOGLE_MAPS_KEY }
+    return render(request, template_name, context)
+
+@login_required
+def recommendation_result(request):
     template_name = 'recommendation.html'
 
     user = request.user
@@ -227,14 +234,12 @@ def recommend_simple(request):
         if vec not in movie_vectors:
             movie_vectors.append(vec)
 
-    movies_model = UserModelBuilder().build_model(movie_vectors, eps=0.50)
-    
-    print(f'Vectors: {len(movie_vectors)}, Clusters: {len(movies_model)}')
-    for item in movies_model:
+    movie_clusters = UserModelBuilder().build_model(movie_vectors, eps=0.50)
+    print(f'Vectors: {len(movie_vectors)}, Clusters: {len(movie_clusters)}')
+    for item in movie_clusters:
         print(item['weight'])
 
-    # geo_item_vectors = UserModelBuilder().get_vectors_from_coordinates(41.890278, 12.492222, 'movies')
-    # Recommender()
-
+    geo_items = UserModelBuilder().get_items_from_coordinates(41.890278, 12.492222, 'movies')
+    ranked_items = Recommender().rank_items(movie_clusters, geo_items)
 
     return render(request, template_name)

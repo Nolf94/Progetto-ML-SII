@@ -28,7 +28,7 @@ class UserModelBuilder(object):
             has_next = 'next' in next_page['paging'].keys()
         media = list(map(lambda x: x['name'], media))
 
-        #for testing purposes only
+        # for testing purposes only
         # media = ['Full Metal Jacket', 'Avatar', 'Shutter Island', 'Fast & Furious']
         # media = ['Full Metal Jacket']
         
@@ -47,18 +47,19 @@ class UserModelBuilder(object):
         return vectors
 
 
-    def get_vectors_from_coordinates(self, latitude, longitude, media_type):
+    def get_items_from_coordinates(self, latitude, longitude, media_type):
         try:
             items = get_wikidata_items_from_latlong(latitude, longitude, media_type)
+            print(f'Retrieving abstracts for {len(items)} {media_type}:')
             for i, item in enumerate(items):
                 abstract = get_wikipedia_abstract_from_wikidata_item(item, i+1)
                 if not abstract:
                     continue
                 item['abstract'] = abstract
                 item['vector'] = create_vector(abstract)
-            size_before = len(items)
+            initial_len = len(items)
             items = list(filter(lambda item: 'abstract' in item.keys(), items))
-            # print(f'before: {size_before}, after: {len(items)}')
+            print(f'Retrieved {len(items)} abstracts (number of non-{media_type} elements: {initial_len-len(items)}).')
             return items
         except Exception as e:
             print(f'ERROR: {str(e)}')

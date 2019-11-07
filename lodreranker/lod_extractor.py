@@ -87,7 +87,6 @@ def get_wikidata_items_from_latlong(latitude, longitude, media_type):
             'name': binding['itemLabel']['value']
         }
         items.append(item)
-
     if items:
         return items
     else:
