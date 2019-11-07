@@ -13,6 +13,7 @@ load_dotenv(dotenv_path=env_path, verbose=True)
 SECRET_KEY = os.getenv('SECRET_KEY')
 SOCIAL_AUTH_FACEBOOK_KEY = os.getenv("SOCIAL_AUTH_FACEBOOK_KEY")
 SOCIAL_AUTH_FACEBOOK_SECRET = os.getenv("SOCIAL_AUTH_FACEBOOK_SECRET")
+GOOGLE_MAPS_KEY = os.getenv("GOOGLE_MAPS_KEY")
 
 CORE_APP_NAME='lodreranker'
 
