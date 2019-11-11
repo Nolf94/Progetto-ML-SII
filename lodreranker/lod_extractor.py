@@ -32,7 +32,7 @@ def query_movies(element):
         """
     return query
 
-def query_movies_geolocalized(latitude, longitude):
+def query_movies_geolocalized(latitude, longitude, radius):
     query = """
         SELECT DISTINCT ?item ?itemLabel 
         WHERE {
@@ -46,7 +46,7 @@ def query_movies_geolocalized(latitude, longitude):
             SERVICE wikibase:around {
                 ?place wdt:P625 ?location.
                     bd:serviceParam wikibase:center """f'"Point({longitude} {latitude})"'"""^^geo:wktLiteral;
-                    wikibase:radius "1".
+                    wikibase:radius """f'"{radius}"'""".
             }
             FILTER((LANG(?itemLabel)) = "it")
         }
@@ -72,10 +72,10 @@ def get_wikidata_item_uri_from_string(element, media_type):
         raise Exception(f'\t"{element}": item not found')
 
 
-def get_wikidata_items_from_latlong(latitude, longitude, media_type):
+def get_wikidata_items_from_coordinates(latitude, longitude, radius, media_type):
     sparql = SPARQLWrapper("https://query.wikidata.org/sparql")
     if media_type == MOVIES:
-        query = query_movies_geolocalized(latitude, longitude)
+        query = query_movies_geolocalized(latitude, longitude, radius)
     sparql.setQuery(query)
     sparql.setTimeout(SPARQL_TIMEOUT)
     sparql.setReturnFormat(JSON)

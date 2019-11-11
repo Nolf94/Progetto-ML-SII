@@ -25,7 +25,7 @@ function updateCircle(radius) {
         circle.setRadius(radius);
     }
     currentRad = radius;
-    info();
+    updateForm();
 }
 
 function handlePositionEvent(latLng) {
@@ -54,10 +54,13 @@ function updateMarker(latLng) {
     map.panTo(latLng);
     currentLat = latLng.lat;
     currentLng = latLng.lng;
-    info();
+    updateForm();
 }
 
-function info() {
+function updateForm() {
+    $('input#lat').val(currentLat);
+    $('input#lng').val(currentLng);
+    $('input#rad').val(currentRad / 1000 ); // wikibase:radius is already in kilometers
     console.log(
         'Lat: ' + currentLat + ', ' +
         'Lng: ' + currentLng + ', ' +

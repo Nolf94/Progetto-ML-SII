@@ -226,19 +226,27 @@ def recommendation_start(request):
 @login_required
 def recommendation_result(request):
     template_name = 'recommendation.html'
+    context = {'GOOGLE_MAPS_KEY': settings.GOOGLE_MAPS_KEY }
 
-    user = request.user
-    movie_vectors = json.loads(user.form_movies)
-    for vec in json.loads(user.social_movies):
-        if vec not in movie_vectors:
-            movie_vectors.append(vec)
+    if request.method == 'POST':
+        lat = request.POST.get('latitude')
+        lng  = request.POST.get('longitude')
+        rad  = request.POST.get('radius')
+        print(f'[{lat}, {lng}, {rad}]')
+    
+        user = request.user
+        movie_vectors = json.loads(user.form_movies)
+        for vec in json.loads(user.social_movies):
+            if vec not in movie_vectors:
+                movie_vectors.append(vec)
 
-    movie_clusters = UserModelBuilder().build_model(movie_vectors, eps=0.50)
-    print(f'Vectors: {len(movie_vectors)}, Clusters: {len(movie_clusters)}')
-    for item in movie_clusters:
-        print(item['weight'])
+        movie_clusters = UserModelBuilder().build_model(movie_vectors, eps=0.50)
+        print(f'Vectors: {len(movie_vectors)}, Clusters: {len(movie_clusters)}')
+        for item in movie_clusters:
+            print(item['weight'])
 
-    geo_items = UserModelBuilder().get_items_from_coordinates(41.890278, 12.492222, 'movies')
-    ranked_items = Recommender().rank_items(movie_clusters, geo_items)
+        geo_items = UserModelBuilder().get_items_from_coordinates(lat, lng, rad, 'movies')
+        ranked_items = Recommender().rank_items(movie_clusters, geo_items)
+        context['ranked_items'] = list(map(lambda x: x['name'], ranked_items))
 
-    return render(request, template_name)
+    return render(request, template_name, context)

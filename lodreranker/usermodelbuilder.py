@@ -7,7 +7,7 @@ from Clustering.Clustering import clusterize
 from Doc2Vec.doc2vec_films_vectors import create_vector
 from Doc2Vec.doc2vec_preprocessing import normalize_text, stopping
 
-from .lod_extractor import (MEDIA_TYPES, get_wikidata_items_from_latlong,
+from .lod_extractor import (MEDIA_TYPES, get_wikidata_items_from_coordinates,
                             get_wikipedia_abstract_from_querystring,
                             get_wikipedia_abstract_from_wikidata_item)
 
@@ -47,9 +47,9 @@ class UserModelBuilder(object):
         return vectors
 
 
-    def get_items_from_coordinates(self, latitude, longitude, media_type):
+    def get_items_from_coordinates(self, latitude, longitude, radius, media_type):
         try:
-            items = get_wikidata_items_from_latlong(latitude, longitude, media_type)
+            items = get_wikidata_items_from_coordinates(latitude, longitude, radius, media_type)
             print(f'Retrieving abstracts for {len(items)} {media_type}:')
             for i, item in enumerate(items):
                 abstract = get_wikipedia_abstract_from_wikidata_item(item, i+1)
