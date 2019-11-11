@@ -1,91 +1,90 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
-{% block title %} Recommendation {% endblock %}
+{% block title %} {% endblock %} 
 {% block content %}
 
 <div class="row mb-3 mx-2">
-    <div id="map"></div>
-    <div id="current">Nothing yet...</div>
-    <div id="searchcontainer" style="position: absolute; z-index: 0; left: 450px; top: 0px;">
-            <select id="range" name="range">
-              <option value="0">Current Map</option>
-              <option value="1">1 Mile</option>
-              <option value="2">2 Miles</option>
-              <option value="3">3 Miles</option>
-              <option value="4">4 Miles</option>
-              <option value="5">5 Miles</option>
-              <option value="10">10 Miles</option>
-              <option value="15">15 Miles</option>
-              <option value="20">20 Miles</option>
-              <option value="25">25 Miles</option>
-              <option value="50">50 Miles</option>
-              <option value="100">100 Miles</option>
-              <option value="250">250 Miles</option>
-              <option value="500">500 Miles</option>
-            </select> 
+    <div class="my-auto pl-0 mr-3">Select the area you would like to visit.<br><strong>Click</strong> on the map or <strong>drag</strong> the marker to move it.</div>
+    <div class="col-sm-2 slidercontainer my-auto">
+        <input type="range" id="slider" class="slider" name="cowbell" min="1" max="10" step="1" oninput="getRadius()"/>
     </div>
+    <div class="my-auto p-0 mr-5">
+        radius: <label class="my-auto" for="slider" id="sliderLabel"></label> km
+    </div>
+    <div class="my-auto alert alert-success" role="alert">We have placed you on the map based on your geolocation.</div>
 </div>
-<div class="row my-auto mb-3">
+<div class="row mb-3 mx-2">
+    <div class="col-md-12" id="map"></div>
+</div>
+
+{% comment %} <div class="row mb-1 mx-2">
+</div> {% endcomment %}
+
+<div class="row mb-3 mx-2">
     <div class="col-sm-8 mx-auto text-center">
         <p><a class="btn btn-success" href="{% url 'recommendation_result' %}">Recommend me something!</a></p>
     </div>
 </div>
 
 <script type="text/javascript">
-    var map, initialLocation, maker, METERS_PER_MILE = 1609.34;;
-    var rome = new google.maps.LatLng(41.9100711, 12.5359979);
-    function initMap() {
-        map = new google.maps.Map(document.getElementById('map'), {zoom: 10, mapTypeId: google.maps.MapTypeId.ROADMAP});
-        infoWindow = new google.maps.InfoWindow;
-        // Try HTML5 geolocation.
-        if (navigator.geolocation) {
-            
-            navigator.geolocation.getCurrentPosition(function(position) {
-                var pos = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-                marker = new google.maps.Marker({center: pos, position: pos, map: map, draggable: true, animation: google.maps.Animation.DROP, scrollwheel: true });
-                function toggleBounce() {
-                    if (marker.getAnimation() !== null) {
-                        marker.setAnimation(null);
-                    } else {
-                        marker.setAnimation(google.maps.Animation.BOUNCE)
-                        setTimeout(function(){ marker.setAnimation(null); }, 750);
-                    }
-                }
-                
-                google.maps.event.addDomListener(document.getElementById('range'), 'change', function(event) {
-                    var value = $("#range").val();
-                    if (marker.circle && marker.circle.setMap) marker.circle.setMap(null);
-                    var circle = new google.maps.Circle({
-                        map: map,
-                        radius: value * METERS_PER_MILE,   // 10 miles in metres
-                        fillColor: '#AA0000'
-                    });
-                    circle.bindTo('center', marker, 'position');
-                    marker.circle = circle;
-                });
-                document.getElementById('current').innerHTML = '<p>Marker dropped: Current Lat: ' + pos.lat + ' Current Lng: ' + pos.lng +'</p>';
-                google.maps.event.addListener(marker, 'dragend', function(event){
-                    document.getElementById('current').innerHTML = '<p>Marker dropped: Current Lat: ' + this.getPosition().lat() + ' Current Lng: ' + this.getPosition().lng() + '</p>';
-                });
-                google.maps.event.addListener(marker, 'dragstart', function(event){
-                    document.getElementById('current').innerHTML = '<p>Currently dragging marker...</p>';
-                });
-                marker.addListener('dragend', toggleBounce);
-                map.setCenter(pos);
-                infoWindow.setPosition(pos);
-                infoWindow.setContent('You are here.');
-                infoWindow.open(map, marker);
-            }, function() {
-                handleLocationError(true, infoWindow, map.getCenter());
-            });
-        } else {
-            // Browser doesn't support Geolocation
-            handleLocationError(false, infoWindow, map.getCenter());
-        }
+    var map, initialLocation;
+    var marker, circle;
+    var currentLat, currentLng, currentRad;
+
+    function getRadius() {
+        newVal = $("#slider").val();
+        $('#sliderLabel').text(newVal);
+        updateCircle(newVal * 1000);
     }
+
+    function updateCircle(radius) {
+        if (circle == undefined) {
+            circle = new google.maps.Circle({
+                map: map,
+                radius: radius,
+                strokeColor: '#EA4335',
+                strokeOpacity: 1,
+                strokeWeight: 2,
+                fillColor: '#EA4335',
+                fillOpacity: 0.2
+            });
+            circle.bindTo('center', marker, 'position');
+            marker.circle = circle;
+        } else {
+            circle.setRadius(radius);
+        }
+        currentRad = radius;
+        info();
+    }
+    
+    function updateMarker(latLng) {
+        if (marker == undefined) {
+            marker = new google.maps.Marker({
+                center: latLng,
+                position: latLng,
+                map: map,
+                draggable: true,
+                animation: google.maps.Animation.DROP,
+                scrollwheel: true
+            });
+        }
+        else {
+            marker.setPosition(latLng);
+            infoWindow.close()
+        }
+        map.panTo(latLng);
+        currentLat = latLng.lat;
+        currentLng = latLng.lng;
+        info();
+    }
+
+    function info() {
+        console.log(
+            'Lat: ' + currentLat + ',' + 
+            'Lng: ' + currentLng + ',' +
+            'Rad: ' + currentRad);
+    }
+
     function handleLocationError(browserHasGeolocation, infoWindow, pos) {
         infoWindow.setPosition(pos);
         infoWindow.setContent(browserHasGeolocation ?
@@ -93,6 +92,67 @@
             'Error: Your browser doesn\'t support geolocation.');
         infoWindow.open(map);
     }
+    
+    function init() {
+        // var rome = new google.maps.LatLng(41.9100711, 12.5359979);
+        var initialRadius = 5;
+        $('#slider').val(initialRadius);
+        $('#sliderLabel').text(initialRadius);
+        currentRad = initialRadius * 1000;
+
+        map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 12, 
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            clickableIcons: false,
+        });
+        infoWindow = new google.maps.InfoWindow;
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                
+                var latLng = {
+                    lat: position.coords.latitude, 
+                    lng: position.coords.longitude
+                };
+                
+                map.setCenter(latLng);
+                updateMarker(latLng);
+                updateCircle(currentRad);
+                infoWindow.setPosition(latLng);
+                infoWindow.setContent('You are here.');
+                infoWindow.open(map, marker);
+
+                marker.addListener('dragend', function() { 
+                    infoWindow.close()
+                });
+    
+                google.maps.event.addListener(map, 'click', function(event) { 
+                    handlePositionEvent(event.latLng); 
+                });
+
+                google.maps.event.addListener(marker, 'dragstart', function(event) {
+                });
+
+                google.maps.event.addListener(marker, 'dragend', function(event) {
+                    handlePositionEvent(event.latLng); 
+                });
+
+                
+                function handlePositionEvent(latLng) {
+                    var latLngObj = {
+                        lat: latLng.lat(), 
+                        lng: latLng.lng()
+                    }
+                    updateMarker(latLngObj);
+                }
+
+            }, function() {
+                handleLocationError(true, infoWindow, map.getCenter());
+            });
+        } else {
+            handleLocationError(false, infoWindow, map.getCenter());
+        }
+    }
 </script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_KEY }}&libraries=places&callback=initMap" type="text/javascript"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_KEY }}&libraries=places&callback=init" type="text/javascript"></script>
 {% endblock %}
