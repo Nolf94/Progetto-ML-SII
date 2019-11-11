@@ -1,5 +1,5 @@
 var map, initialLocation;
-var marker, circle;
+var marker, circle, infoWindow;
 var currentLat, currentLng, currentRad;
 
 function getRadius() {
@@ -26,6 +26,14 @@ function updateCircle(radius) {
     }
     currentRad = radius;
     info();
+}
+
+function handlePositionEvent(latLng) {
+    var latLngObj = {
+        lat: latLng.lat(),
+        lng: latLng.lng()
+    }
+    updateMarker(latLngObj);
 }
 
 function updateMarker(latLng) {
@@ -56,16 +64,7 @@ function info() {
         'Rad: ' + currentRad);
 }
 
-function handleLocationError(browserHasGeolocation, infoWindow, pos) {
-    infoWindow.setPosition(pos);
-    infoWindow.setContent(browserHasGeolocation ?
-        'Error: The Geolocation service failed.' :
-        'Error: Your browser doesn\'t support geolocation.');
-    infoWindow.open(map);
-}
-
 function init() {
-    // var rome = new google.maps.LatLng(41.9100711, 12.5359979);
     var initialRadius = 5;
     $('#slider').val(initialRadius);
     $('#sliderLabel').text(initialRadius);
@@ -74,53 +73,55 @@ function init() {
     map = new google.maps.Map(document.getElementById('map'), {
         zoom: 12,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
+        streetViewControl: false,
         clickableIcons: false,
     });
     infoWindow = new google.maps.InfoWindow;
-
+    
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (position) {
-
             var latLng = {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
             };
-
             map.setCenter(latLng);
             updateMarker(latLng);
             updateCircle(currentRad);
-            infoWindow.setPosition(latLng);
             infoWindow.setContent('You are here.');
             infoWindow.open(map, marker);
-
-            marker.addListener('dragend', function () {
-                infoWindow.close()
-            });
-
-            google.maps.event.addListener(map, 'click', function (event) {
-                handlePositionEvent(event.latLng);
-            });
-
-            google.maps.event.addListener(marker, 'dragstart', function (event) {
-            });
-
-            google.maps.event.addListener(marker, 'dragend', function (event) {
-                handlePositionEvent(event.latLng);
-            });
-
-
-            function handlePositionEvent(latLng) {
-                var latLngObj = {
-                    lat: latLng.lat(),
-                    lng: latLng.lng()
-                }
-                updateMarker(latLngObj);
-            }
-
+            $("#status").show().addClass('alert-success').text("We have placed a marker on the map based on your geolocation.")
+            addListeners()
         }, function () {
-            handleLocationError(true, infoWindow, map.getCenter());
+            handleLocationError(true);
         });
     } else {
-        handleLocationError(false, infoWindow, map.getCenter());
+        handleLocationError(false);
+    }
+
+    function handleLocationError(browserHasGeolocation) {
+        var rome = new google.maps.LatLng(41.902782, 12.496366);
+        map.setCenter(rome);
+        handlePositionEvent(rome);
+        updateCircle(currentRad);
+        infoWindow.setContent('You are here.');
+        infoWindow.open(map, marker);
+        $("#status").show().addClass('alert-warning').text("Geolocation service failed, We've placed you in Rome.")
+    }
+
+    function addListeners() {
+        marker.addListener('dragend', function () {
+            infoWindow.close()
+        });
+
+        google.maps.event.addListener(map, 'click', function (event) {
+            handlePositionEvent(event.latLng);
+        });
+
+        google.maps.event.addListener(marker, 'dragstart', function (event) {
+        });
+
+        google.maps.event.addListener(marker, 'dragend', function (event) {
+            handlePositionEvent(event.latLng);
+        });
     }
 }

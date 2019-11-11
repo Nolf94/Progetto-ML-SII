@@ -7,18 +7,23 @@
     <div class="col-sm-2 slidercontainer my-auto">
         <input type="range" id="slider" class="slider" min="1" max="10" step="1" oninput="getRadius()"/>
     </div>
-    <div class="col-sm-1 my-auto p-0 mr-4 text-nowrap">
+    <div class="my-auto p-0 mr-4 text-nowrap" style="width: 140px">
         radius: <label class="my-auto" for="slider" id="sliderLabel"></label> km
     </div>
-    <div class="my-auto alert alert-success" role="alert">We have placed a marker on the map based on your geolocation.</div>
+    <div id="status" class="my-auto alert collapse" role="alert"></div>
 </div>
 <div class="row mb-3 mx-2">
     {% comment %} The Map {% endcomment %}
     <div class="col-md-12" id="map"></div>
 </div>
 <div class="row mb-3 mx-2">
-    <div class="col-sm-8 mx-auto text-center">
-        <p><a class="btn btn-success" href="{% url 'recommendation_result' %}">Recommend me something!</a></p>
+    <div class="col-sm-3 mx-auto text-center">
+        <form method="post" action="{% url 'recommendation_result' %}" novalidate>
+        {% csrf_token %}
+        <input type="hidden" id="lat"/>
+        <input type="hidden" id="lng"/>
+        <input type="hidden" id="rad"/>
+        <button type="submit" class="btn btn-block btn-success py-2">Recommend me something!</button>
     </div>
 </div>
 <script src="{% static 'js/map.js' %}"></script>

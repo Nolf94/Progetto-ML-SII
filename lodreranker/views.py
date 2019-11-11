@@ -132,7 +132,6 @@ def signup_s1_ajax(request):
 
 
 # Demographic data form
-# TODO add new fields (geolocalization?)
 class SignupS2View(LoginRequiredMixin, UpdateView):
     template_name = 'registration/signup_s2.html'
     form_class = CustomUserDemographicDataForm
