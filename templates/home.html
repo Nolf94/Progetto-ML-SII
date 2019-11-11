@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %} Welcome! {% endblock %}
 {% block content %}
-    <div class="row my-auto mb-3">
+    <div class="row mb-3">
         <div class="col-sm-8 mx-auto text-center">
             {% if user.is_authenticated %}
             <p> View your profile <a href="{% url 'profile' %}">here</a>.</p>
@@ -10,10 +10,10 @@
             {% endif %}
         </div>
     </div>
-    <div class="row my-auto mb-3">
-        <div class="col-sm-8 mx-auto text-center">
+    <div class="row mb-3">
+        <div class="col-8 mx-auto text-center social-container">
         {% if user.has_movies %}
-            <p><a class="btn btn-success" href="{% url 'recommendation_start' %}">Recommend me something!</a></p>
+            <a class="btn btn-success p-3" href="{% url 'recommendation_start' %}">Start</a>
         {% endif %}
         </div>
     </div>
