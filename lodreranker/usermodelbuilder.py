@@ -3,7 +3,7 @@ from urllib.request import urlopen
 
 import requests
 
-from Clustering.Clustering import clusterize
+from Clustering.Clustering import clusterize, summarize
 from Doc2Vec.doc2vec_films_vectors import create_vector
 from Doc2Vec.doc2vec_preprocessing import normalize_text, stopping
 
@@ -66,5 +66,8 @@ class UserModelBuilder(object):
             return
 
 
-    def build_model(self, vector_list, eps):
+    def build_clustering_model(self, vector_list, eps):
         return clusterize(vector_list, eps)
+    
+    def build_summarize_model(self, vector_list):
+        return summarize(vector_list)
