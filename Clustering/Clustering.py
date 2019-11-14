@@ -42,6 +42,5 @@ def clusterize(vectors, eps=0.49):
     return weighted_clusters
 
 def summarize(vectors):
-    X = np.array(vectors)
-    return sum(vectors, X)
+    return sum(np.array(vectors))
 

@@ -68,13 +68,13 @@ function updateForm() {
 }
 
 function init() {
-    var initialRadius = 5;
+    var initialRadius = 50;
     $('#slider').val(initialRadius);
     $('#sliderLabel').text(initialRadius);
     currentRad = initialRadius * 1000;
 
     map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 12,
+        zoom: 8,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         streetViewControl: false,
         clickableIcons: false,
