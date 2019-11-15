@@ -15,9 +15,10 @@ from social_django.models import UserSocialAuth
 
 from .forms import CustomUserCreationForm, CustomUserDemographicDataForm
 from .models import CustomUser
-from .recommender import Recommender
+from .recommendation import ItemRanker, ItemRetriever, Recommender
 from .usermodelbuilder import UserModelBuilder
-from .utils import get_choices, get_vectors_from_selection
+from lodreranker import utils
+from lodreranker import constants
 
 
 def home(request):
@@ -124,7 +125,12 @@ def signup_s1(request):
 def signup_s1_ajax(request):
     user = request.user
     social_auth = UserSocialAuth.objects.filter(user=user.id)[0]
-    movies_vectors = UserModelBuilder().get_vectors_from_social(social_auth.extra_data['movies'], 'movies')
+
+    retrieved_movies = ItemRetriever(constants.MOVIE).get_items_from_social(social_auth.extra_data['movies'])
+
+    # TODO add many-to-many field for user
+
+    # TODO remove social_movies from user
     user.social_movies = json.dumps(list(map(lambda x: x.tolist(), movies_vectors)))
     user.has_social_data = True
     user.save()
@@ -148,7 +154,7 @@ class SignupS2View(LoginRequiredMixin, UpdateView):
 
 # Helper function for cold-start form views.
 ### NB: this is not a view, don't access it directly in urls.py.
-def handle_imgform(request, template_name, min_choices, session_obj_name, imgtype):
+def handle_imgform(request, template_name, min_choices, session_obj_name, media_type):
     MIN_CHOICES = min_choices if min_choices else 5
     context = { 'min_choices': MIN_CHOICES }
 
@@ -157,7 +163,7 @@ def handle_imgform(request, template_name, min_choices, session_obj_name, imgtyp
         choices = request.session[session_obj_name]
     else:
         # get a new random order
-        choices = get_choices(imgtype)
+        choices = utils.get_image_choices(media_type)
         request.session[session_obj_name] = choices
 
     if request.method == 'POST':
@@ -189,7 +195,7 @@ def signup_s3(request):
     result = handle_imgform(request, template_name, 5, 'poi_choices', 'poi')
     if result['success']: 
         selected_images, poi_choices = result['data'][0], result['data'][1]
-        vectors = get_vectors_from_selection(selected_images, poi_choices)
+        vectors = utils.get_vectors_from_selection(selected_images, poi_choices)
         user = request.user
         user.has_poivector = True
         user.poi_weights = sum(vectors).tolist()
@@ -207,7 +213,7 @@ def signup_s4(request):
     if result['success']: 
         selected_images, movie_choices = result['data'][0], result['data'][1]
         user = request.user 
-        movies_vectors = get_vectors_from_selection(selected_images, movie_choices)
+        movies_vectors = utils.get_vectors_from_selection(selected_images, movie_choices)
         user.form_movies = json.dumps(list(map(lambda x: x.tolist(), movies_vectors)))
         user.has_movies = True
         user.save()
@@ -218,35 +224,25 @@ def signup_s4(request):
 
 ##### RECOMMENDATION
 @login_required
-def recommendation_start(request):
-    template_name = 'recommendation.html'
-    context = {'GOOGLE_MAPS_KEY': settings.GOOGLE_MAPS_KEY }
-    return render(request, template_name, context)
-
-@login_required
-def recommendation_clustering_result(request):
+def recommendation(request):
     template_name = 'recommendation.html'
     context = {'GOOGLE_MAPS_KEY': settings.GOOGLE_MAPS_KEY }
 
     if request.method == 'POST':
-        lat = request.POST.get('latitude')
-        lng  = request.POST.get('longitude')
-        rad  = request.POST.get('radius')
-        print(f'[{lat}, {lng}, {rad}]')
-    
+        coordinates = {
+            'lat': request.POST.get('latitude'),
+            'lng': request.POST.get('longitude'),
+            'rad': request.POST.get('radius'),
+        }
+
         user = request.user
-        movie_vectors = json.loads(user.form_movies)
-        for vec in json.loads(user.social_movies):
-            if vec not in movie_vectors:
-                movie_vectors.append(vec)
+        movie_recommender = Recommender(user, constants.MOVIE, coordinates, max_retrieved_items=30)
+        
+        # processo iterativo 
+        retriever = movie_recommender.retriever
+        retriever.retrieve_next()
 
-        movie_clusters = UserModelBuilder().build_clustering_model(movie_vectors, eps=0.50)
-        print(f'Vectors: {len(movie_vectors)}, Clusters: {len(movie_clusters)}')
-        for item in movie_clusters:
-            print(item['weight'])
-
-        geo_items = UserModelBuilder().get_items_from_coordinates(lat, lng, rad, 'movies')
-        ranked_items = Recommender().rank_clustering_items(movie_clusters, geo_items)
+        ranked_items = movie_recommender.recommend(type='clustering')
         context['ranked_items'] = list(map(lambda x: x['name'], ranked_items))
 
     return render(request, template_name, context)
@@ -271,8 +267,8 @@ def recommendation_summarize_result(request):
         movie_sum = UserModelBuilder().build_summarize_model(movie_vectors)
         print(movie_sum)
 
-        geo_items = UserModelBuilder().get_items_from_coordinates(lat, lng, rad, 'movies')
-        ranked_items = Recommender().rank_summarize_items(movie_sum, geo_items)
+        geo_items = UserModelBuilder().get_items_from_coordinates(lat, lng, rad, constants.MOVIE)
+        ranked_items = ItemRanker().rank_summarize_items(movie_sum, geo_items)
         context['ranked_items'] = list(map(lambda x: x['name'], ranked_items))
 
     return render(request, template_name, context)

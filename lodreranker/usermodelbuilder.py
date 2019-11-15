@@ -3,19 +3,23 @@ from urllib.request import urlopen
 
 import requests
 
-from Clustering.Clustering import clusterize, summarize
+from Clustering.clustering import clusterize
 from Doc2Vec.doc2vec_films_vectors import create_vector
 from Doc2Vec.doc2vec_preprocessing import normalize_text, stopping
 
-from .lod_extractor import (MEDIA_TYPES, get_wikidata_items_from_coordinates,
-                            get_wikipedia_abstract_from_querystring,
-                            get_wikipedia_abstract_from_wikidata_item)
+from .lod_queries import (retrieve_from_coordinates,
+                            get_abstract_from_querystring,
+                            get_abstract_from_item)
 
+from lodreranker import constants
+from .models import RetrievedItem
+
+# TODO DEPRECATE
 
 class UserModelBuilder(object):
 
     def get_vectors_from_social(self, extra_data_media, media_type):
-        if media_type not in MEDIA_TYPES:
+        if media_type not in constants.MEDIA_TYPES:
             print('Error: bad media type')
             return
 
@@ -36,7 +40,7 @@ class UserModelBuilder(object):
         print(f'Retrieving abstracts for {len(media)} {media_type}:')
         for i, element in enumerate(media):
             # TODO improve query performance (or make it non-blocking)
-            abstract = get_wikipedia_abstract_from_querystring(element, media_type, i+1)
+            abstract = get_abstract_from_querystring(element, media_type, i+1)
             if abstract:
                 abstracts.append(normalize_text(stopping(abstract)))
         print(f'Retrieved {len(abstracts)} abstracts (number of non-{media_type} elements: {len(media)-len(abstracts)}).')
@@ -49,10 +53,10 @@ class UserModelBuilder(object):
 
     def get_items_from_coordinates(self, latitude, longitude, radius, media_type):
         try:
-            items = get_wikidata_items_from_coordinates(latitude, longitude, radius, media_type)
+            items = retrieve_from_coordinates(latitude, longitude, radius, media_type)
             print(f'Retrieving abstracts for {len(items)} {media_type}:')
             for i, item in enumerate(items):
-                abstract = get_wikipedia_abstract_from_wikidata_item(item, i+1)
+                abstract = get_abstract_from_item(item, i+1)
                 if not abstract:
                     continue
                 item['abstract'] = abstract
@@ -64,10 +68,3 @@ class UserModelBuilder(object):
         except Exception as e:
             print(f'ERROR: {str(e)}')
             return
-
-
-    def build_clustering_model(self, vector_list, eps):
-        return clusterize(vector_list, eps)
-    
-    def build_summarize_model(self, vector_list):
-        return summarize(vector_list)

@@ -5,14 +5,10 @@ import numpy as np
 from django.contrib.staticfiles import finders
 
 
-def get_choices(path='poi'):
-    data = open(finders.find(f'js/{path}.json')).read()
-    json_data = json.loads(data)
+def get_image_choices(media_type):
+    data = json.loads(open(finders.find(f'js/{media_type}.json')).read())
     opts = []
-    # json_data = json_data[:3]
-    for item in random.sample(json_data, len(json_data)):
-    # for item in json_data:
-        opts.append(item)
+    [opts.append(x) for x in random.sample(data, len(data))]
     return opts
 
 

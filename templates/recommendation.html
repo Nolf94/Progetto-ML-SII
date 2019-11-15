@@ -18,23 +18,12 @@
 </div>
 <div class="row mb-3 mx-2">
     <div class="col-sm-3 mx-auto text-center">
-        <form method="post" action="{% url 'recommendation_clustering_result' %}" novalidate>
+        <form method="post" action="{% url 'recommendation' %}" novalidate>
             {% csrf_token %}
             <input type="hidden" id="lat" name="latitude"/>
             <input type="hidden" id="lng" name="longitude"/>
             <input type="hidden" id="rad" name="radius"/>
-            <button type="submit" class="btn btn-block btn-success py-2">Recommend me something with clustering!</button>
-        </form>
-    </div>
-</div>
-<div class="row mb-3 mx-2">
-    <div class="col-sm-3 mx-auto text-center">
-        <form method="post" action="{% url 'recommendation_summarize_result' %}" novalidate>
-            {% csrf_token %}
-            <input type="hidden" id="lat" name="latitude"/>
-            <input type="hidden" id="lng" name="longitude"/>
-            <input type="hidden" id="rad" name="radius"/>
-            <button type="submit" class="btn btn-block btn-success py-2">Recommend me something with summarize!</button>
+            <button type="submit" class="btn btn-block btn-success py-2">Recommend me something!</button>
         </form>
     </div>
 </div>
