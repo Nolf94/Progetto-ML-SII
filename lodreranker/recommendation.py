@@ -1,19 +1,14 @@
 import json
+import re
 from urllib.request import urlopen
 
 import numpy as np
 import requests
 from scipy import spatial
 
-from Clustering.clustering import clusterize
-from Doc2Vec.doc2vec_films_vectors import create_vector
-from Doc2Vec.doc2vec_preprocessing import normalize_text, stopping
-from lodreranker import constants
-
-from .lod_queries import (retrieve_from_coordinates,
-                            get_abstract_from_querystring,
-                            get_abstract_from_item)
-from .models import RetrievedItem
+import Clustering.clustering as clustering
+import Doc2Vec.doc2vec as d2v
+from lodreranker import constants, lod_queries, models
 
 
 class ItemRanker(object):
@@ -31,7 +26,7 @@ class ItemRanker(object):
 
         The score of item i according to cluster k is calculated as following:
             score(i,k) = (similarity(i) / total_similarity_k) * weight(k)
-        where 
+        where
             total_similarity_k = sum(similarity(j,k)) for each item j
         The final score of item i is calculated as following:
             score(i) = sum( score(i,m) ) for each cluster m
@@ -69,88 +64,144 @@ class ItemRanker(object):
 
 class ItemRetriever(object):
     """Interface for retrieving items from Linked Open Data (LOD), such as Wikidata."""
-    def __init__(self, media_type, coords=None, max_retrieved_items=None):
+    def __init__(self, media_type, max_retrieved_items=None):
         self.mtype = media_type
-        self.coords = coords
         self.retrieved_items = []
         self.max_retrieved_items = max_retrieved_items
 
 
-    def get_items_from_social(self, extra_data_media):
-        """Retrieves vectors from social network data."""
+    def retrieve_from_social(self, extra_data_media):
+        """Retrieves items from social network data."""
+
+        # if data is split across multiple pages, fetches from all pages.
         media = extra_data_media['data']
-        # if data is split across multiple pages, fetch them all.
         has_next = 'next' in extra_data_media['paging'].keys()
         while has_next:
             next_page = json.loads(urlopen(extra_data_media['paging']['next']).read().decode('utf-8'))
             media.extend(next_page['data'])
             has_next = 'next' in next_page['paging'].keys()
-        media = list(map(lambda x: x['name'], media))
-                
-        abstracts = []
-        print(f'Retrieving abstracts for {len(media)} {self.mtype}:')
-        for i, querystring in enumerate(media):
-            
-            try:
-                item = RetrievedItem.objects.get(querystring=querystring)
-                abstract = item.abstract
-            except RetrievedItem.DoesNotExist:
-                item = get_abstract_from_querystring(querystring, self.mtype, i+1)
-            abstract = item.abstract
-            
-            if abstract:                
-                abstracts.append(normalize_text(stopping(abstract)))
-        print(f'Retrieved {len(abstracts)} abstracts (number of non-{self.mtype} elements: {len(media)-len(abstracts)}).')
 
-        vectors = []
-        for abstract in abstracts:
-            vectors.append(create_vector(abstract))
-        return vectors
+        # BULK PROCESS
+        valid_items = []
+        # qss is a list of querystrings, aka names which MIGHT represent a linked open data item.
+        qss = list(map(lambda x: x['name'], media))
+        print(f'Starting retrieval for {self.mtype} from {len(qss)} querystrings:')
+        for i, qs in enumerate(qss):
+            print(f'[{i+1}/{len(qss)}] "{qs}"')
+            try: # use cached item
+                item = models.RetrievedItem.objects.get(querystring=qs)
+                print(f'\t"{qs}" found cached: {item.wkd_id}.')
+            except models.RetrievedItem.DoesNotExist: # (try to) get new item
+                sm = lod_queries.Sparql()
+                if self.mtype == constants.MOVIE:
+                    query = sm.get_query_movies_querystring(qs)
 
-
-    def get_items_from_coordinates(self):
-        try:
-            items = retrieve_from_coordinates(self.coords, self.mtype)
-            print(f'Retrieving abstracts for {len(items)} {self.mtype}:')
-            for i, item in enumerate(items):
-                abstract = get_abstract_from_item(item, i+1)
-                if not abstract:
+                try:
+                    binding = sm.execute(query)[0]
+                except Exception as e:
+                    print(f'\t"{qs}": {e}')
                     continue
-                item.abstract = abstract
-                item.vector = create_vector(abstract)
-            initial_len = len(items)
-            items = list(filter(lambda item: 'abstract' in item.keys(), items))
-            print(f'Retrieved {len(items)} abstracts (number of non-{self.mtype} elements: {initial_len-len(items)}).')
-            return items
+
+                item = models.RetrievedItem(
+                    wkd_id=re.sub('http://www.wikidata.org/entity/', '', binding['item']['value']),
+                    media_type=self.mtype,
+                    querystring=qs,
+                    name=binding['itemLabel']['value'],
+                )
+                item.save()
+                print(f'\t"{qs}" returned new item: {item.wkd_id}.')
+
+            if not item.abstract:
+                abstract = lod_queries.Wiki().retrieve_abstract(item)
+                if abstract:
+                    item.abstract = abstract
+                    item.vector = json.dumps(d2v.create_vector(abstract, self.mtype).tolist())
+                    item.save() # update item adding abstract and vector
+            if item.vector:
+                valid_items.append(item)
+        print(f'Retrieved {len(valid_items)} valid items from {len(qss)} querystrings ' +
+            f'({len(qss)-len(valid_items)} invalid querystrings or items).')
+        return valid_items
+
+
+    def retrieve_from_geoarea(self, geoarea):
+        """Retrieves items from geoarea."""
+
+        # BULK PROCESS
+        valid_items = []
+        print(f'Starting retrieval for {self.mtype} in geoarea {geoarea}:')
+        # geo_items is a list of linked open data items which might be valid (have a wiki page in the selected language).
+        geo_items=[]
+        sm = lod_queries.Sparql()
+        if self.mtype == constants.MOVIE:
+            query = sm.get_query_movies_geolocalized(geoarea)
+
+        try:
+            bindings = sm.execute(query)
         except Exception as e:
-            print(f'ERROR: {str(e)}')
-            return
+            print(e)
+            return valid_items
+
+        for binding in bindings:
+            wkd_id = re.sub('http://www.wikidata.org/entity/', '', binding['item']['value'])
+            try: # use cached item
+                item = models.RetrievedItem.objects.get(wkd_id=wkd_id)
+                print(f'Found cached item: {item.wkd_id}')
+            except models.RetrievedItem.DoesNotExist: # create new item
+                item = models.RetrievedItem(
+                    wkd_id=wkd_id,
+                    media_type=self.mtype,
+                    name=binding['itemLabel']['value'],
+                )
+                item.save()
+                print(f'Found new item: {item.wkd_id}')
+            geo_items.append(item)
+
+        for i, item in enumerate(geo_items):
+            print(f'[{i+1}/{len(geo_items)}] "{item.name}"')
+            if not item.abstract:
+                abstract = lod_queries.Wiki().retrieve_abstract(item)
+                if abstract:
+                    item.abstract = abstract
+                    item.vector = json.dumps(d2v.create_vector(abstract, self.mtype).tolist())
+                    item.save() # update item adding abstract and vector
+            if item.vector:
+                valid_items.append(item)
+
+        print(f'Retrieved {len(valid_items)} valid items.')
+        return valid_items
 
 
 class Recommender(object):
     """Main interface for recommendation."""
-    def __init__(self, user, media_type, coords, max_retrieved_items=50):
+    def __init__(self, user, media_type, max_retrieved_items=50):
         self.user = user
         self.mtype = media_type
-        self.retriever = ItemRetriever(self.mtype, coords, max_retrieved_items)
-        self.vectors = json.loads(eval(f'user.form_{media_type}'))
-        for vec in json.loads(eval(f'user.social_{self.mtype}')):
-            if vec not in self.vectors:
-                self.vectors.append(vec)
+        self.retriever = ItemRetriever(self.mtype, max_retrieved_items)
 
-    def recommend(self, media_type, method):
+        # form vectors are directly loaded from json
+        self.uservectors = json.loads(eval(f'user.form_{media_type}'))
+    
+        # social vectors are retrieved from associated RetrievedItems
+        for item in self.user.social_items.all():
+            if item.vector and item.vector not in self.uservectors:
+                self.uservectors.append(json.loads(item.vector))
+        self.uservectors = np.array(self.uservectors)
+
+    def recommend(self, media_type, method='summarize'):
         if method == 'clustering':
-            print('Using clustering')
             eps = 0.50
-            clusters = clusterize(self.vectors, eps)
-            print(f'Vectors: {len(self.vectors)}, Clusters: {len(clusters)}') 
-            for cluster in clusters:
-                print(cluster['weight'])
+            clusters = clustering.clusterize(self.uservectors, eps)
+            print(f'Vectors: {len(self.uservectors)}, Clusters: {len(clusters)}')
+            for i, cluster in enumerate(clusters):
+                print(f"{i+1} - weight: {cluster['weight']}")
 
+            # ----------------------------------- #
             items = self.retriever.retrieved_items
+            # ----------------------------------- #
+
             return ItemRanker().rank_items_using_clusters(clusters, items)
-        
+
         elif method == 'summarize':
-            print('Using summarize')
             items = self.retriever.retrieved_items
-            return ItemRanker().rank_items_using_sum(sum(np.array(self.vectors)), items)
+            return ItemRanker().rank_items_using_sum(sum(np.array(self.uservectors)), items)

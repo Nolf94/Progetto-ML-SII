@@ -39,4 +39,4 @@ def clusterize(vectors, eps=0.49):
         weighted_clusters.append(weighted_cluster)
 
     # plot_clustering(X, labels, n_clusters_)
-    return weighted_cluster
+    return weighted_clusters

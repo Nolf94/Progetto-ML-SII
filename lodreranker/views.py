@@ -13,12 +13,10 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 from social_django.models import UserSocialAuth
 
+from lodreranker import constants, models, utils
+
 from .forms import CustomUserCreationForm, CustomUserDemographicDataForm
-from .models import CustomUser
 from .recommendation import ItemRanker, ItemRetriever, Recommender
-from .usermodelbuilder import UserModelBuilder
-from lodreranker import utils
-from lodreranker import constants
 
 
 def home(request):
@@ -33,7 +31,7 @@ def social_login(request):
 
 
 # Recap user profile data and social data
-# TODO show more fields 
+# TODO add more fields (profession)
 @login_required
 def profile(request):
     user = request.user
@@ -56,7 +54,7 @@ def social_disconnect(request):
     soc_auths = UserSocialAuth.objects.filter(user=user.id)[0].delete()  
     user.has_social_connect = False
     user.has_social_data = False
-    user.social_movies = None
+    user.social_items.clear()
     user.save()
     return redirect(reverse_lazy('profile'))
 
@@ -65,9 +63,9 @@ def social_disconnect(request):
 @login_required
 def reset(request):
     user = request.user
-    user.poi_weights = None
-    user.has_poivector = False
-    user.mov_weights = None
+    # user.poi_weights = None
+    # user.has_poivector = False
+    user.form_movies = None
     user.has_movies = False
     for name in {f.name: None for f in user._meta.fields if f.null}:
         setattr(user, name, None)
@@ -89,8 +87,8 @@ def route(request):
         return redirect(s1)
     elif not user.has_demographic:
         return redirect(s2)
-    elif not user.has_poivector:
-        return redirect(s3)
+    # elif not user.has_poivector:
+        # return redirect(s3)
     elif not user.has_movies:
         return redirect(s4)
     else:
@@ -126,15 +124,12 @@ def signup_s1_ajax(request):
     user = request.user
     social_auth = UserSocialAuth.objects.filter(user=user.id)[0]
 
-    retrieved_movies = ItemRetriever(constants.MOVIE).get_items_from_social(social_auth.extra_data['movies'])
-
-    # TODO add many-to-many field for user
-
-    # TODO remove social_movies from user
-    user.social_movies = json.dumps(list(map(lambda x: x.tolist(), movies_vectors)))
+    social_movies = ItemRetriever(constants.MOVIE).retrieve_from_social(social_auth.extra_data['movies'])
+    user.social_items.add(*social_movies)
     user.has_social_data = True
     user.save()
-    return JsonResponse({'num_retrieved_movies': len(json.loads(user.social_movies))})    
+
+    return JsonResponse({'num_retrieved_movies': len(social_movies)})    
 
 
 # Demographic data form
@@ -143,7 +138,7 @@ class SignupS2View(LoginRequiredMixin, UpdateView):
     form_class = CustomUserDemographicDataForm
 
     def get_object(self, queryset=None):
-        return get_object_or_404(CustomUser, pk=self.request.user.id)
+        return get_object_or_404(models.CustomUser, pk=self.request.user.id)
 
     def form_valid(self, form):
         user = self.request.user
@@ -152,64 +147,30 @@ class SignupS2View(LoginRequiredMixin, UpdateView):
         return route(self.request)
 
 
-# Helper function for cold-start form views.
-### NB: this is not a view, don't access it directly in urls.py.
-def handle_imgform(request, template_name, min_choices, session_obj_name, media_type):
-    MIN_CHOICES = min_choices if min_choices else 5
-    context = { 'min_choices': MIN_CHOICES }
-
-    # choices are stored in session so that the random chosen order is kept during the process.
-    if session_obj_name in request.session:
-        choices = request.session[session_obj_name]
-    else:
-        # get a new random order
-        choices = utils.get_image_choices(media_type)
-        request.session[session_obj_name] = choices
-
-    if request.method == 'POST':
-        selected_images = []
-        try:
-            selected_images = list(request.POST.get('selected').split(','))
-            if len(selected_images) < MIN_CHOICES:
-                raise ValueError
-        except ValueError:
-            # keep choices in the next attempt
-            context['error'] = True
-            if selected_images:
-                context['selected'] = ','.join(x for x in selected_images)
-            return {'success': False, 'data': context}
-
-        # clear the stored order
-        request.session.pop(session_obj_name)
-        request.session.modified = True
-        return {'success': True, 'data': (selected_images, choices)}
-    else:
-        # load the form with the chosen random order
-        return {'success': False, 'data': context}
-
-
-# Cold-start form #1 (POI images)
+# Cold-start form #1 (POIs)
 @login_required
 def signup_s3(request):
-    template_name = 'registration/signup_s3.html'
-    result = handle_imgform(request, template_name, 5, 'poi_choices', 'poi')
-    if result['success']: 
-        selected_images, poi_choices = result['data'][0], result['data'][1]
-        vectors = utils.get_vectors_from_selection(selected_images, poi_choices)
-        user = request.user
-        user.has_poivector = True
-        user.poi_weights = sum(vectors).tolist()
-        user.save()
-        return route(request)
-    else:
-        return render(request, template_name, result['data'])
+    """POI FORM IS DISABLED"""
+    return redirect(reverse_lazy('profile'))
+    # template_name = 'registration/signup_s3.html'
+    # result = utils.handle_imgform(request, template_name, 5, 'poi_choices', 'poi')
+    # if result['success']: 
+    #     selected_images, poi_choices = result['data'][0], result['data'][1]
+    #     vectors = utils.get_vectors_from_selection(selected_images, poi_choices)
+    #     user = request.user
+    #     user.has_poivector = True
+    #     user.poi_weights = sum(vectors).tolist()
+    #     user.save()
+    #     return route(request)
+    # else:
+    #     return render(request, template_name, result['data'])
 
 
 # Cold-start form #2 (Movies)
 @login_required
 def signup_s4(request):
     template_name = 'registration/signup_s4.html'
-    result = handle_imgform(request, template_name, 5, 'movie_choices', 'movies')
+    result = utils.handle_imgform(request, template_name, 5, 'movie_choices', 'movies')
     if result['success']: 
         selected_images, movie_choices = result['data'][0], result['data'][1]
         user = request.user 
@@ -229,46 +190,23 @@ def recommendation(request):
     context = {'GOOGLE_MAPS_KEY': settings.GOOGLE_MAPS_KEY }
 
     if request.method == 'POST':
-        coordinates = {
-            'lat': request.POST.get('latitude'),
-            'lng': request.POST.get('longitude'),
-            'rad': request.POST.get('radius'),
-        }
-
+        area = utils.GeoArea(
+            request.POST.get('latitude'),
+            request.POST.get('longitude'),
+            request.POST.get('radius')
+        )
         user = request.user
-        movie_recommender = Recommender(user, constants.MOVIE, coordinates, max_retrieved_items=30)
+        movie_recommender = Recommender(user, constants.MOVIE, max_retrieved_items=30)
         
-        # processo iterativo 
+        # bulk load 
         retriever = movie_recommender.retriever
-        retriever.retrieve_next()
+        retriever.retrieve_from_geoarea(area)
 
-        ranked_items = movie_recommender.recommend(type='clustering')
+        # TODO retriever.retrieve_next()
+
+        ranked_items = movie_recommender.recommend(constants.MOVIE, method='clustering')
+        ranked_items_2 = movie_recommender.recommend(constants.MOVIE, method='summarize')
         context['ranked_items'] = list(map(lambda x: x['name'], ranked_items))
-
-    return render(request, template_name, context)
-
-@login_required
-def recommendation_summarize_result(request):
-    template_name = 'recommendation.html'
-    context = {'GOOGLE_MAPS_KEY': settings.GOOGLE_MAPS_KEY }
-
-    if request.method == 'POST':
-        lat = request.POST.get('latitude')
-        lng  = request.POST.get('longitude')
-        rad  = request.POST.get('radius')
-        print(f'[{lat}, {lng}, {rad}]')
-    
-        user = request.user
-        movie_vectors = json.loads(user.form_movies)
-        for vec in json.loads(user.social_movies):
-            if vec not in movie_vectors:
-                movie_vectors.append(vec)
-
-        movie_sum = UserModelBuilder().build_summarize_model(movie_vectors)
-        print(movie_sum)
-
-        geo_items = UserModelBuilder().get_items_from_coordinates(lat, lng, rad, constants.MOVIE)
-        ranked_items = ItemRanker().rank_summarize_items(movie_sum, geo_items)
-        context['ranked_items'] = list(map(lambda x: x['name'], ranked_items))
+        context['ranked_items_2'] = list(map(lambda x: x['name'], ranked_items_2))
 
     return render(request, template_name, context)
