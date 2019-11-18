@@ -10,7 +10,7 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     list_display = ['username', 'has_social_connect', 'has_social_data', 'has_demographic', 'has_movies' ]
-    fieldsets = ((('User'), {'fields': ('age', 'gender', 'poi_weights', 'form_movies', 'social_items')}),) + UserAdmin.fieldsets
+    fieldsets = ((('User'), {'fields': ('age', 'gender', 'form_movies', 'social_items')}),) + UserAdmin.fieldsets
 
 class RetrievedItemAdmin(admin.ModelAdmin):
     list_display = ['wkd_id', 'updated', 'media_type', 'name', 'querystring']

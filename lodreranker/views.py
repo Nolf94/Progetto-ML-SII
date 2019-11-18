@@ -1,5 +1,6 @@
 # lodreranker/views.py
 import json
+import jsonpickle
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login
@@ -9,15 +10,12 @@ from django.contrib.staticfiles import finders
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.urls import reverse_lazy
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 from social_django.models import UserSocialAuth
 
-from lodreranker import constants, models, utils
-
-from .forms import CustomUserCreationForm, CustomUserDemographicDataForm
-from .recommendation import ItemRanker, ItemRetriever, Recommender
-
+from lodreranker import constants, forms, models, recommendation, utils
 
 def home(request):
     return render(request, 'home.html')
@@ -57,6 +55,7 @@ def social_disconnect(request):
     user.social_items.clear()
     user.save()
     return redirect(reverse_lazy('profile'))
+    # return redirect(reverse_lazy('signup_s1'))
 
 
 # Reset all user data
@@ -97,7 +96,7 @@ def route(request):
 # Handles user creation, automatically logins the new user after submit.
 class SignupS0View(CreateView):
     template_name = 'registration/signup_s0.html'
-    form_class = CustomUserCreationForm
+    form_class = forms.CustomUserCreationForm
 
     def form_valid(self, form):
         form.save() 
@@ -116,26 +115,53 @@ def signup_s1(request):
     if user.has_social_connect and user.has_social_data:
         return route(request)
     else:
+        try:
+            request.session.pop('retriever')
+        except:
+            pass
         return render(request, template_name)
 
 # Retrieve user media likes from UserSocialAuth.
 @login_required
+@csrf_exempt
 def signup_s1_ajax(request):
     user = request.user
     social_auth = UserSocialAuth.objects.filter(user=user.id)[0]
 
-    social_movies = ItemRetriever(constants.MOVIE).retrieve_from_social(social_auth.extra_data['movies'])
-    user.social_items.add(*social_movies)
-    user.has_social_data = True
-    user.save()
+    if request.is_ajax():
+        session = request.session
+        from pprint import pprint
 
-    return JsonResponse({'num_retrieved_movies': len(social_movies)})    
+        pprint(session.keys())
+        if 'retriever' in session.keys():
+            retriever = jsonpickle.decode(session['retriever'])
+            retriever.retrieve_next()
+        else:
+            retriever = recommendation.SocialItemRetriever(constants.MOVIE)
+            retriever.initialize(social_auth.extra_data['movies'])
+
+        encoded_retriever = jsonpickle.encode(retriever)
+        session['retriever'] = encoded_retriever
+
+        if not retriever.next:
+            for itemid in retriever.retrieved_items:
+                user.social_items.add(models.RetrievedItem.objects.get(wkd_id=itemid))
+            user.has_social_data = True
+            user.save()
+        
+        # OLD BULK METHOD
+        # social_movies = ItemRetriever(constants.MOVIE).retrieve_from_social(social_auth.extra_data['movies'])
+        # user.social_items.add(*social_movies)
+
+
+    # return JsonResponse({'num_retrieved_movies': len(social_movies)})    
+    return JsonResponse(json.loads(encoded_retriever))    
 
 
 # Demographic data form
 class SignupS2View(LoginRequiredMixin, UpdateView):
     template_name = 'registration/signup_s2.html'
-    form_class = CustomUserDemographicDataForm
+    form_class = forms.CustomUserDemographicDataForm
 
     def get_object(self, queryset=None):
         return get_object_or_404(models.CustomUser, pk=self.request.user.id)
@@ -185,7 +211,7 @@ def signup_s4(request):
 
 ##### RECOMMENDATION
 @login_required
-def recommendation(request):
+def recommendation_view(request):
     template_name = 'recommendation.html'
     context = {'GOOGLE_MAPS_KEY': settings.GOOGLE_MAPS_KEY }
 
@@ -196,7 +222,7 @@ def recommendation(request):
             request.POST.get('radius')
         )
         user = request.user
-        movie_recommender = Recommender(user, constants.MOVIE, max_retrieved_items=30)
+        movie_recommender = recommendation.Recommender(user, constants.MOVIE, max_retrieved_items=30)
         
         # bulk load 
         retriever = movie_recommender.retriever

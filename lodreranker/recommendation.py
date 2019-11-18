@@ -3,7 +3,6 @@ import re
 from urllib.request import urlopen
 
 import numpy as np
-import requests
 from scipy import spatial
 
 import Clustering.clustering as clustering
@@ -64,15 +63,15 @@ class ItemRanker(object):
 
 class ItemRetriever(object):
     """Interface for retrieving items from Linked Open Data (LOD), such as Wikidata."""
-    def __init__(self, media_type, max_retrieved_items=None):
+    def __init__(self, media_type):
         self.mtype = media_type
-        self.retrieved_items = []
-        self.max_retrieved_items = max_retrieved_items
 
 
-    def retrieve_from_social(self, extra_data_media):
-        """Retrieves items from social network data."""
+class SocialItemRetriever(ItemRetriever):
+    def __init__(self, media_type):
+        super().__init__(media_type)
 
+    def initialize(self, extra_data_media):
         # if data is split across multiple pages, fetches from all pages.
         media = extra_data_media['data']
         has_next = 'next' in extra_data_media['paging'].keys()
@@ -81,48 +80,109 @@ class ItemRetriever(object):
             media.extend(next_page['data'])
             has_next = 'next' in next_page['paging'].keys()
 
-        # BULK PROCESS
-        valid_items = []
-        # qss is a list of querystrings, aka names which MIGHT represent a linked open data item.
-        qss = list(map(lambda x: x['name'], media))
-        print(f'Starting retrieval for {self.mtype} from {len(qss)} querystrings:')
-        for i, qs in enumerate(qss):
-            print(f'[{i+1}/{len(qss)}] "{qs}"')
-            try: # use cached item
-                item = models.RetrievedItem.objects.get(querystring=qs)
-                print(f'\t"{qs}" found cached: {item.wkd_id}.')
-            except models.RetrievedItem.DoesNotExist: # (try to) get new item
-                sm = lod_queries.Sparql()
-                if self.mtype == constants.MOVIE:
-                    query = sm.get_query_movies_querystring(qs)
+        self.retrieved_items = []
+        self.qss = list(map(lambda x: x['name'], media))
+        self.current = None
+        self.next = True # we use True instead of None to trigger the first recursive ajax call
+        self.i = 0
+        self.tot = len(self.qss)
 
-                try:
-                    binding = sm.execute(query)[0]
-                except Exception as e:
-                    print(f'\t"{qs}": {e}')
-                    continue
+    def retrieve_next(self):
+        self.current = self.qss.pop(0)
+        self.next = self.qss[0] if self.qss else None
+        self.i += 1
+        print(f'[{self.i+1}/{len(self.qss)}] "{self.current}"')
+        try: # use cached item
+            item = models.RetrievedItem.objects.get(querystring=self.current)
+            print(f'\t"{self.current}" found cached: {item.wkd_id}.')
+        except models.RetrievedItem.DoesNotExist: # (try to) get new item
+            sm = lod_queries.Sparql()
+            if self.mtype == constants.MOVIE:
+                query = sm.get_query_movies_querystring(self.current)
 
-                item = models.RetrievedItem(
-                    wkd_id=re.sub('http://www.wikidata.org/entity/', '', binding['item']['value']),
-                    media_type=self.mtype,
-                    querystring=qs,
-                    name=binding['itemLabel']['value'],
-                )
-                item.save()
-                print(f'\t"{qs}" returned new item: {item.wkd_id}.')
+            try:
+                binding = sm.execute(query)[0]
+            except Exception as e:
+                print(f'\t"{self.current}": {e}')
+                return # TODO exception handling
 
-            if not item.abstract:
-                abstract = lod_queries.Wiki().retrieve_abstract(item)
-                if abstract:
-                    item.abstract = abstract
-                    item.vector = json.dumps(d2v.create_vector(abstract, self.mtype).tolist())
-                    item.save() # update item adding abstract and vector
-            if item.vector:
-                valid_items.append(item)
-        print(f'Retrieved {len(valid_items)} valid items from {len(qss)} querystrings ' +
-            f'({len(qss)-len(valid_items)} invalid querystrings or items).')
-        return valid_items
+            item = models.RetrievedItem(
+                wkd_id=re.sub('http://www.wikidata.org/entity/', '', binding['item']['value']),
+                media_type=self.mtype,
+                querystring=self.current,
+                name=binding['itemLabel']['value'],
+            )
+            item.save()
+            print(f'\t"{self.current}" returned new item: {item.wkd_id}.')
 
+        if not item.abstract:
+            abstract = lod_queries.Wiki().retrieve_abstract(item)
+            if abstract:
+                item.abstract = abstract
+                item.vector = json.dumps(d2v.create_vector(abstract, self.mtype).tolist())
+                item.save() # update item adding abstract and vector
+        if item.vector:
+            self.retrieved_items.append(item.wkd_id)
+
+    """ BULK LOAD UNUSED"""
+    # def retrieve_from_social(self, extra_data_media):
+        # """Retrieves items from social network data."""
+
+        # # if data is split across multiple pages, fetches from all pages.
+        # media = extra_data_media['data']
+        # has_next = 'next' in extra_data_media['paging'].keys()
+        # while has_next:
+        #     next_page = json.loads(urlopen(extra_data_media['paging']['next']).read().decode('utf-8'))
+        #     media.extend(next_page['data'])
+        #     has_next = 'next' in next_page['paging'].keys()
+
+        # # BULK PROCESS
+        # valid_items = []
+        # # qss is a list of querystrings, aka names which MIGHT represent a linked open data item.
+        # qss = list(map(lambda x: x['name'], media))
+        # print(f'Starting retrieval for {self.mtype} from {len(qss)} querystrings:')
+        # for i, qs in enumerate(qss):
+        #     print(f'[{i+1}/{len(qss)}] "{qs}"')
+        #     try: # use cached item
+        #         item = models.RetrievedItem.objects.get(querystring=qs)
+        #         print(f'\t"{qs}" found cached: {item.wkd_id}.')
+        #     except models.RetrievedItem.DoesNotExist: # (try to) get new item
+        #         sm = lod_queries.Sparql()
+        #         if self.mtype == constants.MOVIE:
+        #             query = sm.get_query_movies_querystring(qs)
+
+        #         try:
+        #             binding = sm.execute(query)[0]
+        #         except Exception as e:
+        #             print(f'\t"{qs}": {e}')
+        #             continue
+
+        #         item = models.RetrievedItem(
+        #             wkd_id=re.sub('http://www.wikidata.org/entity/', '', binding['item']['value']),
+        #             media_type=self.mtype,
+        #             querystring=qs,
+        #             name=binding['itemLabel']['value'],
+        #         )
+        #         item.save()
+        #         print(f'\t"{qs}" returned new item: {item.wkd_id}.')
+
+        #     if not item.abstract:
+        #         abstract = lod_queries.Wiki().retrieve_abstract(item)
+        #         if abstract:
+        #             item.abstract = abstract
+        #             item.vector = json.dumps(d2v.create_vector(abstract, self.mtype).tolist())
+        #             item.save() # update item adding abstract and vector
+        #     if item.vector:
+        #         valid_items.append(item)
+        # print(f'Retrieved {len(valid_items)} valid items from {len(qss)} querystrings ' +
+        #     f'({len(qss)-len(valid_items)} invalid querystrings or items).')
+        # return valid_items
+
+
+class GeoItemRetriever(ItemRetriever):
+    def __init__(self, media_type, max_to_retrieve=50):
+        super().__init__(media_type)
+        self.max_to_retrieve = max_to_retrieve
 
     def retrieve_from_geoarea(self, geoarea):
         """Retrieves items from geoarea."""
@@ -174,14 +234,14 @@ class ItemRetriever(object):
 
 class Recommender(object):
     """Main interface for recommendation."""
-    def __init__(self, user, media_type, max_retrieved_items=50):
+    def __init__(self, user, media_type, max_to_retrieve=None):
         self.user = user
         self.mtype = media_type
-        self.retriever = ItemRetriever(self.mtype, max_retrieved_items)
+        self.retriever = GeoItemRetriever(self.mtype, max_to_retrieve)
 
         # form vectors are directly loaded from json
         self.uservectors = json.loads(eval(f'user.form_{media_type}'))
-    
+
         # social vectors are retrieved from associated RetrievedItems
         for item in self.user.social_items.all():
             if item.vector and item.vector not in self.uservectors:

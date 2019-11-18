@@ -10,11 +10,11 @@
             {% endif %}
         </div>
     </div>
+    {% if user.has_movies %}
     <div class="row mb-3">
         <div class="col-8 mx-auto text-center social-container">
-        {% if user.has_movies %}
             <a class="btn btn-success p-3" href="{% url 'recommendation' %}">Start</a>
-        {% endif %}
         </div>
     </div>
+    {% endif %}
 {% endblock %}

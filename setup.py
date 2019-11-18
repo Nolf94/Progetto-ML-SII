@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='bgm_lodreranker',
+    name='lodreranker',
     version='0.1a',
 
-    author='Marco Bellocchi, Lorenzo Guidaldi, Giorgia Marini',
+    author='Marco Bellocchi, Lorenzo Guidaldi',
     author_email='lor.guidaldi@stud.uniroma3.it',
 
     packages=find_packages(),

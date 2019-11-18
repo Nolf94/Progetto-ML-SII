@@ -16,6 +16,8 @@ SPARQL_TIMEOUT = 60  # set the query timeout (in seconds)
 SPARQL_LIMIT = 30 # TODO increase dynamically
 
 class Sparql(object):
+    """Interface for building and executing SPARQL queries to the Wikidata endpoint."""
+
     def __init__(self):
         sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36")
         sparql.setTimeout(SPARQL_TIMEOUT)
@@ -81,7 +83,14 @@ class Sparql(object):
 
 
 class Wiki(object):
+    """Interface for executing queries to the Wiki legacy APIs."""
+
     def retrieve_abstract(self, item):
+        """
+        Given an item with a Wikidata item ID, executes the following queries:
+        - Query the Wikidata API to get the Wiki page title from the wikidata item ID.
+        - Query the Wikipedia extracts API with the page title to get the page's first paragraph (our abstract).
+        """
         try:
             try:
                 # Query wikidata API to get wikipedia pagetitle from wkd_id
