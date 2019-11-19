@@ -68,6 +68,22 @@ class Sparql(object):
         """
         return query
 
+    def get_query_movies_poi(self, qs):
+        query = """
+            SELECT DISTINCT ?label ?abstract
+            FROM <http://dbpedia.org/page_links>
+            WHERE {
+                ?o  dbo:wikiPageWikiLink dbr:"""f'"{qs}"'""".
+                ?o rdf:type schema:Movie.
+                ?o  rdfs:label ?label.
+                ?o dbo:abstract ?abstract
+                FILTER langMatches(lang(?abstract),"en")    
+                FILTER langMatches(lang(?label),"en")    
+            }
+            GROUP BY ?label
+            """
+        return query
+
     def execute(self, query):
         self.sparql.setQuery(query)
         try:
