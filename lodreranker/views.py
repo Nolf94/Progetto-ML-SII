@@ -41,7 +41,7 @@ def profile(request):
         facebook_login = user.social_auth.get(provider='facebook')
     except UserSocialAuth.DoesNotExist:
         facebook_login = None
-    
+
     can_disconnect = (user.social_auth.count() > 1 or user.has_usable_password())
     return render(request, 'profile.html', {
         'facebook_login': facebook_login,
@@ -53,7 +53,7 @@ def profile(request):
 @login_required
 def social_disconnect(request):
     user = request.user
-    soc_auths = UserSocialAuth.objects.filter(user=user.id)[0].delete()  
+    soc_auths = UserSocialAuth.objects.filter(user=user.id)[0].delete()
     user.has_social_connect = False
     user.has_social_data = False
     user.social_items.clear()
@@ -113,7 +113,7 @@ class SignupS0View(CreateView):
     form_class = forms.CustomUserCreationForm
 
     def form_valid(self, form):
-        form.save() 
+        form.save()
         username = self.request.POST['username']
         password = self.request.POST['password1']
         user = authenticate(username=username, password=password)
@@ -160,14 +160,14 @@ def signup_s1_ajax(request):
                 user.social_items.add(RetrievedItem.objects.get(wkd_id=itemid))
             user.has_social_data = True
             user.save()
-        
+
         # OLD BULK METHOD
         # social_movies = ItemRetriever(constants.MOVIE).retrieve_from_social(social_auth.extra_data['movies'])
         # user.social_items.add(*social_movies)
 
 
-    # return JsonResponse({'num_retrieved_movies': len(social_movies)})    
-    return JsonResponse(json.loads(encoded_retriever))    
+    # return JsonResponse({'num_retrieved_movies': len(social_movies)})
+    return JsonResponse(json.loads(encoded_retriever))
 
 
 # Demographic data form
@@ -192,7 +192,7 @@ def signup_s3(request):
     return redirect(reverse_lazy('profile'))
     # template_name = 'registration/signup_s3.html'
     # result = utils.handle_imgform(request, template_name, 5, 'poi_choices', 'poi')
-    # if result['success']: 
+    # if result['success']:
     #     selected_images, poi_choices = result['data'][0], result['data'][1]
     #     vectors = utils.get_vectors_from_selection(selected_images, poi_choices)
     #     user = request.user
@@ -209,9 +209,9 @@ def signup_s3(request):
 def signup_s4(request):
     template_name = 'registration/signup_s4.html'
     result = utils.handle_imgform(request, template_name, 5, 'movie_choices', 'movies')
-    if result['success']: 
+    if result['success']:
         selected_images, movie_choices = result['data'][0], result['data'][1]
-        user = request.user 
+        user = request.user
         movies_vectors = utils.get_vectors_from_selection(selected_images, movie_choices)
         user.form_movies = json.dumps(list(map(lambda x: x.tolist(), movies_vectors)))
         user.has_movies = True
@@ -226,9 +226,9 @@ def signup_s4(request):
 def signup_s5(request):
     template_name = 'registration/signup_s5.html'
     result = utils.handle_imgform(request, template_name, 5, 'book_choices', 'books')
-    if result['success']: 
+    if result['success']:
         selected_images, book_choices = result['data'][0], result['data'][1]
-        user = request.user 
+        user = request.user
         books_vectors = utils.get_vectors_from_selection(selected_images, book_choices)
         user.form_books = json.dumps(list(map(lambda x: x.tolist(), books_vectors)))
         user.has_books = True
@@ -243,9 +243,9 @@ def signup_s5(request):
 def signup_s6(request):
     template_name = 'registration/signup_s6.html'
     result = utils.handle_imgform(request, template_name, 5, 'artist_choices', 'artists')
-    if result['success']: 
+    if result['success']:
         selected_images, artist_choices = result['data'][0], result['data'][1]
-        user = request.user 
+        user = request.user
         artists_vectors = utils.get_vectors_from_selection(selected_images, artist_choices)
         user.form_artists = json.dumps(list(map(lambda x: x.tolist(), artists_vectors)))
         user.has_artists = True
@@ -269,14 +269,14 @@ def recommendation_view(request):
         )
         user = request.user
         movie_recommender = Recommender(user, constants.MOVIE, max_to_retrieve=30)
-        
+
         # BULK LOAD
         retriever = movie_recommender.retriever
         retriever.retrieve_from_geoarea(area)
 
         # TODO retriever.retrieve_next()
 
-        try: 
+        try:
             ranking_clustering = movie_recommender.recommend(constants.MOVIE, method='clustering')
             ranking_summarize = movie_recommender.recommend(constants.MOVIE, method='summarize')
             context['itemsfound'] = True
@@ -285,6 +285,6 @@ def recommendation_view(request):
 
         except utils.RetrievalError:
             context['itemsfound'] = False
-            
+
 
     return render(request, template_name, context)

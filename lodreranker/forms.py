@@ -22,15 +22,6 @@ class CustomUserDemographicDataForm(forms.ModelForm):
         model = CustomUser
         fields = ('username','first_name','last_name','age','gender',)
 
-    # tentative prepopulation with data from User Social Account
-    # def __init__(self, *args, **kwargs):
-    #     super(CustomUserDemographicDataForm, self).__init__(*args, **kwargs)
-            # if 'gender' in self.sociallogin.account.extra_data:
-            #     if self.sociallogin.account.extra_data['gender'] == 'male':
-            #         self.initial['gender'] = 'M'
-            #     elif self.sociallogin.account.extra_data['gender'] == 'female':
-            #         self.initial['gender'] = 'F'
-
 
 class CustomUserChangeForm(UserChangeForm):
     class Meta:
