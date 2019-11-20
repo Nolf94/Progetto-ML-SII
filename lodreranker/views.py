@@ -65,7 +65,11 @@ def reset(request):
     # user.poi_weights = None
     # user.has_poivector = False
     user.form_movies = None
+    user.form_books = None
+    user.form_artists = None
     user.has_movies = False
+    user.has_books = False
+    user.has_artists = False
     for name in {f.name: None for f in user._meta.fields if f.null}:
         setattr(user, name, None)
     user.has_demographic = False
@@ -80,6 +84,8 @@ def route(request):
     s2 = reverse_lazy('signup_s2')
     s3 = reverse_lazy('signup_s3')
     s4 = reverse_lazy('signup_s4')
+    s5 = reverse_lazy('signup_s5')
+    s6 = reverse_lazy('signup_s6')
     profile = reverse_lazy('profile')
 
     if not user.has_social_connect:
@@ -90,6 +96,10 @@ def route(request):
         # return redirect(s3)
     elif not user.has_movies:
         return redirect(s4)
+    elif not user.has_books:
+        return redirect(s5)
+    elif not user.has_artists:
+        return redirect(s6)
     else:
         return redirect(profile)
 
@@ -207,7 +217,37 @@ def signup_s4(request):
         return route(request)
     else:
         return render(request, template_name, result['data'])
+# Cold-start form #3 (Books)
+@login_required
+def signup_s5(request):
+    template_name = 'registration/signup_s5.html'
+    result = utils.handle_imgform(request, template_name, 5, 'book_choices', 'books')
+    if result['success']: 
+        selected_images, book_choices = result['data'][0], result['data'][1]
+        user = request.user 
+        books_vectors = utils.get_vectors_from_selection(selected_images, book_choices)
+        user.form_books = json.dumps(list(map(lambda x: x.tolist(), books_vectors)))
+        user.has_books = True
+        user.save()
+        return route(request)
+    else:
+        return render(request, template_name, result['data'])
 
+# Cold-start form #3 (Books)
+@login_required
+def signup_s6(request):
+    template_name = 'registration/signup_s6.html'
+    result = utils.handle_imgform(request, template_name, 5, 'artist_choices', 'artists')
+    if result['success']: 
+        selected_images, artist_choices = result['data'][0], result['data'][1]
+        user = request.user 
+        artists_vectors = utils.get_vectors_from_selection(selected_images, artist_choices)
+        user.form_artists = json.dumps(list(map(lambda x: x.tolist(), artists_vectors)))
+        user.has_artists = True
+        user.save()
+        return route(request)
+    else:
+        return render(request, template_name, result['data'])
 
 ##### RECOMMENDATION
 @login_required

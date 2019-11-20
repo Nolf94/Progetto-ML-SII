@@ -133,6 +133,16 @@ input[type="checkbox"] {
     height: 15em;
 }
 
+.book img {
+    width: 10em;
+    height: 15em;
+}
+
+.artist img {
+    width: 10em;
+    height: 15em;
+}
+
 label {
     position: relative;
     cursor: pointer;

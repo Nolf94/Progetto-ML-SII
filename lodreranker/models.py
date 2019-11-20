@@ -32,8 +32,11 @@ class CustomUser(AbstractUser):
     
     # has_poivector = models.BooleanField(default=False)
     # poi_weights = JSONField(blank=True, null=True)
-
     has_movies = models.BooleanField(default=False)
     form_movies = JSONField(blank=True, null=True)
+    has_books = models.BooleanField(default=False)
+    form_books = JSONField(blank=True, null=True)
+    has_artists = models.BooleanField(default=False)
+    form_artists = JSONField(blank=True, null=True)
 
     social_items = models.ManyToManyField(RetrievedItem)

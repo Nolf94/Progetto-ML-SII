@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% block title %} Books form {% endblock %}
+{% block content %}
+<div class="row mb-3s">
+    <div class="col-12 mx-auto my-auto social-container my-2 text-center">
+        <p>Choose at least {{min_choices}} books you like.</p>
+        {% if error %}<p class="text-center text-danger font-italic">Please choose at least {{min_choices}} books.</p>{% endif %}
+        <form method="post" action="{% url 'signup_s5' %}" novalidate>
+            <div class="form__content book d-flex flex-wrap">
+            {% csrf_token %}
+            <input type="hidden" id="selected" name="selected" value="{{selected}}"/>
+            {% comment %} <div id="preload" hidden>{{preload}}</div> {% endcomment %}
+            {% for choice in request.session.book_choices %}
+                <input type="checkbox" id={{choice.id}} name={{choice.id}} />
+                <label class="m-3" name="{{choice.name}}" for={{choice.id}}>
+                <img src="{% static choice.img %}" /></label>
+            {% endfor %}
+            </div>
+
+            <div class="text-center">
+                {% if error %}<p class="text-center text-danger font-italic">Please choose at least {{min_choices}} books.</p>{% endif %}
+                <button type="submit" class="btn btn-block btn-success py-2">Confirm</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="{% static 'js/imageform.js' %}"></script>
+{% endblock %}
