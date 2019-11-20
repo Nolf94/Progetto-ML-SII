@@ -13,8 +13,6 @@
                 {% if user.has_poivector %}<span> <a href="{% url 'signup_s3' %}">(repeat)</a></span>{% endif %} {% endcomment %}
             <li>Compiled movies form: <span class="fa fa-{% if user.has_movies %}check text-success{% else %}times text-danger{% endif %}"></span>
                 {% if user.has_movies %}<span> <a href="{% url 'signup_s4' %}">(repeat)</a></span>{% endif %}
-                <li>Compiled movies form: <span class="fa fa-{% if user.has_movies %}check text-success{% else %}times text-danger{% endif %}"></span>
-                {% if user.has_movies %}<span> <a href="{% url 'signup_s4' %}">(repeat)</a></span>{% endif %}
             <li>Compiled books form: <span class="fa fa-{% if user.has_books %}check text-success{% else %}times text-danger{% endif %}"></span>
                 {% if user.has_books %}<span> <a href="{% url 'signup_s5' %}">(repeat)</a></span>{% endif %}
             <li>Compiled artists form: <span class="fa fa-{% if user.has_artists %}check text-success{% else %}times text-danger{% endif %}"></span>
