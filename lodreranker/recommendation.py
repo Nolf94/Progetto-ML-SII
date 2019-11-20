@@ -8,18 +8,33 @@ from scipy import spatial
 import Clustering.clustering as clustering
 import Doc2Vec.doc2vec as d2v
 from lodreranker import constants, lod_queries, models
+from lodreranker.utils import RetrievalError
 
 
 class ItemRanker(object):
     """Interface for ranking a list of items according to different strategies."""
 
-    def cosine_similarity(self, vec1, vec2):
-        """Returns the cosine similarity between vectors vec1 and vec2."""
+    def __init__(self, items):
+        # A candidate is a dictionary with two kv pairs: 
+        #   item (the candidate's details)
+        #   score (the candidate's score)
+        self.candidates = [dict(item=item, score=0) for item in items]
+
+    def __cosine_similarity(self, vec1, vec2):
+        """Private method: returns the cosine similarity between vectors vec1 and vec2."""
         return 1 - spatial.distance.cosine(vec1, vec2)
 
-    def rank_items_using_clusters(self, clusters, items):
+    def __get_ranking(self):
+        """Private method: calculates and returns the ranking according to the candidates' scores."""
+        ranking = sorted(self.candidates, reverse=True, key=lambda candidate: candidate['score'])
+        for i, candidate in enumerate(ranking):
+            item = candidate['item']
+            print(f"{str(i+1)}, {candidate['score']}, {item.wkd_id}, {item.name}")
+        return ranking
+
+    def rank_items_using_clusters(self, clusters):
         """
-        Ranks given items using the clustering method.
+        Ranks using the clustering method.
         Given N clusters, N partial scores are calculated for each item by confrontation with every centroid.
         The ranking is then calculated by summing the partial scores.
 
@@ -30,41 +45,46 @@ class ItemRanker(object):
         The final score of item i is calculated as following:
             score(i) = sum( score(i,m) ) for each cluster m
         """
-        # initialize empty scores
-        items = [dict(item, score=0) for item in items]
         for cluster in clusters:
-            # calculate similarity between each item and current cluster's centroid
             relative_sims = {}
-            for item in items:
-                similarity = self.cosine_similarity(cluster["centroid"], item["vector"])
-                relative_sims[item['id']] = similarity
-            # sum similarities for normalization
+            for candidate in self.candidates:
+                item = candidate['item']
+                similarity = self.__cosine_similarity(cluster["centroid"], json.loads(item.vector))
+                relative_sims[item.wkd_id] = similarity
+            
             relative_sims_tot = sum(x for x in relative_sims.values())
-            # item partial score = normalized similarity * cluster's weight
-            for item in items:
-                item['score'] += (relative_sims[item['id']]/relative_sims_tot) * cluster['weight']
+            for candidate in self.candidates:
+                item = candidate['item']
+                candidate['score'] += (relative_sims[item.wkd_id]/relative_sims_tot) * cluster['weight']
 
-        ranked_items = sorted(items, reverse=True, key=lambda item: item['score'])
-        for i, item in enumerate(ranked_items):
-            print(f"{str(i+1)}, {item['score']}, {item['id']}, {item['name']}")
-        return ranked_items
+        return self.__get_ranking()
 
-    def rank_items_using_sum(self, sum, items):
+    def rank_items_using_sum(self, sum_vec):
         """
-        Ranks given items using the sum method.
+        Ranks using the sum method.
         Given a sum vector, the ranking is obtained by simply calculatig similarity between the vector and each item.
         """
-        items = [dict(item, score=self.cosine_similarity(sum, item["vector"])) for item in items]
-        ranked_items = sorted(items, reverse=True, key=lambda item: item['score'])
-        for i, item in enumerate(ranked_items):
-            print(f"{str(i+1)}, {item['score']}, {item['id']}, {item['name']}")
-        return ranked_items
+        for candidate in self.candidates:
+            item = candidate['item']
+            candidate['score'] = self.__cosine_similarity(sum_vec, json.loads(item.vector))
+        
+        return self.__get_ranking()
 
 
 class ItemRetriever(object):
     """Interface for retrieving items from Linked Open Data (LOD), such as Wikidata."""
     def __init__(self, media_type):
+        if type(self) is ItemRetriever:
+            raise Exception('ItemRetriever is an abstract class and cannot be instantiated directly')
         self.mtype = media_type
+
+    def initialize(self):
+        # TODO pull up base logic
+        pass
+
+    def retrieve_next(self):
+        # TODO pull up base logic
+        pass
 
 
 class SocialItemRetriever(ItemRetriever):
@@ -183,6 +203,7 @@ class GeoItemRetriever(ItemRetriever):
     def __init__(self, media_type, max_to_retrieve=50):
         super().__init__(media_type)
         self.max_to_retrieve = max_to_retrieve
+        self.retrieved_items = []
 
     def retrieve_from_geoarea(self, geoarea):
         """Retrieves items from geoarea."""
@@ -201,7 +222,7 @@ class GeoItemRetriever(ItemRetriever):
         except Exception as e:
             print(e)
             return valid_items
-
+        
         for binding in bindings:
             wkd_id = re.sub('http://www.wikidata.org/entity/', '', binding['item']['value'])
             try: # use cached item
@@ -228,8 +249,8 @@ class GeoItemRetriever(ItemRetriever):
             if item.vector:
                 valid_items.append(item)
 
-        print(f'Retrieved {len(valid_items)} valid items.')
-        return valid_items
+        print(f'Retrieved {len(valid_items)} valid items.')        
+        self.retrieved_items = valid_items
 
 
 class Recommender(object):
@@ -249,19 +270,20 @@ class Recommender(object):
         self.uservectors = np.array(self.uservectors)
 
     def recommend(self, media_type, method='summarize'):
+        """Before calling this function, be sure that the recommender's retriever has retrieved items."""
+        items = self.retriever.retrieved_items
+        if not items:
+            raise RetrievalError
+        ranker = ItemRanker(items)
+        
         if method == 'clustering':
             eps = 0.50
             clusters = clustering.clusterize(self.uservectors, eps)
             print(f'Vectors: {len(self.uservectors)}, Clusters: {len(clusters)}')
             for i, cluster in enumerate(clusters):
                 print(f"{i+1} - weight: {cluster['weight']}")
-
-            # ----------------------------------- #
-            items = self.retriever.retrieved_items
-            # ----------------------------------- #
-
-            return ItemRanker().rank_items_using_clusters(clusters, items)
+            return ranker.rank_items_using_clusters(clusters)
 
         elif method == 'summarize':
-            items = self.retriever.retrieved_items
-            return ItemRanker().rank_items_using_sum(sum(np.array(self.uservectors)), items)
+            sum_vec = sum(np.array(self.uservectors))
+            return ranker.rank_items_using_sum(sum_vec)

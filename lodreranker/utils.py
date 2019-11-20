@@ -16,6 +16,10 @@ class GeoArea(object):
         return f"({self.lat}, {self.lng}, {self.rad})"
 
 
+class RetrievalError(Exception):
+    pass
+
+
 def get_image_choices(media_type):
     data = json.loads(open(finders.find(f'js/{media_type}.json')).read())
     opts = []

@@ -1,7 +1,7 @@
 # lodreranker/views.py
 import json
-import jsonpickle
 
+import jsonpickle
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
@@ -15,7 +15,11 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 from social_django.models import UserSocialAuth
 
-from lodreranker import constants, forms, models, recommendation, utils
+from lodreranker import constants, forms, utils
+from lodreranker.models import CustomUser, RetrievedItem
+from lodreranker.recommendation import (ItemRanker, Recommender,
+                                        SocialItemRetriever)
+
 
 def home(request):
     return render(request, 'home.html')
@@ -140,14 +144,12 @@ def signup_s1_ajax(request):
 
     if request.is_ajax():
         session = request.session
-        from pprint import pprint
 
-        pprint(session.keys())
         if 'retriever' in session.keys():
             retriever = jsonpickle.decode(session['retriever'])
             retriever.retrieve_next()
         else:
-            retriever = recommendation.SocialItemRetriever(constants.MOVIE)
+            retriever = SocialItemRetriever(constants.MOVIE)
             retriever.initialize(social_auth.extra_data['movies'])
 
         encoded_retriever = jsonpickle.encode(retriever)
@@ -155,7 +157,7 @@ def signup_s1_ajax(request):
 
         if not retriever.next:
             for itemid in retriever.retrieved_items:
-                user.social_items.add(models.RetrievedItem.objects.get(wkd_id=itemid))
+                user.social_items.add(RetrievedItem.objects.get(wkd_id=itemid))
             user.has_social_data = True
             user.save()
         
@@ -174,7 +176,7 @@ class SignupS2View(LoginRequiredMixin, UpdateView):
     form_class = forms.CustomUserDemographicDataForm
 
     def get_object(self, queryset=None):
-        return get_object_or_404(models.CustomUser, pk=self.request.user.id)
+        return get_object_or_404(CustomUser, pk=self.request.user.id)
 
     def form_valid(self, form):
         user = self.request.user
@@ -217,6 +219,8 @@ def signup_s4(request):
         return route(request)
     else:
         return render(request, template_name, result['data'])
+
+
 # Cold-start form #3 (Books)
 @login_required
 def signup_s5(request):
@@ -233,7 +237,8 @@ def signup_s5(request):
     else:
         return render(request, template_name, result['data'])
 
-# Cold-start form #3 (Books)
+
+# Cold-start form #4 (Artists)
 @login_required
 def signup_s6(request):
     template_name = 'registration/signup_s6.html'
@@ -249,6 +254,7 @@ def signup_s6(request):
     else:
         return render(request, template_name, result['data'])
 
+
 ##### RECOMMENDATION
 @login_required
 def recommendation_view(request):
@@ -262,17 +268,23 @@ def recommendation_view(request):
             request.POST.get('radius')
         )
         user = request.user
-        movie_recommender = recommendation.Recommender(user, constants.MOVIE, max_retrieved_items=30)
+        movie_recommender = Recommender(user, constants.MOVIE, max_to_retrieve=30)
         
-        # bulk load 
+        # BULK LOAD
         retriever = movie_recommender.retriever
         retriever.retrieve_from_geoarea(area)
 
         # TODO retriever.retrieve_next()
 
-        ranked_items = movie_recommender.recommend(constants.MOVIE, method='clustering')
-        ranked_items_2 = movie_recommender.recommend(constants.MOVIE, method='summarize')
-        context['ranked_items'] = list(map(lambda x: x['name'], ranked_items))
-        context['ranked_items_2'] = list(map(lambda x: x['name'], ranked_items_2))
+        try: 
+            ranking_clustering = movie_recommender.recommend(constants.MOVIE, method='clustering')
+            ranking_summarize = movie_recommender.recommend(constants.MOVIE, method='summarize')
+            context['itemsfound'] = True
+            context['ranking_clustering'] = list(map(lambda x: x['item'].name, ranking_clustering))
+            context['ranking_summarize'] = list(map(lambda x: x['item'].name, ranking_summarize))
+
+        except utils.RetrievalError:
+            context['itemsfound'] = False
+            
 
     return render(request, template_name, context)

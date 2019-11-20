@@ -28,9 +28,21 @@
     </div>
 </div>
 
-{% for item in ranked_items %}
-    {{forloop.counter}} - {{item}}<br>
-{% endfor %}
+{% if itemsfound %}
+    <p>
+    <b>Ranking by clustering:</b><br>
+    {% for item in ranking_clustering %}
+        {{forloop.counter}} - {{item}}<br>
+    {% endfor %}
+    </p><p>
+    <b>Ranking by sum:</b><br>
+    {% for item in ranking_summarize %}
+        {{forloop.counter}} - {{item}}<br>
+    {% endfor %}
+    </p>
+{% else %}
+    No items found in that area. sorry!
+{% endif %}
 
 <script src="{% static 'js/map.js' %}"></script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_KEY }}&libraries=places&callback=init" type="text/javascript"></script>
