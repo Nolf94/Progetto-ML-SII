@@ -17,7 +17,7 @@ from social_django.models import UserSocialAuth
 
 from lodreranker import constants, forms, utils
 from lodreranker.models import CustomUser, RetrievedItem
-from lodreranker.recommendation import (ItemRanker, Recommender,
+from lodreranker.recommendation import (ItemRanker, GeoItemRetriever, Recommender,
                                         SocialItemRetriever)
 
 
@@ -160,13 +160,9 @@ def signup_s1_ajax(request):
                 user.social_items.add(RetrievedItem.objects.get(wkd_id=itemid))
             user.has_social_data = True
             user.save()
-
         # OLD BULK METHOD
         # social_movies = ItemRetriever(constants.MOVIE).retrieve_from_social(social_auth.extra_data['movies'])
         # user.social_items.add(*social_movies)
-
-
-    # return JsonResponse({'num_retrieved_movies': len(social_movies)})
     return JsonResponse(json.loads(encoded_retriever))
 
 
@@ -262,29 +258,58 @@ def recommendation_view(request):
     context = {'GOOGLE_MAPS_KEY': settings.GOOGLE_MAPS_KEY }
 
     if request.method == 'POST':
+        context['ajax_begin']  = True
         area = utils.GeoArea(
             request.POST.get('latitude'),
             request.POST.get('longitude'),
             request.POST.get('radius')
         )
-        user = request.user
-        movie_recommender = Recommender(user, constants.MOVIE, max_to_retrieve=30)
-
-        # BULK LOAD
-        retriever = movie_recommender.retriever
-        retriever.retrieve_from_geoarea(area)
-
-        # TODO retriever.retrieve_next()
-
+        request.session['area'] = jsonpickle.encode(area)
         try:
-            ranking_clustering = movie_recommender.recommend(constants.MOVIE, method='clustering')
-            ranking_summarize = movie_recommender.recommend(constants.MOVIE, method='summarize')
-            context['itemsfound'] = True
-            context['ranking_clustering'] = list(map(lambda x: x['item'].name, ranking_clustering))
-            context['ranking_summarize'] = list(map(lambda x: x['item'].name, ranking_summarize))
-
-        except utils.RetrievalError:
-            context['itemsfound'] = False
-
-
+            request.session.pop('retriever')
+        except:
+            pass
     return render(request, template_name, context)
+
+
+@login_required
+@csrf_exempt
+def recommendation_view_ajax(request):
+    user = request.user
+
+    if request.is_ajax():
+        session = request.session
+
+        if 'area' in session.keys():
+            area = jsonpickle.decode(session['area'])
+            session.pop('area')
+
+        if 'retriever' in session.keys():
+            retriever = jsonpickle.decode(session['retriever'])
+            retriever.retrieve_next()
+        else:
+            retriever = GeoItemRetriever(constants.MOVIE, sparql_limit=30)
+            try:
+                retriever.initialize(area)
+            except utils.RetrievalError:
+                return # TODO exception handling
+
+        encoded_retriever = jsonpickle.encode(retriever)
+        session['retriever'] = encoded_retriever
+
+        if not retriever.next:
+            pass
+            # TODO RESTORE RECOMMENDATION
+
+            # movie_recommender = Recommender(constants.MOVIE, user, movie_retriever)
+            # try:
+            #     ranking_clustering = movie_recommender.recommend(method='clustering')
+            #     ranking_summarize = movie_recommender.recommend(method='summarize')
+            #     context['itemsfound'] = True
+            #     context['ranking_clustering'] = list(map(lambda x: x['item'].name, ranking_clustering))
+            #     context['ranking_summarize'] = list(map(lambda x: x['item'].name, ranking_summarize))
+
+            # except utils.RetrievalError:
+            #     context['itemsfound'] = False
+            
+    return JsonResponse(json.loads(encoded_retriever))

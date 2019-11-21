@@ -1,4 +1,4 @@
-$('#js-connect').hide();
+$('#js-begin').hide();
 $("#js-progress").show();
 function doAjax(to_django) {
     $.ajax({
@@ -14,8 +14,10 @@ function doAjax(to_django) {
             $("#js-progress-bar").children().attr('aria-valuenow', from_django.i);
             var percent = (from_django.i * 100 / from_django.tot).toFixed(0) + '%'
             $("#js-progress-bar").children().text(percent).css('width', percent);
-            $("#js-progress-data").text(from_django.next)
-            if (from_django.next) { 
+
+            if (from_django.next) {           
+                if (from_django.next.name) $("#js-progress-data").text(from_django.next.name)
+                else $("#js-progress-data").text(from_django.next)
                 doAjax(from_django); // RECURSIVE CALL
             } else {
                 $("#js-progress-text").text("Done.").next().children().toggleClass('spinner-border');

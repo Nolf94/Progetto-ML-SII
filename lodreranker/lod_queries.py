@@ -13,16 +13,17 @@ from lodreranker import constants
 from .models import RetrievedItem
 
 SPARQL_TIMEOUT = 60  # set the query timeout (in seconds)
-SPARQL_LIMIT = 30 # TODO increase dynamically
+SPARQL_LIMIT_DEFAULT = 30 # TODO increase dynamically
 
 class Sparql(object):
     """Interface for building and executing SPARQL queries to the Wikidata endpoint."""
 
-    def __init__(self):
+    def __init__(self, limit=SPARQL_LIMIT_DEFAULT):
         sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36")
         sparql.setTimeout(SPARQL_TIMEOUT)
         sparql.setReturnFormat(JSON)
         self.sparql = sparql
+        self.limit = limit
 
     def get_query_movies_querystring(self, qs):
             # filmtype_ids = ['Q11424', 'Q93204', 'Q226730', 'Q185529', 'Q200092', 'Q188473', 'Q24862', 'Q157443', 'Q319221', 'Q202866', 'Q219557', 'Q229390', 'Q506240', 'Q31235', 'Q645928', 'Q517386', 'Q842256', 'Q459290', 'Q1054574', 'Q369747', 'Q848512', 'Q24869', 'Q130232', 'Q959790', 'Q1067324', 'Q505119', 'Q652256', 'Q790192', 'Q1268687', 'Q1060398', 'Q12912091', 'Q2143665', 'Q663106', 'Q677466', 'Q336144', 'Q1935609', 'Q1146335', 'Q1200678', 'Q2165644', 'Q1361932', 'Q2484376', 'Q2973181', 'Q3250548', 'Q596138', 'Q2321734', 'Q2301591', 'Q1320115', 'Q430525', 'Q7130449', 'Q1251417', 'Q20442589', 'Q24865', 'Q3072043', 'Q3585697', 'Q917641', 'Q2125170', 'Q2903140', 'Q3677141', 'Q455315', 'Q3648909', 'Q370630', 'Q7858343', 'Q16909344']
@@ -45,6 +46,7 @@ class Sparql(object):
         return query
 
         # bd:serviceParam wikibase:language "it,en,fr,ar,be,bg,bn,ca,cs,da,de,el,es,et,fa,fi,he,hi,hu,hy,id,ja,jv,ko,nb,nl,eo,pa,pl,pt,ro,ru,sh,sk,sr,sv,sw,te,th,tr,uk,yue,vec,vi,zh". 
+    
     def get_query_books_querystring(self, qs):
         query = """
             SELECT DISTINCT ?item ?itemLabel
@@ -101,7 +103,7 @@ class Sparql(object):
             }
             GROUP BY ?item ?itemLabel
             ORDER BY DESC (?linkCount)
-            LIMIT """f'{SPARQL_LIMIT}'"""
+            LIMIT """f'{self.limit}'"""
             """
         return query
 
@@ -131,7 +133,7 @@ class Sparql(object):
         }
         GROUP BY ?item ?itemLabel
         ORDER BY DESC (?linkCount)
-        LIMIT """f'{SPARQL_LIMIT}'"""
+        LIMIT """f'{self.limit}'"""
         """
 
     def get_query_artists_geolocalized(self, geoarea):
@@ -160,7 +162,7 @@ class Sparql(object):
              
             GROUP BY ?item ?itemLabel
             ORDER BY DESC (?linkCount)
-            LIMIT """f'{SPARQL_LIMIT}'"""
+            LIMIT """f'{self.limit}'"""
              """
 
     def get_query_movies_poi(self, qs):

@@ -3,7 +3,7 @@
 {% load static %}
 {% block title %} Connect {% endblock %}
 {% block content %}
-<div id="js-connect" class="row mb-3">
+<div id="js-begin" class="row mb-3">
     <div class="col-8 mx-auto my-auto social-container my-2">
         <p>Now let's connect your Facebook account, so that we can retrieve your social data.</p>
         <a class="btn btn-primary p-3" style="display: table-cell" href="{% url 'social_login' %}">
@@ -41,6 +41,6 @@
     </div>
 </div>
 {% if user.has_social_connect and not user.has_social_data %}
-    <script src="{% static 'js/social.js' %}"></script>
+    <script src="{% static 'js/ajax_retrieval.js' %}"></script>
 {% endif %}
 {% endblock %}

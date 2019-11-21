@@ -1,0 +1,19 @@
+{% block content %}
+
+{% if itemsfound %}
+    <p>
+    <b>Ranking by clustering:</b><br>
+    {% for item in ranking_clustering %}
+        {{forloop.counter}} - {{item}}<br>
+    {% endfor %}
+    </p><p>
+    <b>Ranking by sum:</b><br>
+    {% for item in ranking_summarize %}
+        {{forloop.counter}} - {{item}}<br>
+    {% endfor %}
+    </p>
+{% else %}
+    No items found in that area. sorry!
+{% endif %}
+
+{% endblock %}

@@ -25,6 +25,7 @@ urlpatterns = [
     path('users/reset/', views.reset, name='reset'),
     path('users/logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('ajax/social_connect/get_movie_likes', views.signup_s1_ajax, name='signup_s1_ajax'),
+    path('ajax/recommendation/get_movies', views.recommendation_view_ajax, name='recommendation_view_ajax'),
 
     path('recommendation/', views.recommendation_view, name='recommendation'),
 ]
