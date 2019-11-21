@@ -131,6 +131,7 @@ class Sparql(object):
         }
         GROUP BY ?item ?itemLabel
         ORDER BY DESC (?linkCount)
+        LIMIT """f'{SPARQL_LIMIT}'"""
         """
 
     def get_query_artists_geolocalized(self, geoarea):
