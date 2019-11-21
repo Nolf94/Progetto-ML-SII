@@ -63,7 +63,7 @@ class Sparql(object):
 
     def get_query_artists_querystring(self, qs):
         query = """
-            SELECT DISTINCT ?label ?item ?sitelinks
+            SELECT DISTINCT ?label ?item 
             WHERE { 
                     {      
                         ?type wdt:P279 wd:Q2643890.
