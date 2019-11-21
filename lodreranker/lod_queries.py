@@ -45,6 +45,43 @@ class Sparql(object):
         return query
 
         # bd:serviceParam wikibase:language "it,en,fr,ar,be,bg,bn,ca,cs,da,de,el,es,et,fa,fi,he,hi,hu,hy,id,ja,jv,ko,nb,nl,eo,pa,pl,pt,ro,ru,sh,sk,sr,sv,sw,te,th,tr,uk,yue,vec,vi,zh". 
+    def get_query_books_querystring(self, qs):
+        query = """
+            SELECT DISTINCT ?item ?itemLabel
+            WHERE {
+                ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q17537576.
+                ?item rdfs:label ?queryByTitle.
+                ?item wikibase:sitelinks ?sitelinks
+                FILTER(lang(?queryByTitle) = 'it' || lang(?queryByTitle) = 'en')
+                FILTER(REGEX(?queryByTitle, """f'"{qs}"'""", "i"))
+                SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
+            }    
+            ORDER BY DESC(?sitelinks) 
+            LIMIT 1
+            """
+        return query
+
+    def get_query_artists_querystring(self, qs):
+        query = """
+            SELECT DISTINCT ?label ?item ?sitelinks
+            WHERE { 
+                    {      
+                        ?type wdt:P279 wd:Q2643890.
+                        ?item wdt:P106 ?type.
+                    }       
+                    UNION
+                    {
+                        ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q215380.
+                    }
+                    ?item rdfs:label ?label.
+                    ?item wikibase:sitelinks ?sitelinks
+                    FILTER(lang(?label) = 'it' || lang(?label) = 'en')
+                    FILTER(REGEX(?label, """f'"{qs}"'""", "i"))
+            }
+            ORDER BY DESC (?sitelinks)
+            LIMIT 1
+            """
+        return query
 
     def get_query_movies_geolocalized(self, geoarea):
         query = """
@@ -65,24 +102,132 @@ class Sparql(object):
             GROUP BY ?item ?itemLabel
             ORDER BY DESC (?linkCount)
             LIMIT """f'{SPARQL_LIMIT}'"""
-        """
+            """
         return query
+
+    def get_query_books_geolocalized(self, geoarea):
+        query = """
+        SELECT DISTINCT ?item ?itemLabel 
+        WHERE { 
+                {
+                    VALUES ?type {wd:Q47461344 wd:Q7725634}
+                    ?item (p:P31/ps:P31/(wdt:P279*)) ?type;
+                }
+                UNION
+                {   ?author wdt:P569 ?place.
+                    ?author wdt:P106 wd:Q36180.
+                    ?author wdt:P50 ?item
+                }
+                ?item wdt:P840 ?place.
+                ?item rdfs:label ?itemLabel.
+                ?item wikibase:sitelinks ?linkCount.
+                SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
+                SERVICE wikibase:around {
+                ?place wdt:P625 ?location.
+                bd:serviceParam wikibase:center """f'"Point({geoarea.lng} {geoarea.lat})"'"""^^geo:wktLiteral;
+                                wikibase:radius """f'"{geoarea.rad}"'""".
+                }
+                FILTER((LANG(?itemLabel)) = "it")
+        }
+        GROUP BY ?item ?itemLabel
+        ORDER BY DESC (?linkCount)
+        """
+
+    def get_query_artists_geolocalized(self, geoarea):
+        query = """
+            SELECT DISTINCT ?item ?itemLabel 
+            WHERE {
+                {
+                 ?type wdt:P279* wd:Q639669.
+                 ?item wdt:P106 ?type.
+                 ?item wdt:P19 ?place.
+                 }
+            UNION
+                 {
+                  ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q215380.
+                  ?item wdt:P740 ?place
+                 }
+            ?item rdfs:label ?itemLabel.
+            ?item wikibase:sitelinks ?linkCount.
+            SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
+            SERVICE wikibase:around {
+            ?place wdt:P625 ?location.
+            bd:serviceParam wikibase:center """f'"Point({geoarea.lng} {geoarea.lat})"'"""^^geo:wktLiteral;
+                             wikibase:"""f'"{geoarea.rad}"'""".}
+            FILTER((LANG(?itemLabel)) = "it")
+                 }
+             
+            GROUP BY ?item ?itemLabel
+            ORDER BY DESC (?linkCount)
+            LIMIT """f'{SPARQL_LIMIT}'"""
+             """
 
     def get_query_movies_poi(self, qs):
         query = """
-            SELECT DISTINCT ?label ?abstract
+            SELECT DISTINCT ?label ?abstract 
             FROM <http://dbpedia.org/page_links>
             WHERE {
-                ?o  dbo:wikiPageWikiLink dbr:"""f'"{qs}"'""".
-                ?o rdf:type schema:Movie.
+                ?o  dbo:wikiPageWikiLink ?poi.
+                ?poi rdfs:label """f'"{qs}"'"""@it.
+                ?o  rdf:type schema:Movie.
                 ?o  rdfs:label ?label.
-                ?o dbo:abstract ?abstract
+                ?o  dbo:abstract ?abstract
                 FILTER langMatches(lang(?abstract),"en")    
-                FILTER langMatches(lang(?label),"en")    
-            }
+                FILTER langMatches(lang(?label),"en")                   
+                 }
             GROUP BY ?label
             """
         return query
+
+    def get_query_books_poi(self, qs):
+        query = """
+            SELECT DISTINCT ?label ?abstract 
+            FROM <http://dbpedia.org/page_links>
+            WHERE { 
+                   ?poi rdfs:label """f'"{qs}"'"""@it.
+                   ?o dbo:wikiPageWikiLink ?poi.
+                   {
+                      ?o  rdf:type  schema:Book.
+                      ?o  rdfs:label ?label.
+                      ?o  dbo:abstract ?abstract               
+                   }
+            UNION 
+                   {
+                     ?o  rdf:type  dbo:Writer.
+                     ?book  dbo:author ?o  .
+                     ?book rdfs:label ?label.
+                     ?book  dbo:abstract ?abstract               
+                    }
+            FILTER langMatches(lang(?abstract),"en")    
+            FILTER langMatches(lang(?label),"en")    
+            }
+            GROUP BY ?label
+            """
+            
+    def get_query_artists_poi(self, qs):
+        query = """
+            SELECT DISTINCT ?label ?abstract 
+            FROM <http://dbpedia.org/page_links>
+            WHERE { 
+                    ?o  dbo:wikiPageWikiLink ?poi.
+                    ?poi rdfs:label """f'"{qs}"'"""@it.
+                    {
+                     ?o  rdf:type  dbo:MusicalWork.
+                     ?o  dbo:artist  ?artist.
+                     ?artist  rdfs:label ?label.
+                     ?artist  dbo:abstract ?abstract                  
+                    }
+                    UNION
+                    {
+                     ?o  rdf:type  schema:MusicGroup.
+                     ?o  rdfs:label ?label.
+                     ?o  dbo:abstract ?abstract          
+                    }
+                    FILTER langMatches(lang(?abstract),"en")    
+                    FILTER langMatches(lang(?label),"en") 
+            }
+            GROUP BY ?label
+            """
 
     def execute(self, query):
         self.sparql.setQuery(query)
