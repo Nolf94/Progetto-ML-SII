@@ -149,8 +149,10 @@ def signup_s1_ajax(request):
             retriever = jsonpickle.decode(session['retriever'])
             retriever.retrieve_next()
         else:
-            retriever = SocialItemRetriever(constants.MOVIE)
-            retriever.initialize(social_auth.extra_data['movies'])
+            retriever = SocialItemRetriever(constants.BOOK)
+            # retriever = SocialItemRetriever(constants.MOVIE)
+            # retriever.initialize(social_auth.extra_data['movies'])
+            retriever.initialize(social_auth.extra_data['books'])
 
         encoded_retriever = jsonpickle.encode(retriever)
         session['retriever'] = encoded_retriever
@@ -288,7 +290,7 @@ def recommendation_view_ajax(request):
             retriever = jsonpickle.decode(session['retriever'])
             retriever.retrieve_next()
         else:
-            retriever = GeoItemRetriever(constants.MOVIE, sparql_limit=30)
+            retriever = GeoItemRetriever(constants.MOVIE, sparql_limit=10)
             try:
                 retriever.initialize(area)
             except utils.RetrievalError:

@@ -114,9 +114,7 @@ class SocialItemRetriever(ItemRetriever):
             print(f'\t"{self.current}" found cached: {item.wkd_id}.')
         except models.RetrievedItem.DoesNotExist: # (try to) get new item
             sm = lod_queries.Sparql()
-            if self.mtype == constants.MOVIE:
-                query = sm.get_query_movies_querystring(self.current)
-
+            query = eval(f'sm.get_query_{self.mtype}_querystring(self.current)')
             try:
                 binding = sm.execute(query)[0]
             except Exception as e:

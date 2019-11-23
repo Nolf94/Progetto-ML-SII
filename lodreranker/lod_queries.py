@@ -12,7 +12,7 @@ from lodreranker import constants
 
 from .models import RetrievedItem
 
-SPARQL_TIMEOUT = 60  # set the query timeout (in seconds)
+SPARQL_TIMEOUT = 30  # set the query timeout (in seconds)
 SPARQL_LIMIT_DEFAULT = 30 # TODO increase dynamically
 
 class Sparql(object):

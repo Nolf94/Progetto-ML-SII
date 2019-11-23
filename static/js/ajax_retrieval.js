@@ -28,6 +28,7 @@ function doAjax(to_django) {
                 $("#js-progress-data").hide();
                 $("#js-done").show("slow");
                 $("#js-done-numretrieved").text(from_django.retrieved_items.length);
+                $("#js-done-mtype").text(from_django.mtype);
             }
         }
     });
