@@ -137,6 +137,7 @@ def signup_s1(request):
     else:
         try:
             request.session.pop('retriever')
+            request.session.pop('list_mediatype')
         except:
             pass
         return render(request, template_name)
@@ -150,17 +151,24 @@ def signup_s1_ajax(request):
 
     if request.is_ajax():
         session = request.session
+        if 'mtypes' in session.keys():
+            if request.POST.get('next_mtype'):
+                session['mtypes'].pop(0)
+                if not session['mtypes']:
+                    session.pop('mtypes')
+                    return JsonResponse({ 'done': True })
+            else:
+                pass
+        else:
+            session['mtypes'] = [ constants.MOVIE, constants.BOOK, constants.MUSIC ]
 
         if 'retriever' in session.keys():
             retriever = jsonpickle.decode(session['retriever'])
             retriever.retrieve_next()
         else:
-            # retriever = SocialItemRetriever(constants.MOVIE)
-            # retriever.initialize(social_auth.extra_data['movies'])
-            retriever = SocialItemRetriever(constants.MUSIC)
-            retriever.initialize(social_auth.extra_data['music'])
-            # retriever = SocialItemRetriever(constants.BOOK)
-            # retriever.initialize(social_auth.extra_data['books'])
+            mediatype = session['mtypes'][0]
+            retriever = SocialItemRetriever(mediatype)
+            retriever.initialize(social_auth.extra_data[mediatype])
 
         encoded_retriever = jsonpickle.encode(retriever)
         session['retriever'] = encoded_retriever
@@ -168,8 +176,11 @@ def signup_s1_ajax(request):
         if not retriever.next:
             for itemid in retriever.retrieved_items:
                 user.social_items.add(RetrievedItem.objects.get(wkd_id=itemid))
+            
             user.has_social_data = True
             user.save()
+            session.pop('retriever')
+
     return JsonResponse(json.loads(encoded_retriever))
 
 

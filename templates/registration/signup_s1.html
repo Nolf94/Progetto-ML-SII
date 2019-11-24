@@ -14,7 +14,7 @@
 </div>
 <div id="js-progress" class="collapse" ajax_url="{% url 'signup_s1_ajax' %}">
     <div class="row mb-3 mx-auto d-flex justify-content-center text-center">
-        <div id="js-progress-text" class="mr-3 my-auto">Please wait while we retrieve your liked media from Facebook...</div>
+        <div id="js-progress-text" class="mr-3 my-auto">Please wait while we retrieve your liked <span id="js-progress-text-mtype">media</span> from Facebook...</div>
         <div class="my-auto d-flex justify-content-end">
             <div class="spinner-border text-primary" role="status">
                 <span class="sr-only">Loading</span>
@@ -30,16 +30,26 @@
 </div>
 <div id="js-done" class="collapse text-center">
     <div class="row mt-3 mb-3 mx-auto">
-        <div class="col mx-auto">
-            We retrieved&nbsp;<span id="js-done-numretrieved" class="text-success"></span>&nbsp;<span id="js-done-mtype" ></span>&nbsp;from your Facebook profile.
-        </div>
+        <div class="col mx-auto">We retrieved the following media from your Facebook profile:</div>
     </div>
-    <div class="row mb-3">
+    <div class="row mb-3 mx-auto">
         <div class="col mx-auto">
-            <a id="connect" class="btn btn-success py-2" href="{% url 'resume' %}">Continue</a>
+            <ul>
+                <li id="js-done--movies" class="collapse"><span class="numretrieved text-success"></span> movies</span></li>
+                <li id="js-done--books" class="collapse"><span class="numretrieved text-success"></span> books</span></li>
+                <li id="js-done--artists" class="collapse"><span class="numretrieved text-success"></span> artists</span></li>
+            </ul>
         </div>
     </div>
 </div>
+<div id="js-continue" class="collapse text-center">
+    <div class="row mb-3">
+        <div class="col mx-auto">
+            <a class="btn btn-success py-2" href="{% url 'resume' %}">Continue</a>
+        </div>
+    </div>
+</div>
+
 {% if user.has_social_connect and not user.has_social_data %}
     <script src="{% static 'js/ajax_retrieval.js' %}"></script>
 {% endif %}

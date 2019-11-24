@@ -1,5 +1,7 @@
+import os
 import json
 import random
+import sys
 
 import numpy as np
 from django.contrib.staticfiles import finders
@@ -67,3 +69,10 @@ def handle_imgform(request, template_name, min_choices, session_obj_name, media_
     else:
         # load the form with the chosen random order
         return {'success': False, 'data': context}
+
+
+def disablePrint():
+    sys.stdout = open(os.devnull, 'w')
+
+def enablePrint():
+    sys.stdout = sys.__stdout__

@@ -8,8 +8,8 @@ from scipy import spatial
 import Clustering.clustering as clustering
 import Doc2Vec.doc2vec as d2v
 from lodreranker import constants, lod_queries
+from lodreranker import utils
 from lodreranker.models import RetrievedItem
-from lodreranker.utils import RetrievalError
 
 
 class ItemRanker(object):
@@ -82,17 +82,17 @@ class ItemRetriever(object):
     def initialize(self):
         self.retrieved_items = []
         self.current = None
-        self.next = True # we use True instead of None to trigger the first recursive ajax call
+        # self.next = True # we use True instead of None to trigger the first recursive ajax call
+        self.next = self.input_set[0] if self.input_set else None
         self.i = 0
         self.tot = len(self.input_set)
-        print(f'Initialized {type(self).__name__} with {self.tot} inputs.')
+        print(f'Initialized {type(self).__name__} for {self.mtype} with {self.tot} inputs.')
 
     def retrieve_next(self):
         self.current = self.input_set.pop(0)
         self.next = self.input_set[0] if self.input_set else None
         self.i += 1
         print(f'[{self.i}/{self.tot}] {self.current}')
-        # self.input_set = [] # TODO TEMPORARY
 
 
 class SocialItemRetriever(ItemRetriever):
@@ -118,9 +118,11 @@ class SocialItemRetriever(ItemRetriever):
                 i+=1
 
         self.input_set = list(map(lambda x: x['name'], media))
+        # self.input_set = self.input_set[:3]
         super().initialize()
 
     def retrieve_next(self):
+        # utils.disablePrint()
         super().retrieve_next()
         wkb = lod_queries.Wikibase()
         spql = lod_queries.Sparql(constants.WIKIDATA)
@@ -136,21 +138,26 @@ class SocialItemRetriever(ItemRetriever):
             if not search_results:
                 print(f'\t"{self.current}": No entities found.')
             for i, entity in enumerate(search_results):
+                wkd_id = entity['id']
                 desc = entity["description"] if 'description' in entity.keys() else None
                 print(f'\t[{i+1}/{len(search_results)}] {entity["label"]} ({desc})')
-                query = spql.get_query(self.mtype, 'light', entity['id'])
+                query = spql.get_query(self.mtype, 'light', wkd_id)
                 try:
                     binding = spql.execute(query)[0]
                     print(f'\t\tEntity type matches with {self.mtype}.')
-                    item = RetrievedItem(
-                        wkd_id=re.sub('http://www.wikidata.org/entity/', '', entity['id']),
-                        media_type=self.mtype,
-                        querystring=self.current,
-                        name=entity['label'],
-                    )
-                    item.save()
+                    try:
+                        item = RetrievedItem.objects.get(wkd_id=wkd_id) 
+                        print(f'\t"{self.current}" found cached {item.wkd_id}.')
+                    except RetrievedItem.DoesNotExist:
+                        item = RetrievedItem(
+                            wkd_id=re.sub('http://www.wikidata.org/entity/', '', wkd_id),
+                            media_type=self.mtype,
+                            querystring=self.current,
+                            name=entity['label'],
+                        )
+                        item.save()
+                        print(f'\t"{self.current}" returned new item: {item.wkd_id}.')
                     found_matching_entity = True
-                    print(f'\t"{self.current}" returned new item: {item.wkd_id}.')
                     break
                 except Exception as e:
                     print(f'\t\t{e}')
@@ -166,6 +173,7 @@ class SocialItemRetriever(ItemRetriever):
                 item.save() # update item adding abstract and vector
         if item.vector:
             self.retrieved_items.append(item.wkd_id)
+        # utils.enablePrint()
 
 
 class GeoItemRetriever(ItemRetriever):
@@ -181,7 +189,7 @@ class GeoItemRetriever(ItemRetriever):
         except Exception as e:
             print(e)
             # TODO exception handling in AJAX
-            raise RetrievalError()
+            raise utils.RetrievalError
 
         self.input_set = list(map(lambda x: {
                 'id': re.sub('http://www.wikidata.org/entity/', '', x['item']['value']),
@@ -233,7 +241,7 @@ class Recommender(object):
         """Before calling this function, be sure that the recommender's retriever has retrieved items."""
         itemids = self.retriever.retrieved_items
         if not itemids:
-            raise RetrievalError
+            raise utils.RetrievalError
         items = [RetrievedItem.objects.get(wkd_id=itemid) for itemid in itemids]
         ranker = ItemRanker(items)
 
