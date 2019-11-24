@@ -84,14 +84,14 @@ class ItemRetriever(object):
         self.next = True # we use True instead of None to trigger the first recursive ajax call
         self.i = 0
         self.tot = len(self.input_set)
-        print(f'Initialized {type(self)} with {self.tot} inputs.')
+        print(f'Initialized {type(self).__name__} with {self.tot} inputs.')
 
     def retrieve_next(self):
         self.current = self.input_set.pop(0)
         self.next = self.input_set[0] if self.input_set else None
         self.i += 1
         print(f'[{self.i}/{self.tot}] {self.current}')
-        self.input_set = [] # TODO TEMPORARY
+        # self.input_set = [] # TODO TEMPORARY
 
 
 class SocialItemRetriever(ItemRetriever):
@@ -125,13 +125,12 @@ class SocialItemRetriever(ItemRetriever):
             item = models.RetrievedItem.objects.get(querystring=self.current)
             print(f'\t"{self.current}" found cached: {item.wkd_id}.')
         except models.RetrievedItem.DoesNotExist: # (try to) get new item
-            sm = lod_queries.Sparql()
-            query = eval(f'sm.get_query_{self.mtype}_querystring(self.current)')
+            spql = lod_queries.Sparql(constants.WIKIDATA)
             try:
-                binding = sm.execute(query)[0]
+                binding = spql.execute(spql.get_query(self.mtype, 'querystring', self.current))[0]
             except Exception as e:
                 print(f'\t"{self.current}": {e}')
-                return # TODO exception handling
+                return # TODO exception handling in AJAX
 
             item = models.RetrievedItem(
                 wkd_id=re.sub('http://www.wikidata.org/entity/', '', binding['item']['value']),
@@ -153,22 +152,18 @@ class SocialItemRetriever(ItemRetriever):
 
 
 class GeoItemRetriever(ItemRetriever):
-    def __init__(self, media_type, sparql_limit=None):
+    def __init__(self, media_type, limit=None):
+        self.limit = limit
         super().__init__(media_type)
-        self.sparql_limit = sparql_limit
 
     def initialize(self, geoarea):
-        # geo_items is a list of linked open data items which might be valid (have a wiki page in the selected language).
-        geo_items=[]
-        sm = lod_queries.Sparql(self.sparql_limit)
-        if self.mtype == constants.MOVIE:
-            query = sm.get_query_movies_geolocalized(geoarea)
-
+        spql = lod_queries.Sparql(constants.WIKIDATA, limit=self.limit)
         try:
-            bindings = sm.execute(query)
+            bindings = spql.execute(spql.get_query(self.mtype, 'geolocalized', geoarea))
             print(f'The query returned {len(bindings)} results.')
         except Exception as e:
             print(e)
+            # TODO exception handling in AJAX
             raise RetrievalError()
 
         self.input_set = list(map(lambda x: {

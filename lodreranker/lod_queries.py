@@ -7,27 +7,33 @@ from urllib.request import HTTPHandler, urlopen
 
 from SPARQLWrapper import JSON, SPARQLExceptions, SPARQLWrapper
 
-import Doc2Vec.doc2vec as d2v
 from lodreranker import constants
-
-from .models import RetrievedItem
+from lodreranker.models import RetrievedItem
 
 
 class Sparql(object):
     """Interface for building and executing SPARQL queries to the Wikidata endpoint."""
 
-    def __init__(self, limit=constants.SPARQL_LIMIT_DEFAULT):
-        sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36")
+    def __init__(self, lod, limit=constants.SPARQL_LIMIT_DEFAULT):
+        agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"
+        
+        if lod in constants.SUPPORTED_LODS:
+            sparql = SPARQLWrapper(lod, agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36")
+            self.lod = lod
+        else:
+            raise Exception(f"Invalid lod: {lod}")
+
         sparql.setTimeout(constants.SPARQL_TIMEOUT)
         sparql.setReturnFormat(JSON)
         self.sparql = sparql
         self.limit = limit
 
+
+    # QUERYSTRING QUERIES --------------------------------------------------------------------------------
+    # SLOW! Given a string, they check the existence of a wikidata item with a label containing that string.
+    # If found, the item is returned (1 item per query)
+
     def get_query_movies_querystring(self, qs):
-            # filmtype_ids = ['Q11424', 'Q93204', 'Q226730', 'Q185529', 'Q200092', 'Q188473', 'Q24862', 'Q157443', 'Q319221', 'Q202866', 'Q219557', 'Q229390', 'Q506240', 'Q31235', 'Q645928', 'Q517386', 'Q842256', 'Q459290', 'Q1054574', 'Q369747', 'Q848512', 'Q24869', 'Q130232', 'Q959790', 'Q1067324', 'Q505119', 'Q652256', 'Q790192', 'Q1268687', 'Q1060398', 'Q12912091', 'Q2143665', 'Q663106', 'Q677466', 'Q336144', 'Q1935609', 'Q1146335', 'Q1200678', 'Q2165644', 'Q1361932', 'Q2484376', 'Q2973181', 'Q3250548', 'Q596138', 'Q2321734', 'Q2301591', 'Q1320115', 'Q430525', 'Q7130449', 'Q1251417', 'Q20442589', 'Q24865', 'Q3072043', 'Q3585697', 'Q917641', 'Q2125170', 'Q2903140', 'Q3677141', 'Q455315', 'Q3648909', 'Q370630', 'Q7858343', 'Q16909344']
-            # filmtypes = ' '.join(f'wd:{x}' for x in filmtype_ids)
-            # ?item wdt:P31 ?type.
-            # VALUES ?type { """f'{filmtypes}'""" }
         query = """
             SELECT DISTINCT ?item ?itemLabel
             WHERE {
@@ -43,8 +49,6 @@ class Sparql(object):
             """
         return query
 
-        # bd:serviceParam wikibase:language "it,en,fr,ar,be,bg,bn,ca,cs,da,de,el,es,et,fa,fi,he,hi,hu,hy,id,ja,jv,ko,nb,nl,eo,pa,pl,pt,ro,ru,sh,sk,sr,sv,sw,te,th,tr,uk,yue,vec,vi,zh". 
-    
     def get_query_books_querystring(self, qs):
         query = """
             SELECT DISTINCT ?item ?itemLabel
@@ -83,6 +87,63 @@ class Sparql(object):
             """
         return query
 
+    
+    # LIGHT QUERIES --------------------------------------------------------------------------------
+    # They only check the type of a wikidata item, given its id (fast).
+    # If found, the item is returned (1 item per query)
+
+    def get_query_movies_light(self, wkd_id):
+        query = """
+        SELECT ?type ?typeLabel
+        WHERE {
+            BIND(wd:<<WKD_ID>> as ?item)
+            ?item wdt:P31 ?type .               # item instance of type
+            ?type wdt:P279* wd:Q11424 .         # type sublclass of* film
+            SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
+        }
+        """
+        return query
+
+    def get_query_books_light(self, wkd_id):
+        query = """
+        SELECT ?type ?typeLabel
+        WHERE {
+            BIND(wd:"""f'{wkd_id}'""" as ?item)
+            ?item wdt:P31 ?type .               # item instance of type
+            ?type wdt:P279* wd:Q47461344 .      # type subclass of* written work
+            SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
+        }
+        """
+        return query
+
+    def get_query_artists_light(self, wkd_id):
+        query = """
+        SELECT ?type ?typeLabel
+        WHERE {
+            BIND(wd:"""f'{wkd_id}'""" as ?item)
+            # two cases because -types- of humans are expressed using occupation (P106)
+            {
+                # groups of humans: bands, orchestras etc.
+                ?item wdt:P31 ?type .           # item instance of type
+                ?type wdt:P279* wd:Q32178211    # type subclass of* music organisation
+            }
+            UNION
+            {
+                # humans: singers, instrument players, performers, composers etc.
+                ?item wdt:P106 ?type .          # id has occupation type
+                ?type wdt:P279* ?occupations .  # type subclass of* musician OR music artist
+                VALUES ?occupations { wd:Q639669 wd:Q1294626 } 
+            }
+            SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
+        }
+        """
+        return query
+
+
+    # GEOLOCALIZED QUERIES --------------------------------------------------------------------------------
+    # Given a set of coordinates and a radius, they check the existence of wikidata items within that area
+    # If found, the item is returned (1 item per query)
+
     def get_query_movies_geolocalized(self, geoarea):
         query = """
             SELECT DISTINCT ?item ?itemLabel 
@@ -110,7 +171,7 @@ class Sparql(object):
         SELECT DISTINCT ?item ?itemLabel 
         WHERE { 
                 {
-                    VALUES ?type {wd:Q47461344 wd:Q7725634}
+                    VALUES ?type { wd:Q47461344 wd:Q7725634 }
                     ?item (p:P31/ps:P31/(wdt:P279*)) ?type;
                 }
                 UNION
@@ -162,6 +223,9 @@ class Sparql(object):
             ORDER BY DESC (?linkCount)
             LIMIT """f'{self.limit}'"""
              """
+
+
+    # DBPEDIA POI QUERIES --------------------------------------------------------------------------------
 
     def get_query_movies_poi(self, qs):
         query = """
@@ -242,6 +306,16 @@ class Sparql(object):
             raise Exception(f'HTTPError {e.code}, {str(e)}')
         except Exception as e:
             raise Exception(str(e))
+
+    def get_query(self, media_type, query_type, query_args):
+        wkd_types = ['light', 'querystring', 'geolocalized']
+        dbp_types = ['poi']
+
+        if ((self.lod == constants.WIKIDATA and not query_type in wkd_types) or
+                (self.lod == constants.DBPEDIA and not query_type in dbp_types)):
+            raise Exception(f"Invalid query_type '{query_type}' for endpoint '{self.lod}'")
+
+        return getattr(self, f'get_query_{media_type}_{query_type}')(query_args)
 
 
 class Wiki(object):
