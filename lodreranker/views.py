@@ -42,10 +42,16 @@ def profile(request):
     except UserSocialAuth.DoesNotExist:
         facebook_login = None
 
+    def get_info(mtype):
+        return list(map(lambda x: f'{x.name}  ({x.wkd_id}, {len(x.abstract)} chars.)', user.social_items.filter(media_type=mtype)))
+
     can_disconnect = (user.social_auth.count() > 1 or user.has_usable_password())
     return render(request, 'profile.html', {
         'facebook_login': facebook_login,
-        'can_disconnect': can_disconnect
+        'can_disconnect': can_disconnect,
+        f'{constants.MOVIE}': get_info(constants.MOVIE),
+        f'{constants.BOOK}': get_info(constants.BOOK),
+        f'{constants.MUSIC}': get_info(constants.MUSIC),
     })
 
 
