@@ -32,7 +32,7 @@ class Sparql(object):
     # QUERYSTRING QUERIES --------------------------------------------------------------------------------
     # SLOW! Given a string, they check the existence of a wikidata item with a label containing that string.
     # If found, the item is returned (1 item per query)
-
+    """DEPRECATED"""
     def get_query_movies_querystring(self, qs):
         query = """
             SELECT DISTINCT ?item ?itemLabel
@@ -48,7 +48,8 @@ class Sparql(object):
             LIMIT 1
             """
         return query
-
+    
+    """DEPRECATED"""
     def get_query_books_querystring(self, qs):
         query = """
             SELECT DISTINCT ?item ?itemLabel
@@ -65,6 +66,7 @@ class Sparql(object):
             """
         return query
 
+    """DEPRECATED"""
     def get_query_artists_querystring(self, qs):
         query = """
             SELECT DISTINCT ?label ?item 
@@ -99,7 +101,7 @@ class Sparql(object):
             BIND(wd:"""f'{wkd_id}'""" as ?item)
             ?item wdt:P31 ?type .               # item instance of type
             ?type wdt:P279* wd:Q11424 .         # type sublclass of* film
-            SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
+            SERVICE wikibase:label { bd:serviceParam wikibase:language "en, it". }
         }
         """
         return query
@@ -111,7 +113,7 @@ class Sparql(object):
             BIND(wd:"""f'{wkd_id}'""" as ?item)
             ?item wdt:P31 ?type .               # item instance of type
             ?type wdt:P279* wd:Q47461344 .      # type subclass of* written work
-            SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
+            SERVICE wikibase:label { bd:serviceParam wikibase:language "en, it". }
         }
         """
         return query
@@ -134,7 +136,7 @@ class Sparql(object):
                 ?type wdt:P279* ?occupations .  # type subclass of* musician OR music artist
                 VALUES ?occupations { wd:Q639669 wd:Q1294626 } 
             }
-            SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
+            SERVICE wikibase:label { bd:serviceParam wikibase:language "en, it". }
         }
         """
         return query
@@ -300,7 +302,7 @@ class Sparql(object):
             result = self.sparql.query()
             bindings = result.convert()['results']['bindings']
             if not bindings:
-                raise Exception("Nothing found.")
+                raise Exception("No match found.")
             return bindings
         except HTTPError as e:
             raise Exception(f'HTTPError {e.code}, {str(e)}')
@@ -318,8 +320,24 @@ class Sparql(object):
         return getattr(self, f'get_query_{media_type}_{query_type}')(query_args)
 
 
-class Wiki(object):
-    """Interface for executing queries to the Wiki legacy APIs."""
+class Wikibase(object):
+    """Interface for executing queries to the Wikibase APIs."""
+
+    def search(self, querystring, limit=7):
+        """
+        Searches the Wikidata API with the given querystring.
+        Returns a list of entities with their wikidata item id.
+        """
+        wkd_query_params = urlencode({
+            'action': 'wbsearchentities',
+            'format': 'json',
+            'language': 'it',
+            'limit': limit,
+            'search': querystring,
+        })
+        wkd_query = f'https://www.wikidata.org/w/api.php?{wkd_query_params}'
+        wkd_results = json.loads(urlopen(wkd_query.rstrip()).read().decode('utf-8'))
+        return wkd_results['search']
 
     def retrieve_abstract(self, item):
         """
