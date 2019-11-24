@@ -96,7 +96,7 @@ class Sparql(object):
         query = """
         SELECT ?type ?typeLabel
         WHERE {
-            BIND(wd:<<WKD_ID>> as ?item)
+            BIND(wd:"""f'{wkd_id}'""" as ?item)
             ?item wdt:P31 ?type .               # item instance of type
             ?type wdt:P279* wd:Q11424 .         # type sublclass of* film
             SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
