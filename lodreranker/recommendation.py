@@ -7,7 +7,8 @@ from scipy import spatial
 
 import Clustering.clustering as clustering
 import Doc2Vec.doc2vec as d2v
-from lodreranker import constants, lod_queries, models
+from lodreranker import constants, lod_queries
+from lodreranker.models import RetrievedItem
 from lodreranker.utils import RetrievalError
 
 
@@ -103,7 +104,7 @@ class SocialItemRetriever(ItemRetriever):
 
         def has_next(page):
             return 'next' in page['paging'].keys()
-    
+
         # if data is split across multiple pages, keep fetching from pages until page limit is reached.
         if has_next(extra_data_media):
             print(f'FB {self.mtype} are on more than one page, fetching (max: {constants.FB_FETCH_PAGE_LIMIT})')
@@ -115,34 +116,50 @@ class SocialItemRetriever(ItemRetriever):
                 current_page = json.loads(urlopen(next_page_url).read().decode('utf-8'))
                 media.extend(current_page['data'])
                 i+=1
-            
+
         self.input_set = list(map(lambda x: x['name'], media))
         super().initialize()
 
     def retrieve_next(self):
         super().retrieve_next()
-        try: # use cached item
-            item = models.RetrievedItem.objects.get(querystring=self.current)
+        wkb = lod_queries.Wikibase()
+        spql = lod_queries.Sparql(constants.WIKIDATA)
+
+        try: # look for cached item
+            item = RetrievedItem.objects.get(querystring=self.current)
             print(f'\t"{self.current}" found cached: {item.wkd_id}.')
-        except models.RetrievedItem.DoesNotExist: # (try to) get new item
-            spql = lod_queries.Sparql(constants.WIKIDATA)
-            try:
-                binding = spql.execute(spql.get_query(self.mtype, 'querystring', self.current))[0]
-            except Exception as e:
-                print(f'\t"{self.current}": {e}')
+
+        except RetrievedItem.DoesNotExist: # (try to) get new item
+            print(f'\t"{self.current}" is new. Searching Wikibase for Entities matching with type "{self.mtype}"...')
+            found_matching_entity = False
+            search_results = wkb.search(self.current)
+            if not search_results:
+                print(f'\t"{self.current}": No entities found.')
+            for i, entity in enumerate(search_results):
+                desc = entity["description"] if 'description' in entity.keys() else None
+                print(f'\t[{i+1}/{len(search_results)}] {entity["label"]} ({desc})')
+                query = spql.get_query(self.mtype, 'light', entity['id'])
+                try:
+                    binding = spql.execute(query)[0]
+                    print(f'\t\tEntity type matches with {self.mtype}.')
+                    item = RetrievedItem(
+                        wkd_id=re.sub('http://www.wikidata.org/entity/', '', entity['id']),
+                        media_type=self.mtype,
+                        querystring=self.current,
+                        name=entity['label'],
+                    )
+                    item.save()
+                    found_matching_entity = True
+                    print(f'\t"{self.current}" returned new item: {item.wkd_id}.')
+                    break
+                except Exception as e:
+                    print(f'\t\t{e}')
+            if not found_matching_entity:
+                print(f'\t"{self.current}" is invalid. Skipping.. ')
                 return # TODO exception handling in AJAX
 
-            item = models.RetrievedItem(
-                wkd_id=re.sub('http://www.wikidata.org/entity/', '', binding['item']['value']),
-                media_type=self.mtype,
-                querystring=self.current,
-                name=binding['itemLabel']['value'],
-            )
-            item.save()
-            print(f'\t"{self.current}" returned new item: {item.wkd_id}.')
-
         if not item.abstract:
-            abstract = lod_queries.Wiki().retrieve_abstract(item)
+            abstract = wkb.retrieve_abstract(item)
             if abstract:
                 item.abstract = abstract
                 item.vector = json.dumps(d2v.create_vector(abstract, self.mtype).tolist())
@@ -175,10 +192,10 @@ class GeoItemRetriever(ItemRetriever):
     def retrieve_next(self):
         super().retrieve_next()
         try: # use cached item
-            item = models.RetrievedItem.objects.get(wkd_id=self.current['id'])
+            item = RetrievedItem.objects.get(wkd_id=self.current['id'])
             print(f'\t\"{self.current["name"]}\" found cached: {item.wkd_id}.')
-        except models.RetrievedItem.DoesNotExist: # create new item
-            item = models.RetrievedItem(
+        except RetrievedItem.DoesNotExist: # create new item
+            item = RetrievedItem(
                 wkd_id=self.current['id'],
                 media_type=self.mtype,
                 name=self.current['name'],
@@ -186,7 +203,7 @@ class GeoItemRetriever(ItemRetriever):
             item.save()
 
         if not item.abstract:
-            abstract = lod_queries.Wiki().retrieve_abstract(item)
+            abstract = lod_queries.Wikibase().retrieve_abstract(item)
             if abstract:
                 item.abstract = abstract
                 item.vector = json.dumps(d2v.create_vector(abstract, self.mtype).tolist())
@@ -217,7 +234,7 @@ class Recommender(object):
         itemids = self.retriever.retrieved_items
         if not itemids:
             raise RetrievalError
-        items = [models.RetrievedItem.objects.get(wkd_id=itemid) for itemid in itemids]
+        items = [RetrievedItem.objects.get(wkd_id=itemid) for itemid in itemids]
         ranker = ItemRanker(items)
 
         if method == 'clustering':

@@ -58,8 +58,8 @@ def social_disconnect(request):
     user.has_social_data = False
     user.social_items.clear()
     user.save()
-    return redirect(reverse_lazy('profile'))
-    # return redirect(reverse_lazy('signup_s1'))
+    # return redirect(reverse_lazy('profile'))
+    return redirect(reverse_lazy('signup_s1'))
 
 
 # Reset all user data
@@ -149,10 +149,12 @@ def signup_s1_ajax(request):
             retriever = jsonpickle.decode(session['retriever'])
             retriever.retrieve_next()
         else:
-            # retriever = SocialItemRetriever(constants.MUSIC)
-            # retriever.initialize(social_auth.extra_data['music'])
-            retriever = SocialItemRetriever(constants.MOVIE)
-            retriever.initialize(social_auth.extra_data['movies'])
+            # retriever = SocialItemRetriever(constants.MOVIE)
+            # retriever.initialize(social_auth.extra_data['movies'])
+            retriever = SocialItemRetriever(constants.MUSIC)
+            retriever.initialize(social_auth.extra_data['music'])
+            # retriever = SocialItemRetriever(constants.BOOK)
+            # retriever.initialize(social_auth.extra_data['books'])
 
         encoded_retriever = jsonpickle.encode(retriever)
         session['retriever'] = encoded_retriever
