@@ -162,9 +162,6 @@ def signup_s1_ajax(request):
                 user.social_items.add(RetrievedItem.objects.get(wkd_id=itemid))
             user.has_social_data = True
             user.save()
-        # OLD BULK METHOD
-        # social_movies = ItemRetriever(constants.MOVIE).retrieve_from_social(social_auth.extra_data['movies'])
-        # user.social_items.add(*social_movies)
     return JsonResponse(json.loads(encoded_retriever))
 
 

@@ -91,7 +91,7 @@ class ItemRetriever(object):
         self.next = self.input_set[0] if self.input_set else None
         self.i += 1
         print(f'[{self.i}/{self.tot}] {self.current}')
-        self.input_set = []
+        self.input_set = [] # TODO TEMPORARY
 
 
 class SocialItemRetriever(ItemRetriever):
@@ -151,60 +151,6 @@ class SocialItemRetriever(ItemRetriever):
         if item.vector:
             self.retrieved_items.append(item.wkd_id)
 
-    """ BULK LOAD UNUSED"""
-    # def retrieve_from_social(self, extra_data_media):
-        # """Retrieves items from social network data."""
-
-        # # if data is split across multiple pages, fetches from all pages.
-        # media = extra_data_media['data']
-        # has_next = 'next' in extra_data_media['paging'].keys()
-        # while has_next:
-        #     next_page = json.loads(urlopen(extra_data_media['paging']['next']).read().decode('utf-8'))
-        #     media.extend(next_page['data'])
-        #     has_next = 'next' in next_page['paging'].keys()
-
-        # # BULK PROCESS
-        # valid_items = []
-        # # qss is a list of querystrings, aka names which MIGHT represent a linked open data item.
-        # qss = list(map(lambda x: x['name'], media))
-        # print(f'Starting retrieval for {self.mtype} from {len(qss)} querystrings:')
-        # for i, qs in enumerate(qss):
-        #     print(f'[{i+1}/{len(qss)}] "{qs}"')
-        #     try: # use cached item
-        #         item = models.RetrievedItem.objects.get(querystring=qs)
-        #         print(f'\t"{qs}" found cached: {item.wkd_id}.')
-        #     except models.RetrievedItem.DoesNotExist: # (try to) get new item
-        #         sm = lod_queries.Sparql()
-        #         if self.mtype == constants.MOVIE:
-        #             query = sm.get_query_movies_querystring(qs)
-
-        #         try:
-        #             binding = sm.execute(query)[0]
-        #         except Exception as e:
-        #             print(f'\t"{qs}": {e}')
-        #             continue
-
-        #         item = models.RetrievedItem(
-        #             wkd_id=re.sub('http://www.wikidata.org/entity/', '', binding['item']['value']),
-        #             media_type=self.mtype,
-        #             querystring=qs,
-        #             name=binding['itemLabel']['value'],
-        #         )
-        #         item.save()
-        #         print(f'\t"{qs}" returned new item: {item.wkd_id}.')
-
-        #     if not item.abstract:
-        #         abstract = lod_queries.Wiki().retrieve_abstract(item)
-        #         if abstract:
-        #             item.abstract = abstract
-        #             item.vector = json.dumps(d2v.create_vector(abstract, self.mtype).tolist())
-        #             item.save() # update item adding abstract and vector
-        #     if item.vector:
-        #         valid_items.append(item.wkd_id)
-        # print(f'Retrieved {len(valid_items)} valid items from {len(qss)} querystrings ' +
-        #     f'({len(qss)-len(valid_items)} invalid querystrings or items).')
-        # return valid_items
-
 
 class GeoItemRetriever(ItemRetriever):
     def __init__(self, media_type, sparql_limit=None):
@@ -252,51 +198,6 @@ class GeoItemRetriever(ItemRetriever):
                 item.save() # update item adding abstract and vector
         if item.vector:
             self.retrieved_items.append(item.wkd_id)
-
-    """ BULK LOAD UNUSED"""
-    # def retrieve_from_geoarea(self, geoarea):
-        # """Retrieves items from geoarea."""
-        # print(f'Starting retrieval for {self.mtype} in geoarea {geoarea}:')
-        # # geo_items is a list of linked open data items which might be valid (have a wiki page in the selected language).
-        # geo_items=[]
-        # sm = lod_queries.Sparql(self.sparql_limit)
-        # if self.mtype == constants.MOVIE:
-        #     query = sm.get_query_movies_geolocalized(geoarea)
-
-        # try:
-        #     bindings = sm.execute(query)
-        #     print(f'The query returned {len(bindings)} results.')
-        # except Exception as e:
-        #     print(e)
-        #     return
-
-        # valid_items = []
-        # for i, binding in enumerate(bindings):
-        #     wkd_id = re.sub('http://www.wikidata.org/entity/', '', binding['item']['value'])
-        #     try: # use cached item
-        #         item = models.RetrievedItem.objects.get(wkd_id=wkd_id)
-        #         print(f'Found cached item: {item.wkd_id}')
-        #     except models.RetrievedItem.DoesNotExist: # create new item
-        #         item = models.RetrievedItem(
-        #             wkd_id=wkd_id,
-        #             media_type=self.mtype,
-        #             name=binding['itemLabel']['value'],
-        #         )
-        #         item.save()
-        #         print(f'Found new item: {item.wkd_id}')
-
-        #     print(f'[{i+1}/{len(bindings)}] "{item.name}"')
-        #     if not item.abstract:
-        #         abstract = lod_queries.Wiki().retrieve_abstract(item)
-        #         if abstract:
-        #             item.abstract = abstract
-        #             item.vector = json.dumps(d2v.create_vector(abstract, self.mtype).tolist())
-        #             item.save() # update item adding abstract and vector
-        #     if item.vector:
-        #         valid_items.append(item.wkd_id)
-
-        # print(f'Retrieved {len(valid_items)} valid items.')
-        # self.retrieved_items = valid_items
 
 
 class Recommender(object):
