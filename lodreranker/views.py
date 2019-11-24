@@ -149,10 +149,10 @@ def signup_s1_ajax(request):
             retriever = jsonpickle.decode(session['retriever'])
             retriever.retrieve_next()
         else:
-            retriever = SocialItemRetriever(constants.BOOK)
+            retriever = SocialItemRetriever(constants.MUSIC)
+            retriever.initialize(social_auth.extra_data['music'])
             # retriever = SocialItemRetriever(constants.MOVIE)
             # retriever.initialize(social_auth.extra_data['movies'])
-            retriever.initialize(social_auth.extra_data['books'])
 
         encoded_retriever = jsonpickle.encode(retriever)
         session['retriever'] = encoded_retriever

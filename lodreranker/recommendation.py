@@ -84,12 +84,14 @@ class ItemRetriever(object):
         self.next = True # we use True instead of None to trigger the first recursive ajax call
         self.i = 0
         self.tot = len(self.input_set)
+        print(f'Initialized {type(self)} with {self.tot} inputs.')
 
     def retrieve_next(self):
         self.current = self.input_set.pop(0)
         self.next = self.input_set[0] if self.input_set else None
         self.i += 1
         print(f'[{self.i}/{self.tot}] {self.current}')
+        self.input_set = []
 
 
 class SocialItemRetriever(ItemRetriever):
@@ -97,13 +99,23 @@ class SocialItemRetriever(ItemRetriever):
         super().__init__(media_type)
 
     def initialize(self, extra_data_media):
-        # if data is split across multiple pages, fetches from all pages.
         media = extra_data_media['data']
-        has_next = 'next' in extra_data_media['paging'].keys()
-        while has_next:
-            next_page = json.loads(urlopen(extra_data_media['paging']['next']).read().decode('utf-8'))
-            media.extend(next_page['data'])
-            has_next = 'next' in next_page['paging'].keys()
+
+        def has_next(page):
+            return 'next' in page['paging'].keys()
+    
+        # if data is split across multiple pages, keep fetching from pages until page limit is reached.
+        if has_next(extra_data_media):
+            print(f'FB {self.mtype} are on more than one page, fetching (max: {constants.FB_FETCH_PAGE_LIMIT})')
+            i=2
+            current_page = extra_data_media
+            while has_next(current_page) and i <= constants.FB_FETCH_PAGE_LIMIT:
+                print(f'FB {self.mtype}: fetching next page ({i})')
+                next_page_url = current_page['paging']['next']
+                current_page = json.loads(urlopen(next_page_url).read().decode('utf-8'))
+                media.extend(current_page['data'])
+                i+=1
+            
         self.input_set = list(map(lambda x: x['name'], media))
         super().initialize()
 

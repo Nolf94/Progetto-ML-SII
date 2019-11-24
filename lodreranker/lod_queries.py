@@ -12,15 +12,13 @@ from lodreranker import constants
 
 from .models import RetrievedItem
 
-SPARQL_TIMEOUT = 30  # set the query timeout (in seconds)
-SPARQL_LIMIT_DEFAULT = 30 # TODO increase dynamically
 
 class Sparql(object):
     """Interface for building and executing SPARQL queries to the Wikidata endpoint."""
 
-    def __init__(self, limit=SPARQL_LIMIT_DEFAULT):
+    def __init__(self, limit=constants.SPARQL_LIMIT_DEFAULT):
         sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36")
-        sparql.setTimeout(SPARQL_TIMEOUT)
+        sparql.setTimeout(constants.SPARQL_TIMEOUT)
         sparql.setReturnFormat(JSON)
         self.sparql = sparql
         self.limit = limit
@@ -68,8 +66,8 @@ class Sparql(object):
             SELECT DISTINCT ?label ?item 
             WHERE { 
                     {      
-                        ?type wdt:P279 wd:Q2643890.
                         ?item wdt:P106 ?type.
+                        ?type wdt:P279 wd:Q2643890.
                     }       
                     UNION
                     {
