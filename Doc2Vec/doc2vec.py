@@ -25,7 +25,6 @@ def stopping(text):
 
 
 def create_vector(text, media_type):
-    if media_type == constants.MOVIE:
-        d2v_model = Doc2Vec.load(os.path.dirname(__file__) + '/doc2vec_data_films.model')
+    d2v_model = Doc2Vec.load(os.path.dirname(__file__) + f'/doc2vec_data_{media_type}.model')
     return d2v_model.infer_vector(normalize_text(stopping(text)).split())
 
