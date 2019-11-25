@@ -17,7 +17,7 @@ from social_django.models import UserSocialAuth
 
 from lodreranker import constants, forms, utils
 from lodreranker.models import CustomUser, RetrievedItem
-from lodreranker.recommendation import (ItemRanker, Recommender,
+from lodreranker.recommendation import (ItemRanker, GeoItemRetriever, Recommender,
                                         SocialItemRetriever)
 
 
@@ -42,10 +42,16 @@ def profile(request):
     except UserSocialAuth.DoesNotExist:
         facebook_login = None
 
+    def get_info(mtype):
+        return list(map(lambda x: f'{x.name}  ({x.wkd_id}, {len(x.abstract)} chars.)', user.social_items.filter(media_type=mtype)))
+
     can_disconnect = (user.social_auth.count() > 1 or user.has_usable_password())
     return render(request, 'profile.html', {
         'facebook_login': facebook_login,
-        'can_disconnect': can_disconnect
+        'can_disconnect': can_disconnect,
+        f'{constants.MOVIE}': get_info(constants.MOVIE),
+        f'{constants.BOOK}': get_info(constants.BOOK),
+        f'{constants.MUSIC}': get_info(constants.MUSIC),
     })
 
 
@@ -129,10 +135,11 @@ def signup_s1(request):
     if user.has_social_connect and user.has_social_data:
         return route(request)
     else:
-        try:
+        session = request.session
+        if 'retriever' in session.keys():
             request.session.pop('retriever')
-        except:
-            pass
+        if 'list_mediatype' in session.keys():
+            request.session.pop('list_mediatype')
         return render(request, template_name)
 
 # Retrieve user media likes from UserSocialAuth.
@@ -144,13 +151,22 @@ def signup_s1_ajax(request):
 
     if request.is_ajax():
         session = request.session
+        if 'mtypes' in session.keys():
+            if request.POST.get('next_mtype'):
+                session['mtypes'].pop(0)
+                if not session['mtypes']:
+                    session.pop('mtypes')
+                    return JsonResponse({'retrieval_done': True})
+        else:
+            session['mtypes'] = [ constants.MOVIE, constants.BOOK, constants.MUSIC ]
 
         if 'retriever' in session.keys():
             retriever = jsonpickle.decode(session['retriever'])
             retriever.retrieve_next()
         else:
-            retriever = SocialItemRetriever(constants.MOVIE)
-            retriever.initialize(social_auth.extra_data['movies'])
+            mediatype = session['mtypes'][0]
+            retriever = SocialItemRetriever(mediatype)
+            retriever.initialize(social_auth.extra_data[mediatype])
 
         encoded_retriever = jsonpickle.encode(retriever)
         session['retriever'] = encoded_retriever
@@ -160,13 +176,8 @@ def signup_s1_ajax(request):
                 user.social_items.add(RetrievedItem.objects.get(wkd_id=itemid))
             user.has_social_data = True
             user.save()
+            session.pop('retriever')
 
-        # OLD BULK METHOD
-        # social_movies = ItemRetriever(constants.MOVIE).retrieve_from_social(social_auth.extra_data['movies'])
-        # user.social_items.add(*social_movies)
-
-
-    # return JsonResponse({'num_retrieved_movies': len(social_movies)})
     return JsonResponse(json.loads(encoded_retriever))
 
 
@@ -262,29 +273,76 @@ def recommendation_view(request):
     context = {'GOOGLE_MAPS_KEY': settings.GOOGLE_MAPS_KEY }
 
     if request.method == 'POST':
+        context['ajax_begin']  = True
+        session = request.session
         area = utils.GeoArea(
             request.POST.get('latitude'),
             request.POST.get('longitude'),
             request.POST.get('radius')
         )
-        user = request.user
-        movie_recommender = Recommender(user, constants.MOVIE, max_to_retrieve=30)
+        session['area'] = jsonpickle.encode(area)
+        if 'retriever' in session.keys():
+            session.pop('retriever')
+        if 'list_mediatype' in session.keys():
+            session.pop('list_mediatype')
 
-        # BULK LOAD
-        retriever = movie_recommender.retriever
-        retriever.retrieve_from_geoarea(area)
-
-        # TODO retriever.retrieve_next()
-
-        try:
-            ranking_clustering = movie_recommender.recommend(constants.MOVIE, method='clustering')
-            ranking_summarize = movie_recommender.recommend(constants.MOVIE, method='summarize')
-            context['itemsfound'] = True
-            context['ranking_clustering'] = list(map(lambda x: x['item'].name, ranking_clustering))
-            context['ranking_summarize'] = list(map(lambda x: x['item'].name, ranking_summarize))
-
-        except utils.RetrievalError:
-            context['itemsfound'] = False
-
+        for key in list(filter(lambda x: x.startswith('notfound-') or x.startswith('rankings-'), session.keys())):
+            session.pop(key)
+        for key in list(filter(lambda x: x.startswith('notfound_') or x.startswith('rankings_'), session.keys())):
+            session.pop(key)
+        session.modified = True
 
     return render(request, template_name, context)
+
+@login_required
+@csrf_exempt
+def recommendation_view_ajax(request):
+    user = request.user
+
+    if request.is_ajax():
+        session = request.session
+
+        if 'mtypes' in session.keys():
+            if request.POST.get('next_mtype'):
+                session['mtypes'].pop(0)
+                if not session['mtypes']:
+                    session.pop('mtypes')
+                    session.pop('area')
+                    return JsonResponse({'retrieval_done': True})
+        else:
+            # session['mtypes'] = [constants.MOVIE, constants.BOOK, constants.MUSIC]
+            session['mtypes'] = [constants.MOVIE]
+
+        if 'retriever' in session.keys():
+            retriever = jsonpickle.decode(session['retriever'])
+            retriever.retrieve_next()
+        else:
+            mediatype = session['mtypes'][0]
+            retriever = GeoItemRetriever(mediatype, limit=5)
+            if 'area' in session.keys():
+                area = jsonpickle.decode(session['area'])
+            retriever.initialize(area)
+
+        encoded_retriever = jsonpickle.encode(retriever)
+        session['retriever'] = encoded_retriever
+
+        if not retriever.next:
+            session.pop('retriever')
+            recommender = Recommender(retriever.mtype, user, retriever)
+            try:
+                # TODO RICONTROLLARE
+                session[f'rankings_{retriever.mtype}'] = [
+                    list(map(lambda x: jsonpickle.encode(x), recommender.recommend(method='clustering'))),
+                    list(map(lambda x: jsonpickle.encode(x), recommender.recommend(method='summarize'))),
+                    list(map(lambda x: jsonpickle.encode(x), recommender.recommend(method='outdegree'))),
+                ]
+            except utils.RetrievalError:
+                session[f'notfound{retriever.mtype}'] = True
+
+    return JsonResponse(json.loads(encoded_retriever))
+
+
+@login_required
+def recommendation_results(request):
+    template_name = 'results.html'
+    return render(request, template_name)

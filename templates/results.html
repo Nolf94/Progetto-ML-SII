@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% comment %} {% load static %} {% endcomment %}
+{% block title %} {% endblock %} 
+{% block content %}
+
+{{ request.session.rankings_movies }}
+
+<hr>
+
+{{ request.session.rankings_music }}
+
+<hr>
+
+{{ request.session.rankings_artists }}
+
+
+{% comment %} {% if itemsfound %}
+    <p>
+    <b>Ranking by clustering:</b><br>
+    {% for item in ranking_clustering %}
+        {{forloop.counter}} - {{item}}<br>
+    {% endfor %}
+    </p><p>
+    <b>Ranking by sum:</b><br>
+    {% for item in ranking_summarize %}
+        {{forloop.counter}} - {{item}}<br>
+    {% endfor %}
+    </p>
+{% else %}
+    No items found in that area. sorry!
+{% endif %}
+
+{% endblock %} {% endcomment %}
+
+{% endblock %}

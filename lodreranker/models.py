@@ -18,6 +18,7 @@ class RetrievedItem(models.Model):
     querystring = models.CharField(max_length=180, blank=True, null=True)
     abstract = models.TextField(blank=True, null=True)
     vector = JSONField(blank=True, null=True)
+    outdegree = models.PositiveSmallIntegerField(default=0)
 
 
 class CustomUser(AbstractUser):

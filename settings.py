@@ -133,7 +133,7 @@ SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [
     ('likes', 'likes'),
     ('movies', 'movies'),
     ('books', 'books'),
-    ('music', 'music'),
+    ('music', 'artists'),
 ]
 
 LOGIN_URL = '/users/login'

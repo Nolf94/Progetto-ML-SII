@@ -13,7 +13,7 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = ((('User'), {'fields': ('age', 'gender', 'form_movies', 'form_books','form_artists', 'social_items')}),) + UserAdmin.fieldsets
 
 class RetrievedItemAdmin(admin.ModelAdmin):
-    list_display = ['wkd_id', 'updated', 'media_type', 'name', 'querystring']
+    list_display = ['wkd_id', 'updated', 'media_type', 'name', 'querystring', 'outdegree']
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(RetrievedItem, RetrievedItemAdmin)
