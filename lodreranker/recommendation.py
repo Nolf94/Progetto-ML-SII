@@ -71,6 +71,17 @@ class ItemRanker(object):
 
         return self.__get_ranking()
 
+    def rank_items_outdegree(self):
+        """
+        Ranks without any given input:
+        The candidates' scores are simply inferred by the items outdegree, which comes from wikidata itself.
+        """
+        for candidate in self.candidates:
+            item = candidate['item']
+            candidate['score'] = item.outdegree
+
+        return self.__get_ranking()
+
 
 class ItemRetriever(object):
     """Interface for retrieving items from Linked Open Data (LOD), such as Wikidata."""
@@ -100,6 +111,7 @@ class SocialItemRetriever(ItemRetriever):
         super().__init__(media_type)
 
     def initialize(self, extra_data_media):
+        self.input_set = []
         media = extra_data_media['data']
 
         def has_next(page):
@@ -117,7 +129,8 @@ class SocialItemRetriever(ItemRetriever):
                 media.extend(current_page['data'])
                 i+=1
 
-        self.input_set = list(map(lambda x: x['name'], media))
+        if media:
+            self.input_set = list(map(lambda x: x['name'], media))
         # self.input_set = self.input_set[:3]
         super().initialize()
 
@@ -146,7 +159,7 @@ class SocialItemRetriever(ItemRetriever):
                     binding = spql.execute(query)[0]
                     print(f'\t\tEntity type matches with {self.mtype}.')
                     try:
-                        item = RetrievedItem.objects.get(wkd_id=wkd_id) 
+                        item = RetrievedItem.objects.get(wkd_id=wkd_id)
                         print(f'\t"{self.current}" found cached {item.wkd_id}.')
                     except RetrievedItem.DoesNotExist:
                         item = RetrievedItem(
@@ -182,19 +195,25 @@ class GeoItemRetriever(ItemRetriever):
         super().__init__(media_type)
 
     def initialize(self, geoarea):
+        self.input_set = []
         spql = lod_queries.Sparql(constants.WIKIDATA, limit=self.limit)
         try:
             bindings = spql.execute(spql.get_query(self.mtype, 'geolocalized', geoarea))
-            print(f'The query returned {len(bindings)} results.')
-        except Exception as e:
-            print(e)
-            # TODO exception handling in AJAX
-            raise utils.RetrievalError
+            self.input_set = list(map(lambda x: {
+                    'id': re.sub('http://www.wikidata.org/entity/', '', x['item']['value']),
+                    'name': x['itemLabel']['value'],
+                    'outDegree': x['outDegree']['value']
+                }, bindings))
 
-        self.input_set = list(map(lambda x: {
-                'id': re.sub('http://www.wikidata.org/entity/', '', x['item']['value']),
-                'name': x['itemLabel']['value']
-            }, bindings))
+            print("Initial rank according to wikidata item outDegree:")
+            for x in self.input_set:
+                # NB: This rank includes potentially invalid items (which have no abstract)
+                print(f"outDegree: {x['outDegree']}\t"
+                      f"linkCount: {x['linkCount']}\t"
+                      f"{x['itemLabel']}")
+            
+        except Exception as e:
+            print(f'{type(self).__name__} for {self.mtype}: {e}')
         super().initialize()
 
     def retrieve_next(self):
@@ -202,11 +221,18 @@ class GeoItemRetriever(ItemRetriever):
         try: # use cached item
             item = RetrievedItem.objects.get(wkd_id=self.current['id'])
             print(f'\t\"{self.current["name"]}\" found cached: {item.wkd_id}.')
+            
+            # (temporary) update existing items with outdegree -----
+            item.outdegree = self.current['outdegree']
+            item.save()
+            # ------------------------------------------------------
+
         except RetrievedItem.DoesNotExist: # create new item
             item = RetrievedItem(
                 wkd_id=self.current['id'],
                 media_type=self.mtype,
                 name=self.current['name'],
+                outdegree=self.current['outdegree'],
             )
             item.save()
 
@@ -238,6 +264,7 @@ class Recommender(object):
         self.uservectors = np.array(self.uservectors)
 
     def recommend(self, method='summarize'):
+        utils.disablePrint()
         """Before calling this function, be sure that the recommender's retriever has retrieved items."""
         itemids = self.retriever.retrieved_items
         if not itemids:
@@ -251,8 +278,15 @@ class Recommender(object):
             print(f'Vectors: {len(self.uservectors)}, Clusters: {len(clusters)}')
             for i, cluster in enumerate(clusters):
                 print(f"{i+1} - weight: {cluster['weight']}")
-            return ranker.rank_items_using_clusters(clusters)
+
+            ranking = ranker.rank_items_using_clusters(clusters)
 
         elif method == 'summarize':
             sum_vec = sum(np.array(self.uservectors))
-            return ranker.rank_items_using_sum(sum_vec)
+            ranking = ranker.rank_items_using_sum(sum_vec)
+
+        elif method == 'outdegree':
+            ranking = ranker.rank_items_outdegree()
+
+        utils.enablePrint()
+        return ranking
