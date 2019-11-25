@@ -9,8 +9,10 @@ function doAjax(to_django) {
         data: to_django,
         success: function(from_django) {
             console.log(from_django);
-            if (!from_django.done) {
+            if (!from_django.retrieval_done) {
                 $("#js-progress-text-mtype").text(from_django.mtype);
+                $("#js-progress-text-done").hide();
+                $("#js-progress-text-moreinfo").hide();
                 var percent = (from_django.i * 100 / from_django.tot).toFixed(0) + '%';
                 $("#js-progress-bar").children().text(percent).css('width', percent);
                 $("#js-progress-bar").children().attr('aria-valuenow', from_django.i);
@@ -25,6 +27,8 @@ function doAjax(to_django) {
                     // $("#js-progress-bar").children()
                     //     .toggleClass('progress-bar-animated')
                     //     .toggleClass('progress-bar-striped');
+                    $("#js-progress-text-done").show();
+                    $("#js-progress-text-moreinfo").show();
                     $("#js-progress-data").text('');
                     $("#js-progress-bar").children().text('0%').css('width', '0%');
                     $("#js-done").show("fast");
