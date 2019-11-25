@@ -90,7 +90,7 @@ class Sparql(object):
         return query
 
     
-    # LIGHT QUERIES --------------------------------------------------------------------------------
+    # LIGHT QUERIES --------------------------------------------------------------------------------------
     # They only check the type of a wikidata item, given its id (fast).
     # If found, the item is returned (1 item per query)
 
@@ -138,7 +138,7 @@ class Sparql(object):
         return query
 
 
-    # GEOLOCALIZED QUERIES --------------------------------------------------------------------------------
+    # GEOLOCALIZED QUERIES -------------------------------------------------------------------------------
     # Given a set of coordinates and a radius, they check the existence of wikidata items within that area
     # If found, the item is returned (1 item per query)
 
@@ -172,7 +172,7 @@ class Sparql(object):
         query = """
         SELECT DISTINCT ?item ?itemLabel ?linkCount (count(distinct ?entity) as ?outDegree) 
         WHERE {
-            ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q47461344.  # item has type which (is subclass of)* written work
+            ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q47461344;  # item has type which (is subclass of)* written work
                 rdfs:label ?itemLabel;
                 wikibase:sitelinks ?linkCount;
                 ?p ?entity.
@@ -182,7 +182,7 @@ class Sparql(object):
             UNION
             {
                 ?author wdt:P50 ?item;   # author is author of item
-                    wdt:P106 wd:Q36180.  # author occupation is a writer
+                    wdt:P106 wd:Q36180;  # author occupation is a writer
                     wdt:P19 ?place;      # author was born in place
             }
             SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
