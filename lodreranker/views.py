@@ -64,8 +64,8 @@ def social_disconnect(request):
     user.has_social_data = False
     user.social_items.clear()
     user.save()
-    # return redirect(reverse_lazy('profile'))
-    return redirect(reverse_lazy('signup_s1'))
+    return redirect(reverse_lazy('profile'))
+    # return redirect(reverse_lazy('signup_s1'))
 
 
 # Reset all user data
@@ -288,10 +288,11 @@ def recommendation_view(request):
 
         for key in list(filter(lambda x: x.startswith('notfound-') or x.startswith('rankings-'), session.keys())):
             session.pop(key)
+        for key in list(filter(lambda x: x.startswith('notfound_') or x.startswith('rankings_'), session.keys())):
+            session.pop(key)
         session.modified = True
 
     return render(request, template_name, context)
-
 
 @login_required
 @csrf_exempt
@@ -307,18 +308,10 @@ def recommendation_view_ajax(request):
                 if not session['mtypes']:
                     session.pop('mtypes')
                     session.pop('area')
-
-                    # TODO SHOW RECOMMENDATION RESULTS
-                    print('*'*100)
-                    for rankings in list(filter(lambda x: x.startswith('rankings-'), session.keys())):
-                        for ranking in rankings:
-                            print('='*100)
-                            print(jsonpickle.decode(ranking))
-                    print('*'*100)
-
                     return JsonResponse({'retrieval_done': True})
         else:
-            session['mtypes'] = [constants.MOVIE, constants.BOOK, constants.MUSIC]
+            # session['mtypes'] = [constants.MOVIE, constants.BOOK, constants.MUSIC]
+            session['mtypes'] = [constants.MOVIE]
 
         if 'retriever' in session.keys():
             retriever = jsonpickle.decode(session['retriever'])
@@ -337,12 +330,19 @@ def recommendation_view_ajax(request):
             session.pop('retriever')
             recommender = Recommender(retriever.mtype, user, retriever)
             try:
-                session[f'rankings-{retriever.mtype}'] = [
-                    jsonpickle.encode(recommender.recommend(method='clustering')),
-                    # jsonpickle.encode(recommender.recommend(method='summarize')),
-                    # jsonpickle.encode(recommender.recommend(method='outdegree')),
+                # TODO RICONTROLLARE
+                session[f'rankings_{retriever.mtype}'] = [
+                    list(map(lambda x: jsonpickle.encode(x), recommender.recommend(method='clustering'))),
+                    list(map(lambda x: jsonpickle.encode(x), recommender.recommend(method='summarize'))),
+                    list(map(lambda x: jsonpickle.encode(x), recommender.recommend(method='outdegree'))),
                 ]
             except utils.RetrievalError:
-                session[f'notfound-{retriever.mtype}'] = True
+                session[f'notfound{retriever.mtype}'] = True
 
     return JsonResponse(json.loads(encoded_retriever))
+
+
+@login_required
+def recommendation_results(request):
+    template_name = 'results.html'
+    return render(request, template_name)

@@ -42,6 +42,15 @@ function doAjax(to_django) {
                 $("#js-progress-text").text("Done.").next().children().toggleClass('spinner-border');
                 $("#js-progress-data").hide();
                 $("#js-continue").show("slow");
+                
+                if ($("#js-results").length) { // REDIRECT TO RESULTS VIEW
+                    var results_url = $('#js-results').attr('results_url')
+                    console.log("Redirecting to results view...")
+                    // TODO SHOW REDIRECT LOADER
+                    setTimeout(() => {
+                        window.location.pathname = results_url
+                    }, 2000);
+                }
             }
         }
     });

@@ -29,7 +29,6 @@
         </div>
     </div>
 </div>
-
 <div id="js-progress" class="collapse" ajax_url="{% url 'recommendation_view_ajax' %}">
     <div class="row mb-3 mx-auto d-flex justify-content-center text-center">
         <div id="js-progress-text" class="mr-3 my-auto">Please wait, retrieving <span id="js-progress-text-mtype">media</span>... <span id="js-progress-text-done" class="collapse text-success">Done.</span></div>
@@ -47,19 +46,7 @@
     </div>
     <div id="js-progress-text-moreinfo" class="row mt-3 mb-3 mx-auto text-black-50">Executing query for the next media type, it may take a while...</div>
 </div>
-
-
-<div id="js-results" class="collapse">
-    {% comment %} TODO mostra la progress bar (sequenziale per ciascun media type) 
-    
-    {% include 'results.html' %}
-    
-    {% endcomment %}
-</div>
-
-
-
-
+<div id="js-results" class="collapse" results_url="{% url 'results' %}"></div>
 <script src="{% static 'js/map.js' %}"></script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_KEY }}&libraries=places&callback=init" type="text/javascript"></script>
 

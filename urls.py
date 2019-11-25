@@ -28,4 +28,5 @@ urlpatterns = [
     path('ajax/recommendation/', views.recommendation_view_ajax, name='recommendation_view_ajax'),
 
     path('recommendation/', views.recommendation_view, name='recommendation'),
+    path('recommendation/results', views.recommendation_results, name='results'),
 ]
