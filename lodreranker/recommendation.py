@@ -11,6 +11,10 @@ from lodreranker import constants, lod_queries
 from lodreranker import utils
 from lodreranker.models import RetrievedItem
 
+# class Candidate(object):
+#     def __init__(self, item):
+#         self.item = item
+#         self.score = 0
 
 class ItemRanker(object):
     """Interface for ranking a list of items according to different strategies."""
@@ -20,6 +24,8 @@ class ItemRanker(object):
         #   item (the candidate's details)
         #   score (the candidate's score)
         self.candidates = [dict(item=item, score=0) for item in items]
+        # self.candidates = [Candidate(item) for item in items]
+        print(f'\t{type(self).__name__} initialized with {len(items)} items')
 
     def __cosine_similarity(self, vec1, vec2):
         """Private method: returns the cosine similarity between vectors vec1 and vec2."""
@@ -28,9 +34,10 @@ class ItemRanker(object):
     def __get_ranking(self):
         """Private method: calculates and returns the ranking according to the candidates' scores."""
         ranking = sorted(self.candidates, reverse=True, key=lambda candidate: candidate['score'])
+        print(f'\t{type(self).__name__} calculated the following ranking:')
         for i, candidate in enumerate(ranking):
             item = candidate['item']
-            print(f"{str(i+1)}, {candidate['score']}, {item.wkd_id}, {item.name}")
+            print(f"\t{str(i+1)}) {round(candidate['score'], 3)}\t{item.wkd_id}\t({item.name})")
         return ranking
 
     def rank_items_using_clusters(self, clusters):
@@ -39,7 +46,7 @@ class ItemRanker(object):
         Given N clusters, N partial scores are calculated for each item by confrontation with every centroid.
         The ranking is then calculated by summing the partial scores.
 
-        The score of item i according to cluster k is calculated as following:
+        The score of item i according to cluster k is calculated as follows:
             score(i,k) = (similarity(i) / total_similarity_k) * weight(k)
         where
             total_similarity_k = sum(similarity(j,k)) for each item j
@@ -97,7 +104,7 @@ class ItemRetriever(object):
         self.next = self.input_set[0] if self.input_set else None
         self.i = 0
         self.tot = len(self.input_set)
-        print(f'Initialized {type(self).__name__} for {self.mtype} with {self.tot} inputs.')
+        print(f'{type(self).__name__} for {self.mtype} initialized with {self.tot} inputs.')
 
     def retrieve_next(self):
         self.current = self.input_set.pop(0)
@@ -135,7 +142,7 @@ class SocialItemRetriever(ItemRetriever):
         super().initialize()
 
     def retrieve_next(self):
-        # utils.disablePrint()
+        utils.disablePrint()
         super().retrieve_next()
         wkb = lod_queries.Wikibase()
         spql = lod_queries.Sparql(constants.WIKIDATA)
@@ -186,7 +193,7 @@ class SocialItemRetriever(ItemRetriever):
                 item.save() # update item adding abstract and vector
         if item.vector:
             self.retrieved_items.append(item.wkd_id)
-        # utils.enablePrint()
+        utils.enablePrint()
 
 
 class GeoItemRetriever(ItemRetriever):
@@ -202,15 +209,13 @@ class GeoItemRetriever(ItemRetriever):
             self.input_set = list(map(lambda x: {
                     'id': re.sub('http://www.wikidata.org/entity/', '', x['item']['value']),
                     'name': x['itemLabel']['value'],
-                    'outDegree': x['outDegree']['value']
+                    'outdegree': x['outDegree']['value']
                 }, bindings))
 
-            print("Initial rank according to wikidata item outDegree:")
-            for x in self.input_set:
+            print("\tInitial rank according to wikidata item outDegree:")
+            for i, element in enumerate(self.input_set):
                 # NB: This rank includes potentially invalid items (which have no abstract)
-                print(f"outDegree: {x['outDegree']}\t"
-                      f"linkCount: {x['linkCount']}\t"
-                      f"{x['itemLabel']}")
+                print(f"\t{i+1}) {element['outdegree']}\t{element['name']}")
             
         except Exception as e:
             print(f'{type(self).__name__} for {self.mtype}: {e}')
@@ -222,7 +227,7 @@ class GeoItemRetriever(ItemRetriever):
             item = RetrievedItem.objects.get(wkd_id=self.current['id'])
             print(f'\t\"{self.current["name"]}\" found cached: {item.wkd_id}.')
             
-            # (temporary) update existing items with outdegree -----
+            # (TODO temporary) update existing items with outdegree
             item.outdegree = self.current['outdegree']
             item.save()
             # ------------------------------------------------------
@@ -270,14 +275,14 @@ class Recommender(object):
         if not itemids:
             raise utils.RetrievalError
         items = [RetrievedItem.objects.get(wkd_id=itemid) for itemid in itemids]
+        print(f'{type(self).__name__}: recommending using method "{method}"')
         ranker = ItemRanker(items)
-
         if method == 'clustering':
             eps = 0.50
             clusters = clustering.clusterize(self.uservectors, eps)
-            print(f'Vectors: {len(self.uservectors)}, Clusters: {len(clusters)}')
+            print(f'{type(self).__name__}: starting clustering. Vectors: {len(self.uservectors)}, Clusters: {len(clusters)}')
             for i, cluster in enumerate(clusters):
-                print(f"{i+1} - weight: {cluster['weight']}")
+                print(f"\tcluster {i+1} - weight: {cluster['weight']}")
 
             ranking = ranker.rank_items_using_clusters(clusters)
 

@@ -314,6 +314,7 @@ class Sparql(object):
     def execute(self, query):
         self.sparql.setQuery(query)
         try:
+            print(f'{type(self).__name__}: querying "{self.lod}"...')
             result = self.sparql.query()
             bindings = result.convert()['results']['bindings']
             if not bindings:
