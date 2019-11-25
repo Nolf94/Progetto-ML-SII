@@ -11,10 +11,11 @@ from lodreranker import constants, lod_queries
 from lodreranker import utils
 from lodreranker.models import RetrievedItem
 
-# class Candidate(object):
-#     def __init__(self, item):
-#         self.item = item
-#         self.score = 0
+class Candidate(object):
+    """A Candidate is a RetrievedItem with an additional score used to rank it in a list."""
+    def __init__(self, item: RetrievedItem):
+        self.item = item
+        self.score = 0
 
 class ItemRanker(object):
     """Interface for ranking a list of items according to different strategies."""
@@ -23,9 +24,9 @@ class ItemRanker(object):
         # A candidate is a dictionary with two kv pairs:
         #   item (the candidate's details)
         #   score (the candidate's score)
-        self.candidates = [dict(item=item, score=0) for item in items]
-        # self.candidates = [Candidate(item) for item in items]
-        print(f'\t{type(self).__name__} initialized with {len(items)} items')
+        # self.candidates = [dict(item=item, score=0) for item in items]
+        self.candidates = [Candidate(item) for item in items]
+        print(f'\t{type(self).__name__} initialized with {len(items)} candidates')
 
     def __cosine_similarity(self, vec1, vec2):
         """Private method: returns the cosine similarity between vectors vec1 and vec2."""
@@ -33,11 +34,11 @@ class ItemRanker(object):
 
     def __get_ranking(self):
         """Private method: calculates and returns the ranking according to the candidates' scores."""
-        ranking = sorted(self.candidates, reverse=True, key=lambda candidate: candidate['score'])
+        ranking = sorted(self.candidates, reverse=True, key=lambda candidate: candidate.score)
         print(f'\t{type(self).__name__} calculated the following ranking:')
         for i, candidate in enumerate(ranking):
-            item = candidate['item']
-            print(f"\t{str(i+1)}) {round(candidate['score'], 3)}\t{item.wkd_id}\t({item.name})")
+            item = candidate.item
+            print(f"\t{str(i+1)}) {round(candidate.score, 3)}\t{item.wkd_id}\t({item.name})")
         return ranking
 
     def rank_items_using_clusters(self, clusters):
@@ -56,14 +57,13 @@ class ItemRanker(object):
         for cluster in clusters:
             relative_sims = {}
             for candidate in self.candidates:
-                item = candidate['item']
+                item = candidate.item
                 similarity = self.__cosine_similarity(cluster["centroid"], json.loads(item.vector))
                 relative_sims[item.wkd_id] = similarity
 
             relative_sims_tot = sum(x for x in relative_sims.values())
             for candidate in self.candidates:
-                item = candidate['item']
-                candidate['score'] += (relative_sims[item.wkd_id]/relative_sims_tot) * cluster['weight']
+                candidate.score += (relative_sims[candidate.item.wkd_id]/relative_sims_tot) * cluster['weight']
 
         return self.__get_ranking()
 
@@ -73,8 +73,7 @@ class ItemRanker(object):
         Given a sum vector, the ranking is obtained by simply calculatig similarity between the vector and each item.
         """
         for candidate in self.candidates:
-            item = candidate['item']
-            candidate['score'] = self.__cosine_similarity(sum_vec, json.loads(item.vector))
+            candidate.score = self.__cosine_similarity(sum_vec, json.loads(candidate.item.vector))
 
         return self.__get_ranking()
 
@@ -84,8 +83,7 @@ class ItemRanker(object):
         The candidates' scores are simply inferred by the items outdegree, which comes from wikidata itself.
         """
         for candidate in self.candidates:
-            item = candidate['item']
-            candidate['score'] = item.outdegree
+            candidate.score = candidate.item.outdegree
 
         return self.__get_ranking()
 
