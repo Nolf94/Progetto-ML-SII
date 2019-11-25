@@ -18,7 +18,7 @@ class Sparql(object):
         agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"
         
         if lod in constants.SUPPORTED_LODS:
-            sparql = SPARQLWrapper(lod, agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36")
+            sparql = SPARQLWrapper(lod, agent=agent)
             self.lod = lod
         else:
             raise Exception(f"Invalid lod: {lod}")
@@ -99,8 +99,7 @@ class Sparql(object):
         SELECT ?type ?typeLabel
         WHERE {
             BIND(wd:"""f'{wkd_id}'""" as ?item)
-            ?item wdt:P31 ?type .               # item instance of type
-            ?type wdt:P279* wd:Q11424 .         # type sublclass of* film
+            ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q11424.         # item has type which (is subclass of)* film
             SERVICE wikibase:label { bd:serviceParam wikibase:language "en, it". }
         }
         """
@@ -111,8 +110,7 @@ class Sparql(object):
         SELECT ?type ?typeLabel
         WHERE {
             BIND(wd:"""f'{wkd_id}'""" as ?item)
-            ?item wdt:P31 ?type .               # item instance of type
-            ?type wdt:P279* wd:Q47461344 .      # type subclass of* written work
+            ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q47461344.      # item has type which (is subclass of)* written work
             SERVICE wikibase:label { bd:serviceParam wikibase:language "en, it". }
         }
         """
@@ -126,15 +124,13 @@ class Sparql(object):
             # two cases because -types- of humans are expressed using occupation (P106)
             {
                 # groups of humans: bands, orchestras etc.
-                ?item wdt:P31 ?type .           # item instance of type
-                ?type wdt:P279* wd:Q32178211    # type subclass of* music organisation
+                ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q32178211.  # item has type which (is subclass of)* music organisation
             }
             UNION
             {
                 # humans: singers, instrument players, performers, composers etc.
-                ?item wdt:P106 ?type .          # id has occupation type
-                ?type wdt:P279* ?occupations .  # type subclass of* musician OR music artist
-                VALUES ?occupations { wd:Q639669 wd:Q1294626 } 
+                ?item wdt:P106/wdt:P279* ?occupations.          # item has occupation which (is subclass of)* occupations
+                VALUES ?occupations { wd:Q639669 wd:Q1294626 }  # occupations is musician OR music artist
             }
             SERVICE wikibase:label { bd:serviceParam wikibase:language "en, it". }
         }
@@ -148,12 +144,14 @@ class Sparql(object):
 
     def get_query_movies_geolocalized(self, geoarea):
         query = """
-        SELECT DISTINCT ?item ?itemLabel 
+        SELECT DISTINCT ?item ?itemLabel ?linkCount (count(distinct ?entity) as ?outDegree) 
         WHERE {
-            ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q11424;
-                wdt:P840 ?place;
+            ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q11424; # item has type which (is subclass of)* film
+                ?placePred ?place;                      # item has a placePred relation with place
                 rdfs:label ?itemLabel;
-                wikibase:sitelinks ?linkCount.
+                wikibase:sitelinks ?linkCount;
+                ?p ?entity.
+            VALUES ?placePred { wdt:P840 wdt:P915 }     # placePred is narrative location OR filming location
             SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
             SERVICE wikibase:around {
                 ?place wdt:P625 ?location.
@@ -161,30 +159,32 @@ class Sparql(object):
                                 wikibase:radius """f'"{geoarea.rad}"'""".
             }
             FILTER((LANG(?itemLabel)) = "it")
+            FILTER(STRSTARTS(STR(?entity), "http://www.wikidata.org/entity/"))
         }
-        GROUP BY ?item ?itemLabel
-        ORDER BY DESC (?linkCount)
+        GROUP BY ?item ?itemLabel ?linkCount ?outDegree
+        # ORDER BY DESC (?linkCount) # for external wikibase links (wikipedia, wikiquote etc.)
+        ORDER BY DESC (?outDegree) # for internal (wikidata) links between entities
         LIMIT """f'{self.limit}'"""
         """
         return query
 
     def get_query_books_geolocalized(self, geoarea):
         query = """
-        SELECT DISTINCT ?item ?itemLabel 
-        WHERE { 
+        SELECT DISTINCT ?item ?itemLabel ?linkCount (count(distinct ?entity) as ?outDegree) 
+        WHERE {
+            ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q47461344.  # item has type which (is subclass of)* written work
+                rdfs:label ?itemLabel;
+                wikibase:sitelinks ?linkCount;
+                ?p ?entity.
             {
-                ?item (p:P31/ps:P31/(wdt:P279*)) ?type;
-                VALUES ?type { wd:Q47461344 wd:Q7725634 }
+                ?item wdt:P840 ?place.   # item narrative location is place 
             }
             UNION
             {
-                ?author wdt:P569 ?place.
-                ?author wdt:P106 wd:Q36180.
-                ?author wdt:P50 ?item
+                ?author wdt:P50 ?item;   # author is author of item
+                    wdt:P106 wd:Q36180.  # author occupation is a writer
+                    wdt:P19 ?place;      # author was born in place
             }
-            ?item wdt:P840 ?place.
-            ?item rdfs:label ?itemLabel.
-            ?item wikibase:sitelinks ?linkCount.
             SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
             SERVICE wikibase:around {
                 ?place wdt:P625 ?location.
@@ -192,29 +192,35 @@ class Sparql(object):
                                 wikibase:radius """f'"{geoarea.rad}"'""".
             }
             FILTER((LANG(?itemLabel)) = "it")
+            FILTER(STRSTARTS(STR(?entity), "http://www.wikidata.org/entity/"))
         }
-        GROUP BY ?item ?itemLabel
-        ORDER BY DESC (?linkCount)
+        GROUP BY ?item ?itemLabel ?linkCount ?outDegree
+        # ORDER BY DESC (?linkCount) # for external wikibase links (wikipedia, wikiquote etc.)
+        ORDER BY DESC (?outDegree) # for internal (wikidata) links between entities
         LIMIT """f'{self.limit}'"""
         """
         return query
 
     def get_query_artists_geolocalized(self, geoarea):
         query = """
-        SELECT DISTINCT ?item ?itemLabel 
+        SELECT DISTINCT ?item ?itemLabel ?linkCount (count(distinct ?entity) as ?outDegree) 
         WHERE {
+            # two cases because -types- of humans are expressed using occupation (P106)
             {
-                ?type wdt:P279* wd:Q639669.
-                ?item wdt:P106 ?type.
-                ?item wdt:P19 ?place.
+                # groups of humans: bands, orchestras etc.
+                ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q32178211;  # item has type which (is subclass of)* music organisation
+                    wdt:P740 ?place.                            # item location of formation is place
             }
             UNION
             {
-                ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q215380.
-                ?item wdt:P740 ?place
+                # humans: singers, instrument players, performers, composers etc.
+                ?item wdt:P106/wdt:P279* ?occupations;          # item has occupation which (is subclass of)* occupations
+                    wdt:P19 ?place.                             # item was born in place
+                VALUES ?occupations { wd:Q639669 wd:Q1294626 }  # occupations is musician OR music artist
             }
-            ?item rdfs:label ?itemLabel.
-            ?item wikibase:sitelinks ?linkCount.
+            ?item rdfs:label ?itemLabel;
+                wikibase:sitelinks ?linkCount;
+                ?p ?entity.
             SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
             SERVICE wikibase:around {
                 ?place wdt:P625 ?location.
@@ -222,9 +228,11 @@ class Sparql(object):
                                 wikibase:radius """f'"{geoarea.rad}"'""".
             }
             FILTER((LANG(?itemLabel)) = "it")
+            FILTER(STRSTARTS(STR(?entity), "http://www.wikidata.org/entity/"))
         }    
-        GROUP BY ?item ?itemLabel
-        ORDER BY DESC (?linkCount)
+        GROUP BY ?item ?itemLabel ?linkCount ?outDegree
+        # ORDER BY DESC (?linkCount) # for external wikibase links (wikipedia, wikiquote etc.)
+        ORDER BY DESC (?outDegree) # for internal (wikidata) links between entities
         LIMIT """f'{self.limit}'"""
         """
         return query
@@ -234,70 +242,72 @@ class Sparql(object):
 
     def get_query_movies_poi(self, qs):
         query = """
-            SELECT DISTINCT ?label ?abstract 
-            FROM <http://dbpedia.org/page_links>
-            WHERE {
-                ?poi rdfs:label """f'"{qs}"'"""@it.
-                ?item dbo:wikiPageWikiLink ?poi;
-                    rdf:type schema:Movie;
-                    rdfs:label ?label;
-                    dbo:abstract ?abstract.
-                FILTER langMatches(lang(?abstract),"en")    
-                FILTER langMatches(lang(?label),"en")                   
-            }
-            GROUP BY ?label
-            """
+        SELECT DISTINCT ?label ?abstract 
+        FROM <http://dbpedia.org/page_links>
+        WHERE {
+            ?poi rdfs:label """f'"{qs}"'"""@it.
+            ?item dbo:wikiPageWikiLink ?poi;
+                rdf:type schema:Movie;
+                rdfs:label ?label;
+                dbo:abstract ?abstract.
+            FILTER langMatches(lang(?abstract),"en")    
+            FILTER langMatches(lang(?label),"en")                   
+        }
+        GROUP BY ?label
+        """
         return query
 
     def get_query_books_poi(self, qs):
         query = """
-            SELECT DISTINCT ?label ?abstract 
-            FROM <http://dbpedia.org/page_links>
-            WHERE { 
-                   ?poi rdfs:label """f'"{qs}"'"""@it.
-                   ?item dbo:wikiPageWikiLink ?poi.
-                   {
-                        ?item rdf:type  schema:Book;
-                            rdfs:label ?label;
-                            dbo:abstract ?abstract.             
-                   }
+        SELECT DISTINCT ?label ?abstract 
+        FROM <http://dbpedia.org/page_links>
+        WHERE { 
+            ?poi rdfs:label """f'"{qs}"'"""@it.
+            ?item dbo:wikiPageWikiLink ?poi.
+            {
+                ?item rdf:type  schema:Book;
+                    rdfs:label ?label;
+                    dbo:abstract ?abstract.             
+            }
             UNION 
-                   {
-                        ?item rdf:type  dbo:Writer.
-                        ?book dbo:author ?item;
-                            rdfs:label ?label;
-                            dbo:abstract ?abstract.            
-                    }
+            {
+                ?item rdf:type  dbo:Writer.
+                ?book dbo:author ?item;
+                    rdfs:label ?label;
+                    dbo:abstract ?abstract.            
+            }
             FILTER langMatches(lang(?abstract),"en")    
             FILTER langMatches(lang(?label),"en")    
-            }
-            GROUP BY ?label
-            """
+        }
+        GROUP BY ?label
+        """
+        return query
             
     def get_query_artists_poi(self, qs):
         query = """
-            SELECT DISTINCT ?label ?abstract 
-            FROM <http://dbpedia.org/page_links>
-            WHERE { 
-                    ?o  dbo:wikiPageWikiLink ?poi.
-                    ?poi rdfs:label """f'"{qs}"'"""@it.
-                    {
-                        ?o  rdf:type  dbo:MusicalWork.
-                        ?o  dbo:artist  ?artist.
-                        ?artist  rdfs:label ?label.
-                        ?artist  dbo:abstract ?abstract                  
-                    }
-                    UNION
-                    {
-                        ?o  rdf:type  schema:MusicGroup.
-                        ?o  rdfs:label ?label.
-                        ?o  dbo:abstract ?abstract          
-                    }
-                    FILTER langMatches(lang(?abstract),"en")    
-                    FILTER langMatches(lang(?label),"en") 
+        SELECT DISTINCT ?label ?abstract 
+        FROM <http://dbpedia.org/page_links>
+        WHERE { 
+            ?o  dbo:wikiPageWikiLink ?poi.
+            ?poi rdfs:label """f'"{qs}"'"""@it.
+            {
+                ?o  rdf:type  dbo:MusicalWork.
+                ?o  dbo:artist  ?artist.
+                ?artist  rdfs:label ?label.
+                ?artist  dbo:abstract ?abstract                  
             }
-            GROUP BY ?label
-            """
+            UNION
+            {
+                ?o  rdf:type  schema:MusicGroup.
+                ?o  rdfs:label ?label.
+                ?o  dbo:abstract ?abstract          
+            }
+            FILTER langMatches(lang(?abstract),"en")    
+            FILTER langMatches(lang(?label),"en") 
+        }
+        GROUP BY ?label
+        """
+        return query
 
     #  ---------------------------------------------------------------------------------------------------
 
