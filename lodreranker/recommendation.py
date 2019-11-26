@@ -5,7 +5,7 @@ from urllib.request import urlopen
 import numpy as np
 from scipy import spatial
 
-import Clustering.clustering as clustering
+from Clustering.clustering import Clusterer
 import Doc2Vec.doc2vec as d2v
 from lodreranker import constants, lod_queries
 from lodreranker import utils
@@ -20,13 +20,15 @@ class Candidate(object):
 class ItemRanker(object):
     """Interface for ranking a list of items according to different strategies."""
 
-    def __init__(self, items):
-        # A candidate is a dictionary with two kv pairs:
-        #   item (the candidate's details)
-        #   score (the candidate's score)
-        # self.candidates = [dict(item=item, score=0) for item in items]
+    def __init__(self, items, strip=False):
+        """
+        Parameters:
+        - items: a list of RetrievedItems
+        - strip: if true, the ranker will return just the ranked item's id and score.
+        """
         self.candidates = [Candidate(item) for item in items]
-        print(f'\t{type(self).__name__} initialized with {len(items)} candidates')
+        self.strip = strip
+        print(f'\t{type(self).__name__} initialized with {len(items)} candidates, will strip: {self.strip}')
 
     def __cosine_similarity(self, vec1, vec2):
         """Private method: returns the cosine similarity between vectors vec1 and vec2."""
@@ -39,6 +41,10 @@ class ItemRanker(object):
         for i, candidate in enumerate(ranking):
             item = candidate.item
             print(f"\t{str(i+1)}) {round(candidate.score, 3)}\t{item.wkd_id}\t({item.name})")
+
+        if self.strip:
+            # strip the ranking from all info but the candidate's item id and score
+            ranking = [dict(id=candidate.item.wkd_id, score=round(candidate.score, 3)) for candidate in ranking]
         return ranking
 
     def rank_items_using_clusters(self, clusters):
@@ -136,11 +142,11 @@ class SocialItemRetriever(ItemRetriever):
 
         if media:
             self.input_set = list(map(lambda x: x['name'], media))
-        # self.input_set = self.input_set[:3]
+        # self.input_set = self.input_set[:3] # for testing
         super().initialize()
 
     def retrieve_next(self):
-        utils.disablePrint()
+        # utils.disablePrint()
         super().retrieve_next()
         wkb = lod_queries.Wikibase()
         spql = lod_queries.Sparql(constants.WIKIDATA)
@@ -191,7 +197,7 @@ class SocialItemRetriever(ItemRetriever):
                 item.save() # update item adding abstract and vector
         if item.vector:
             self.retrieved_items.append(item.wkd_id)
-        utils.enablePrint()
+        # utils.enablePrint()
 
 
 class GeoItemRetriever(ItemRetriever):
@@ -266,22 +272,18 @@ class Recommender(object):
                     self.uservectors.append(vector)
         self.uservectors = np.array(self.uservectors)
 
-    def recommend(self, method='summarize'):
-        utils.disablePrint()
+    def recommend(self, method='summarize', strip=False):
+        # utils.disablePrint()
         """Before calling this function, be sure that the recommender's retriever has retrieved items."""
         itemids = self.retriever.retrieved_items
         if not itemids:
             raise utils.RetrievalError
         items = [RetrievedItem.objects.get(wkd_id=itemid) for itemid in itemids]
+        
         print(f'{type(self).__name__}: recommending using method "{method}"')
-        ranker = ItemRanker(items)
+        ranker = ItemRanker(items, strip)
         if method == 'clustering':
-            eps = 0.50
-            clusters = clustering.clusterize(self.uservectors, eps)
-            print(f'{type(self).__name__}: starting clustering. Vectors: {len(self.uservectors)}, Clusters: {len(clusters)}')
-            for i, cluster in enumerate(clusters):
-                print(f"\tcluster {i+1} - weight: {cluster['weight']}")
-
+            clusters = Clusterer().dbscan(self.uservectors, 0.50)
             ranking = ranker.rank_items_using_clusters(clusters)
 
         elif method == 'summarize':
@@ -291,5 +293,5 @@ class Recommender(object):
         elif method == 'outdegree':
             ranking = ranker.rank_items_outdegree()
 
-        utils.enablePrint()
+        # utils.enablePrint()
         return ranking
