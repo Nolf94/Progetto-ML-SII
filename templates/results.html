@@ -5,24 +5,53 @@
 {% block content %}
 
 {% if has_results %}
-    {% comment %} # TODO styling {% endcomment %}
-    <div class="row mb-3">
-        <div class="col">
-        {% for mtype, mtype_data in results.items %}
-            <hr><h2>{{ mtype }}</h2>
-            {% for ranking_method, ranking_data in mtype_data.items %}
-                    <h5>{{ ranking_method }}</h5>
-                    {% for el in ranking_data %}
-                        <p>{{ forloop.counter }} {{ items|keyvalue:el.id|keyvalue:'name' }} [{{ el.score }}] </p> 
-                    {% endfor %}
-
-            {% empty %}
-                <p> 404 {{ mtype }} </p>
-            {% endfor %}
-        {% endfor %}
-        </div>
+<div class="row my-3 mx-5">
+    <div class="col">
+        <p>We retrieved <span class="text-success">{{ items|length }}</span> different media in that area.</p>
+        <p>Based on your profile, we ranked the media using three different methods. Which method do you prefer for each media type?</p>
     </div>
+</div>
+<div class="row">
+    {% for mtype, mt_rankings in results.items %}
+        <div class="col-md-6 p-3">
+            <nav class="row">
+                <div class="col-4 align-text-bottom mb-3"><span class="h4 pl-2">{{mtype|title}}</span></span></div>
+                <div class="col-8 nav nav-pills justify-content-end mb-1" style="font-size: 0.9em" id="nav-tab" role="tablist">
+                {% for method in mt_rankings.keys %}
+                    <a class="nav-item nav-link {% if forloop.counter == 1 %}active{% endif %}" id="nav-{{mtype}}-{{method}}-tab" data-toggle="tab" href="#nav-{{mtype}}-{{method}}" role="tab" aria-controls="nav-{{mtype}}-{{method}}" aria-selected="true">{{method|title}}</a>
+                {% endfor %}
+                </div>
+            </nav>
+            <div class="tab-content border rounded p-2" id="nav-tabContent">
+            {% for method, ranking in mt_rankings.items %}
+                <div id="nav-{{mtype}}-{{method}}" class="tab-pane fade overflow-auto {% if forloop.counter == 1 %}show active{% endif %}" style="max-height: 50vh" role="tabpanel" aria-labelledby="nav-{{mtype}}-{{method}}-tab">
+                    <div class="list-group list-group-flush">
+                    {% for el in ranking %}
+                        <a href="#{{el.id}}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" role="button"  data-toggle="collapse" aria-expanded="false" aria-controls="collapseExample">
+                            <span> 
+                                <span class="mr-2 small p-1"> {{forloop.counter}}</span>
+                                {{ items|keyvalue:el.id|keyvalue:'name' }} 
+                                <span class="ml-3 small font-italic" style="opacity: 0.5">{{ el.id }}</span>
+                            </span>
+                            <span class="badge badge-light badge-pill">{{ el.score|percent }}</span>  {% comment %} TODO: is it really a percentile? {% endcomment %}
+                        </a>
+                        <div id="{{el.id}}"class="collapse">
+                            <div class="col my-3 small">{{ items|keyvalue:el.id|keyvalue:'abstract'|paragraphs|extract|safe }}</div>
+                            <div class="col mt-3 mb-5"> <a href="https://www.wikidata.org/wiki/{{el.id}}" target="_blank">Read more <i class="fas fa-external-link-alt small"></i></a></div>
+                        </div>
+                    {% endfor %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="p-5" style="max-height: 50vh; height:50vh" role="tabpanel" >
+                    <span class="h5 text-secondary"> Sorry, no {{ mtype }} found in that area.</span>
+                </div>
+            {% endfor %}
+            </div> 
+        </div>
+    {% endfor %}
 
+    {% comment %}  The items dictionary, uncomment for debugging only {% endcomment %}
     {% comment %} <div class="row mb-3">
         <div class="col">
         {% for item in items.values %}
@@ -32,6 +61,17 @@
     </div> {% endcomment %}
 
 {% else %}
-    404, bello!
+<div class="row my-5 justify-content-center">
+    <div class="col-md-4 social-container mx-5 my-2 text-center">
+        <p>Sorry, we haven't found anything in that area.</p>
+        <a class="btn btn-success p-3" style="display: table-cell" href="{% url 'recommendation' %}">Try again!</a>
+    </div>
+</div>
 {% endif %}
+
+<script type="text/javascript">
+    // little hack to lock the card's width so that it doesn't grow when an item is clicked.
+    $('.card').css('width','80vw');
+</script>
 {% endblock %}
+
