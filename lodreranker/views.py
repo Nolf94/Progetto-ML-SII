@@ -286,8 +286,6 @@ def recommendation_view(request):
             session.pop('retriever')
         if 'list_mediatype' in session.keys():
             session.pop('list_mediatype')
-    
-        # TODO move -->
         if 'results' in session.keys():
             session.pop('results')
 

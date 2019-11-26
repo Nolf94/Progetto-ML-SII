@@ -92,7 +92,7 @@ function init() {
             updateCircle(currentRad);
             infoWindow.setContent('You are here.');
             infoWindow.open(map, marker);
-            $("#status").show().addClass('alert-success').text("We have placed a marker on the map based on your geolocation.")
+            $("#status").show().addClass('alert-success').text("We have placed you on the map based on your geolocation.")
             addListeners()
         }, function () {
             handleLocationError(true);

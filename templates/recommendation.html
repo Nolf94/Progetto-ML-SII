@@ -4,14 +4,14 @@
 {% block content %}
 <div id="js-begin">
     <div class="row mb-3 mx-2">
-        <div class="my-auto pl-0 mr-3">Select the area you would like to visit.<br><strong>Click</strong> on the map or <strong>drag</strong> the marker to move it.</div>
+        <div class="pl-0 mb-2 mr-3">Select the area you would like to visit.<br><strong>Click</strong> on the map or <strong>drag</strong> the marker to move it.</div>
         <div class="col-sm-2 slidercontainer my-auto">
             <input type="range" id="slider" class="slider" min="10" max="100" step="10" oninput="getRadius()"/>
         </div>
         <div class="my-auto p-0 mr-4 text-nowrap" style="width: 140px">
             radius: <label class="my-auto" for="slider" id="sliderLabel"></label> km
         </div>
-        <div id="status" class="my-auto alert collapse" role="alert"></div>
+        <div id="status" class="alert my-auto small wcollapse" role="alert"></div>
     </div>
     <div class="row mb-3 mx-2">
         {% comment %} The Map {% endcomment %}
