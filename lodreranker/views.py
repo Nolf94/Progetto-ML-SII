@@ -45,6 +45,7 @@ def profile(request):
     def get_info(mtype):
         return list(map(lambda x: f'{x.name}  ({x.wkd_id}, {len(x.abstract)} chars.)', user.social_items.filter(media_type=mtype)))
 
+    # TODO improve context variables 
     can_disconnect = (user.social_auth.count() > 1 or user.has_usable_password())
     return render(request, 'profile.html', {
         'facebook_login': facebook_login,
@@ -272,9 +273,9 @@ def recommendation_view(request):
     template_name = 'recommendation.html'
     context = {'GOOGLE_MAPS_KEY': settings.GOOGLE_MAPS_KEY }
 
+    session = request.session
     if request.method == 'POST':
         context['ajax_begin']  = True
-        session = request.session
         area = utils.GeoArea(
             request.POST.get('latitude'),
             request.POST.get('longitude'),
@@ -285,12 +286,10 @@ def recommendation_view(request):
             session.pop('retriever')
         if 'list_mediatype' in session.keys():
             session.pop('list_mediatype')
-
-        for key in list(filter(lambda x: x.startswith('notfound-') or x.startswith('rankings-'), session.keys())):
-            session.pop(key)
-        for key in list(filter(lambda x: x.startswith('notfound_') or x.startswith('rankings_'), session.keys())):
-            session.pop(key)
-        session.modified = True
+    
+        # TODO move -->
+        if 'results' in session.keys():
+            session.pop('results')
 
     return render(request, template_name, context)
 
@@ -310,15 +309,15 @@ def recommendation_view_ajax(request):
                     session.pop('area')
                     return JsonResponse({'retrieval_done': True})
         else:
-            # session['mtypes'] = [constants.MOVIE, constants.BOOK, constants.MUSIC]
-            session['mtypes'] = [constants.MOVIE]
+            session['mtypes'] = [constants.MOVIE, constants.BOOK, constants.MUSIC]
+            # session['mtypes'] = [constants.MOVIE]
 
         if 'retriever' in session.keys():
             retriever = jsonpickle.decode(session['retriever'])
             retriever.retrieve_next()
         else:
             mediatype = session['mtypes'][0]
-            retriever = GeoItemRetriever(mediatype, limit=5)
+            retriever = GeoItemRetriever(mediatype, limit=15)
             if 'area' in session.keys():
                 area = jsonpickle.decode(session['area'])
             retriever.initialize(area)
@@ -329,15 +328,21 @@ def recommendation_view_ajax(request):
         if not retriever.next:
             session.pop('retriever')
             recommender = Recommender(retriever.mtype, user, retriever)
+
             try:
-                # TODO RICONTROLLARE
-                session[f'rankings_{retriever.mtype}'] = [
-                    list(map(lambda x: jsonpickle.encode(x), recommender.recommend(method='clustering'))),
-                    list(map(lambda x: jsonpickle.encode(x), recommender.recommend(method='summarize'))),
-                    list(map(lambda x: jsonpickle.encode(x), recommender.recommend(method='outdegree'))),
-                ]
+                mtype_results = {
+                    'clustering': recommender.recommend(method='clustering', strip=True),
+                    'summarize': recommender.recommend(method='summarize', strip=True),
+                    'outdegree': recommender.recommend(method='outdegree', strip=True),
+                }
             except utils.RetrievalError:
-                session[f'notfound{retriever.mtype}'] = True
+                mtype_results = {}
+
+            if 'results' in session.keys():
+                session['results'][retriever.mtype] = mtype_results
+            else:
+                session['results'] = {retriever.mtype: mtype_results}
+            session[f'results_{retriever.mtype}'] = mtype_results
 
     return JsonResponse(json.loads(encoded_retriever))
 
@@ -345,4 +350,31 @@ def recommendation_view_ajax(request):
 @login_required
 def recommendation_results(request):
     template_name = 'results.html'
-    return render(request, template_name)
+    context = {}
+    
+    if request.method == 'GET':
+        session = request.session
+        results = session['results']
+
+        items = {}
+        for mtype, mtype_data in results.items():
+            if mtype_data:
+                itemids = list(set([el['id'] for ranking in mtype_data.values() for el in ranking]))
+                try:
+                    mtype_items = [RetrievedItem.objects.get(wkd_id=itemid) for itemid in itemids]
+                
+                    items.update( [(item.wkd_id, item.__dict__) for item in mtype_items] )
+                
+                except RetrievedItem.DoesNotExist:
+                    return # it should never ever fire
+                
+        # results['movies'] = {} 
+        # results['books'] = {}
+        # results['artists'] = {}
+        context['has_results'] = any([results[x] for x in results.keys()])
+        context['results'] = results
+        context['items'] = items
+
+
+
+    return render(request, template_name, context)

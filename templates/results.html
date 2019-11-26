@@ -1,35 +1,37 @@
 {% extends 'base.html' %}
+{% load template_extras %}
 {% comment %} {% load static %} {% endcomment %}
-{% block title %} {% endblock %} 
+{% block title %} Results {% endblock %}
 {% block content %}
 
-{{ request.session.rankings_movies }}
+{% if has_results %}
+    {% comment %} # TODO styling {% endcomment %}
+    <div class="row mb-3">
+        <div class="col">
+        {% for mtype, mtype_data in results.items %}
+            <hr><h2>{{ mtype }}</h2>
+            {% for ranking_method, ranking_data in mtype_data.items %}
+                    <h5>{{ ranking_method }}</h5>
+                    {% for el in ranking_data %}
+                        <p>{{ forloop.counter }} {{ items|keyvalue:el.id|keyvalue:'name' }} [{{ el.score }}] </p> 
+                    {% endfor %}
 
-<hr>
+            {% empty %}
+                <p> 404 {{ mtype }} </p>
+            {% endfor %}
+        {% endfor %}
+        </div>
+    </div>
 
-{{ request.session.rankings_music }}
+    {% comment %} <div class="row mb-3">
+        <div class="col">
+        {% for item in items.values %}
+            <p> {{item}} </p>
+        {% endfor %}
+        </div>
+    </div> {% endcomment %}
 
-<hr>
-
-{{ request.session.rankings_artists }}
-
-
-{% comment %} {% if itemsfound %}
-    <p>
-    <b>Ranking by clustering:</b><br>
-    {% for item in ranking_clustering %}
-        {{forloop.counter}} - {{item}}<br>
-    {% endfor %}
-    </p><p>
-    <b>Ranking by sum:</b><br>
-    {% for item in ranking_summarize %}
-        {{forloop.counter}} - {{item}}<br>
-    {% endfor %}
-    </p>
 {% else %}
-    No items found in that area. sorry!
+    404, bello!
 {% endif %}
-
-{% endblock %} {% endcomment %}
-
 {% endblock %}
