@@ -11,3 +11,5 @@ SPARQL_LIMIT_DEFAULT = 30  # TODO increase dynamically
 WIKIDATA = 'https://query.wikidata.org/sparql'
 DBPEDIA = 'http://dbpedia.org/sparql'
 SUPPORTED_LODS = [WIKIDATA, DBPEDIA]
+
+CLUSTERING_EPS = 0.62
