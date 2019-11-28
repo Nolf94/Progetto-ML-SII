@@ -4,6 +4,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
 from lodreranker import views as views
+from lodreranker import tests as test_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),     
@@ -29,4 +30,6 @@ urlpatterns = [
 
     path('recommendation/', views.recommendation_view, name='recommendation'),
     path('recommendation/results', views.recommendation_results, name='results'),
+
+    path('tests/clustering', test_views.test_clustering, name='test_clustering'),
 ]

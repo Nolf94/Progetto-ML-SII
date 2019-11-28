@@ -50,26 +50,36 @@ class ItemRanker(object):
     def rank_items_using_clusters(self, clusters):
         """
         Ranks using the clustering method.
-        Given N clusters, N partial scores are calculated for each item by confrontation with every centroid.
-        The ranking is then calculated by summing the partial scores.
+        Given N items and M clusters:
+        - For each cluster k, N similarities relative to that cluster are calculated as follows:
+            relative_sims(k) = [cossim(i1,k), cossim(i2,k), ..., cossim(iN, k)] 
+        - The similarities are then normalized by mapping from range [-1,1] to range [0,1], with the formula:
+            x' = (x-min(relative_sims(k))/(max(relative_sims(k)-min(relative_sims(k))))
+            so that the item with the highest similarity has similarity=1,
+            and the item with the lowest has similarity=0
 
-        The score of item i according to cluster k is calculated as follows:
-            score(i,k) = (similarity(i) / total_similarity_k) * weight(k)
-        where
-            total_similarity_k = sum(similarity(j,k)) for each item j
-        The final score of item i is calculated as following:
-            score(i) = sum( score(i,m) ) for each cluster m
+        - Each similarity is then multiplied for the cluster's weight, making it a partial score for item i:
+            partial_score(i,k) = relative_sims(i,k) * weight(k)
+            so that the item with similarity=1 has similarity=weight(k),
+            this way the cluster's weight will influence the item's final score.
+
+        - The final score of each item is then calculated by summing the item's partial scores across all cluster:
+            score(i) = Σ(partial_score(i,k) for each k.
         """
+
+        def scale01(val, lst):
+            return (val - min(lst)) / (max(lst) - min(lst))
+
         for cluster in clusters:
             relative_sims = {}
             for candidate in self.candidates:
                 item = candidate.item
                 similarity = self.__cosine_similarity(cluster["centroid"], json.loads(item.vector))
-                relative_sims[item.wkd_id] = similarity
+                relative_sims[item.wkd_id] = similarity     
+            normalized_sims = {itemid: scale01(similarity, relative_sims.values()) for itemid, similarity in relative_sims.items()}
 
-            relative_sims_tot = sum(x for x in relative_sims.values())
             for candidate in self.candidates:
-                candidate.score += (relative_sims[candidate.item.wkd_id]/relative_sims_tot) * cluster['weight']
+                candidate.score += (normalized_sims[candidate.item.wkd_id]) * cluster['weight']
 
         return self.__get_ranking()
 
@@ -283,7 +293,7 @@ class Recommender(object):
         print(f'{type(self).__name__}: recommending using method "{method}"')
         ranker = ItemRanker(items, strip)
         if method == 'clustering':
-            clusters = Clusterer().dbscan(self.uservectors, 0.50)
+            clusters = Clusterer().dbscan(self.uservectors, constants.CLUSTERING_EPS)
             ranking = ranker.rank_items_using_clusters(clusters)
 
         elif method == 'summarize':

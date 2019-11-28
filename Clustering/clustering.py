@@ -45,6 +45,6 @@ class Clusterer(object):
 
         print(f'\t{type(self).__name__}: extracted {len(weighted_clusters)} clusters.')
         for i, cluster in enumerate(weighted_clusters):
-                    print(f"\t\tcluster {i+1} - weight: {cluster['weight']}")
+                    print(f"\t\tcluster {i+1} - size: {int(cluster['weight']*len(X))}, weight: {cluster['weight']}")
 
         return weighted_clusters

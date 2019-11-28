@@ -372,7 +372,4 @@ def recommendation_results(request):
         context['has_results'] = any([results[x] for x in results.keys()])
         context['results'] = results
         context['items'] = items
-
-
-
     return render(request, template_name, context)
