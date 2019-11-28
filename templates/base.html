@@ -11,6 +11,8 @@
     <script defer src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" 
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>  
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.10.1/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-sortablejs@latest/jquery-sortable.js"></script>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" 
         integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
@@ -18,7 +20,8 @@
     <title>LODReranker</title>
 </head>
 
-<body ondragstart="return false;" ondrop="return false;">
+{% comment %} <body ondragstart="return false;" ondrop="return false;"> {% endcomment %}
+<body>
     <main class="main container-fluid p-0">
         <!-- header -->
         <div class="header row w-100 flex-nowrap p-3 mb-4 bg-dark shadow">

@@ -180,3 +180,13 @@ label:before {
     height: 55vh;
     width: 90vw;
 }
+
+.draggable {
+    cursor: pointer;
+}
+.draggable i {
+    opacity: 0.6;
+}
+.draggable:hover {
+    border-color: dodgerblue;
+}

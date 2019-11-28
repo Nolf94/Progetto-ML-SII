@@ -22,6 +22,7 @@ from lodreranker.recommendation import (ItemRanker, GeoItemRetriever, Recommende
 
 
 def home(request):
+    request.session['retriever_name'] = 'GeoItemRetriever'
     return render(request, 'home.html')
 
 
@@ -284,6 +285,8 @@ def recommendation_view(request):
         session['area'] = jsonpickle.encode(area)
         if 'retriever' in session.keys():
             session.pop('retriever')
+        if 'retriever' in session.keys():
+            session.pop('retriever_name')
         if 'list_mediatype' in session.keys():
             session.pop('list_mediatype')
         if 'results' in session.keys():
@@ -325,6 +328,7 @@ def recommendation_view_ajax(request):
 
         if not retriever.next:
             session.pop('retriever')
+            session['retriever_name'] = type(retriever).__name__
             recommender = Recommender(retriever.mtype, user, retriever)
 
             try:
@@ -349,10 +353,13 @@ def recommendation_view_ajax(request):
 def recommendation_results(request):
     template_name = 'results.html'
     context = {}
-    
+    session = request.session
+
     if request.method == 'GET':
-        session = request.session
-        results = session['results']
+        if 'results' in session.keys():
+            results = session['results']
+        else: 
+            return redirect(reverse_lazy('recommendation'))
 
         items = {}
         for mtype, mtype_data in results.items():
@@ -367,9 +374,13 @@ def recommendation_results(request):
                     return # it should never ever fire
                 
         # results['movies'] = {} 
-        # results['books'] = {}
+        # results['books'] = results['movies']
         # results['artists'] = {}
         context['has_results'] = any([results[x] for x in results.keys()])
         context['results'] = results
-        context['items'] = items
+        context['items'] = items     
+    else:
+        pass
+        # handle evaluation
+
     return render(request, template_name, context)

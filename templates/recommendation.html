@@ -46,7 +46,7 @@
     </div>
     <div id="js-progress-text-moreinfo" class="row mt-3 mb-3 mx-auto text-black-50">Executing query for the next media type, it may take a while...</div>
 </div>
-<div id="js-results" class="collapse" results_url="{% url 'results' %}"></div>
+<div id="js-results" class="collapse" results_url="{% url 'recommendation_results' %}"></div>
 <script src="{% static 'js/map.js' %}"></script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_KEY }}&libraries=places&callback=init" type="text/javascript"></script>
 

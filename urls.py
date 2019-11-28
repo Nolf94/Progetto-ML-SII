@@ -25,11 +25,13 @@ urlpatterns = [
     path('users/social_disconnect/', views.social_disconnect, name='social_disconnect'),
     path('users/reset/', views.reset, name='reset'),
     path('users/logout/', auth_views.LogoutView.as_view(), name='logout'),
+    
+    path('recommendation/', views.recommendation_view, name='recommendation'),
+    path('recommendation/results', views.recommendation_results, name='recommendation_results'),
+
     path('ajax/social_connect/', views.signup_s1_ajax, name='signup_s1_ajax'),
     path('ajax/recommendation/', views.recommendation_view_ajax, name='recommendation_view_ajax'),
 
-    path('recommendation/', views.recommendation_view, name='recommendation'),
-    path('recommendation/results', views.recommendation_results, name='results'),
 
     path('tests/clustering', test_views.test_clustering, name='test_clustering'),
 ]
