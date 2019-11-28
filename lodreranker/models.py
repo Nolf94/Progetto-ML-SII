@@ -22,11 +22,13 @@ class RetrievedItem(models.Model):
 
 
 class CustomUser(AbstractUser):
-    first_name = models.CharField(max_length=180, blank=True, null=True)
-    last_name = models.CharField(max_length=180, blank=True, null=True)
-    age = models.SmallIntegerField(blank=True, null=True)
+    # first_name = models.CharField(max_length=180, blank=True, null=True)
+    # last_name = models.CharField(max_length=180, blank=True, null=True)
     GENDER_CHOICES = [('M', 'Male'), ('F', 'Female')]
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True, null=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True)
+    age = models.SmallIntegerField(null=True)
+    PROFESSION_CHOICES = [('S', 'Student'),('T', 'Teacher'),('E', 'Employee'),('F', 'Freelancer'),('U','Unemployed')]
+    profession = models.CharField(max_length=10, choices=PROFESSION_CHOICES, null=True)
     has_social_connect = models.BooleanField(default=False)
     has_social_data = models.BooleanField(default=False)
     has_demographic = models.BooleanField(default=False)
