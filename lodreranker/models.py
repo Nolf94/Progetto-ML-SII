@@ -1,6 +1,7 @@
 # lodreranker/models.py
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
 from social_django.fields import JSONField
 from lodreranker import constants
 
@@ -19,6 +20,21 @@ class RetrievedItem(models.Model):
     abstract = models.TextField(blank=True, null=True)
     vector = JSONField(blank=True, null=True)
     outdegree = models.PositiveSmallIntegerField(default=0)
+
+
+class RankerMetric(models.Model):
+    clustering = models.PositiveIntegerField()
+    summarize = models.PositiveIntegerField()
+    outdegree = models.PositiveIntegerField()
+    retriever = models.CharField(max_length=20)
+
+
+class BeyondAccuracyMetric(models.Model):
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    novelty = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    serendipity = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    diversity = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    retriever = models.CharField(max_length=20)
 
 
 class CustomUser(AbstractUser):

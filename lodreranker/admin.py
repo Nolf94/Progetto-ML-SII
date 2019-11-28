@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin, Group
 
 from .forms import CustomUserCreationForm, CustomUserChangeForm
-from .models import CustomUser, RetrievedItem
+from .models import CustomUser, RetrievedItem, RankerMetric, BeyondAccuracyMetric
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
@@ -18,4 +18,5 @@ class RetrievedItemAdmin(admin.ModelAdmin):
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(RetrievedItem, RetrievedItemAdmin)
 admin.site.unregister(Group)
-
+admin.site.register(RankerMetric)
+admin.site.register(BeyondAccuracyMetric)
