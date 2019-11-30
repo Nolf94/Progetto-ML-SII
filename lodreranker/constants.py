@@ -13,3 +13,5 @@ DBPEDIA = 'http://dbpedia.org/sparql'
 SUPPORTED_LODS = [WIKIDATA, DBPEDIA]
 
 CLUSTERING_EPS = 0.62
+
+METHODS = ['clustering', 'summarize', 'outdegree']

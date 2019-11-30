@@ -34,11 +34,9 @@ def paragraphs(value):
 def extract(value):
     return f"{value.split('</p>')[0]}</p>"
 
-
 @register.filter
 def percent(value):
     if value<1:
         return f'{round(value*100,2)}%'
     else:
         return value
-

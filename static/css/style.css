@@ -143,12 +143,12 @@ input[type="checkbox"] {
     height: 15em;
 }
 
-label {
+label.imglabel {
     position: relative;
     cursor: pointer;
 }
 
-label:before {
+label.imglabel:before {
     background-color: white;
     color: white;
     content: " ";
@@ -166,13 +166,13 @@ label:before {
     z-index: 1;
 }
 
-:checked+label:before {
+:checked+label.imglabel:before {
     content: "\2713";
     background-color: dodgerblue;
     transform: scale(1.2);
 }
 
-:checked+label img {
+:checked+label.imglabel img {
     transform: scale(0.9);
 }
 
@@ -189,4 +189,32 @@ label:before {
 }
 .draggable:hover {
     border-color: dodgerblue;
+}
+
+
+.likert:last-of-type {border-bottom: 0;}
+.likert:before {
+  content:  '';
+  position: relative;
+  top: 14px;
+  left: 9.5%;
+  display: block;
+  background-color: #efefef;
+  height: 12px;
+  width: 78%;
+}
+.likert li {
+  display: inline-block;
+  width: 19%;
+  text-align: center;
+  vertical-align:  top;
+}
+.likert li input[type=radio] {
+  display: block;
+  position: relative;
+  left: 50%;
+  margin-left: -6px; 
+}
+.likert li label {
+    user-select: none;
 }

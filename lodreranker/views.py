@@ -22,7 +22,6 @@ from lodreranker.recommendation import (ItemRanker, GeoItemRetriever, Recommende
 
 
 def home(request):
-    request.session['retriever_name'] = 'GeoItemRetriever'
     return render(request, 'home.html')
 
 
@@ -331,14 +330,18 @@ def recommendation_view_ajax(request):
             session['retriever_name'] = type(retriever).__name__
             recommender = Recommender(retriever.mtype, user, retriever)
 
+            mtype_results = {}
             try:
-                mtype_results = {
-                    'clustering': recommender.recommend(method='clustering', strip=True),
-                    'summarize': recommender.recommend(method='summarize', strip=True),
-                    'outdegree': recommender.recommend(method='outdegree', strip=True),
-                }
+                for method in constants.METHODS:
+                    mtype_results[method] = recommender.recommend(method=method, strip=True)
+                # mtype_results = {
+                #     'clustering': recommender.recommend(method='clustering', strip=True),
+                #     'summarize': recommender.recommend(method='summarize', strip=True),
+                #     'outdegree': recommender.recommend(method='outdegree', strip=True),
+                # }
             except utils.RetrievalError:
-                mtype_results = {}
+                # mtype_results will be empty
+                pass
 
             if 'results' in session.keys():
                 session['results'][retriever.mtype] = mtype_results
@@ -355,32 +358,50 @@ def recommendation_results(request):
     context = {}
     session = request.session
 
-    if request.method == 'GET':
-        if 'results' in session.keys():
-            results = session['results']
-        else: 
-            return redirect(reverse_lazy('recommendation'))
+    # if request.method == 'GET':
+    if 'results' in session.keys():
+        results = session['results']
+    else: 
+        return redirect(reverse_lazy('recommendation'))
 
-        items = {}
-        for mtype, mtype_data in results.items():
-            if mtype_data:
-                itemids = list(set([el['id'] for ranking in mtype_data.values() for el in ranking]))
-                try:
-                    mtype_items = [RetrievedItem.objects.get(wkd_id=itemid) for itemid in itemids]
-                
-                    items.update( [(item.wkd_id, item.__dict__) for item in mtype_items] )
-                
-                except RetrievedItem.DoesNotExist:
-                    return # it should never ever fire
-                
-        # results['movies'] = {} 
-        # results['books'] = results['movies']
-        # results['artists'] = {}
-        context['has_results'] = any([results[x] for x in results.keys()])
-        context['results'] = results
-        context['items'] = items     
-    else:
-        pass
+    items = {}
+    for mtype, mtype_data in results.items():
+        if mtype_data:
+            itemids = list(set([el['id'] for ranking in mtype_data.values() for el in ranking]))
+            try:
+                mtype_items = [RetrievedItem.objects.get(wkd_id=itemid) for itemid in itemids]
+            
+                items.update( [(item.wkd_id, item.__dict__) for item in mtype_items] )
+            
+            except RetrievedItem.DoesNotExist:
+                return # it should never ever fire
+            
+    # results['movies'] = {} 
+    # results['books'] = results['movies']
+    # results['artists'] = {}
+    context['has_results'] = any([results[x] for x in results.keys()])
+    context['results'] = results
+    context['items'] = items   
+
+
+    beyondaccuracy_text = {
+        'rating': 'multimedia content that matched my interests',
+        'novelty': 'multimedia content that I did not know before',
+        'serendipity': 'surprisingly interesting multimedia content that I might not have known in other ways',
+        'diversity': 'multimedia content that are different to each other(among content of the same type)',
+    }
+    context['beyondaccuracy'] = beyondaccuracy_text
+
+
+    # else:
+
+    if request.method == 'POST':
+        post_dict = request.POST
+        print(session['retriever_name'])
+        for key in filter(lambda x: x.startswith('ranking'), post_dict.keys()):
+            print(key)
+
+
         # handle evaluation
 
     return render(request, template_name, context)

@@ -13,20 +13,23 @@
                 <div class="d-flex mb-2">
                     <div class="list-group mr-2">
                     {% for method in mt_rankings.keys %}
-                        <input type="hidden" id="{{mtype}}-{{method}}-input" name="{{mtype}}-{{method}}-input" value="{{forloop.counter|add:-1}}" initialvalue="{{forloop.counter|add:-1}}"/>
-                    {% endfor %}
-                    {% for method in mt_rankings.keys %}
                         <div class="list-group-item border-light bg-light text-white mb-1 px-1">
                             <span class="bg-success border border-success rounded-circle px-2 py-1"> {{forloop.counter}}</span>
                         </div>
                     {% endfor %}
                     </div>
-                    <div id="{{mtype}}-{{method}}-list" class="sortable list-group" >
+                    <div id="{{mtype}}__preferences" class="sortable list-group" >
                     {% for method in mt_rankings.keys %}
                         <div id="{{mtype}}-{{method}}" class="draggable list-group-item mb-1 rounded-pill">
                             <i class="fas fa-grip-vertical pr-3 h7"></i>
                             {{ method|title }}
                         </div>
+                    {% endfor %}
+                    </div>
+                    <div id="{{mtype}}__preferences_values" class="collapse">
+                    <input type="hidden" id="{{mtype}}__preferences_aggregate" name="ranking_{{mtype}}"/>
+                    {% for method in mt_rankings.keys %}
+                        <input type="hidden" id="{{mtype}}-{{method}}_val" index="{{forloop.counter|add:-1}}"/>
                     {% endfor %}
                     </div>
                 </div>

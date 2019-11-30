@@ -15,7 +15,7 @@
             <li>The <b>musical bands</b> which formed in this area and the <b>musicians</b>, <b>singers</b> or <b>composers</b> which were born in the area.</li>
         </ul>
         <p><span class="text-success">You can click on elements on the lists to read their descriptions!</span></p>
-        <p>Based on your profile, we ranked the media using three different methods. For the first two methods (<b>clustering</b> and <b>sum vector</b>), 
+        <p>Based on your profile, we ranked the media using three different methods. For the first two methods (<b>clustering</b> and <b>sum vector</b>),
         each item is ordered by the affinity with your likes and preferences. For the third method (<b>node outgoing degree</b>) the items are simply ordered
         by the amount of information their LOD entities have, which is represented by their node degree count.</p>
         <p><span class="text-primary">Which method do you prefer for each media type?</span></p>
@@ -41,9 +41,9 @@
                     <div class="list-group list-group-flush">
                     {% for el in ranking %}
                         <a href="#{{el.id}}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" role="button"  data-toggle="collapse" aria-expanded="false" aria-controls="collapseExample">
-                            <div class="d-flex align-items-center text-nowrap"> 
+                            <div class="d-flex align-items-center text-nowrap">
                                 <span class="mr-2 small p-1"> {{forloop.counter}}</span>
-                                {{ items|keyvalue:el.id|keyvalue:'name' }} 
+                                {{ items|keyvalue:el.id|keyvalue:'name' }}
                                 <span class="mx-3 small font-italic" style="opacity: 0.5">{{ el.id }}</span>
                             </div>
                             <span class="badge badge-light badge-pill">{{ el.score|percent }}</span>  {% comment %} TODO: is it really a percentile? {% endcomment %}
@@ -62,10 +62,14 @@
                     <span class="h5 text-secondary"> Sorry, no {{ mtype }} found in that area.</span>
                 </div>
             {% endfor %}
-            </div> 
+            </div>
             {% include 'evaluation/ranker.html' %}
         </div>
     {% endfor %}
+
+</div>
+{% include 'evaluation/beyondaccuracy.html' %}
+</form>
 
     {% comment %}  The items dictionary, uncomment for debugging only {% endcomment %}
     {% comment %} <div class="row mb-3">
@@ -74,23 +78,13 @@
             <p> {{item}} </p>
         {% endfor %}
         </div>
-    </div> {% endcomment %}    
-</div>
+    </div> {% endcomment %}
 
-{% include 'evaluation/beyondaccuracy.html' %}
-</form>
-<div id="js-keys" class="collapse">
-{% for mtype, v in results.items %}
-    {% for method in v.keys %}
-        {{mtype}}-{{method}}
-    {% endfor %}
-{% endfor %}
-</div>
+
 <script src="{% static 'js/results.js' %}"></script>
 <script type="text/javascript">
     // little hack to lock the card's width so that it doesn't grow when an item is clicked.
     $('.card').css('width','98vw');
-    init_results($('#js-keys').text().trim().replace(/\n/g,'').split(' ').filter(el => el.length))
 </script>
 {% endwith %}
 {% else %}

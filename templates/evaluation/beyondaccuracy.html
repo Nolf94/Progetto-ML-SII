@@ -1,7 +1,45 @@
 {% block content %}
-    <div class="m-2 p-5 border border-primary rounded" style="border-width: 2px">
-    BEYOND ACCURACY TODO
+{% load template_extras %}
 
-    <button type="submit" class="btn btn-block btn-success py-2">Confirm</button>
+    <div class="row justify-content-center">
+        <div class="d-flex w-75 p-5 justify-content-center border border-primary rounded bg-light" style="border-width: 2px !important;">
+        
+        <div class="mr-3 h4">
+            <i class="far fa-question-circle text-primary"></i>
+        </div>
+        
+        <div class="d-flex flex-column">
+            <div class="mb-4">
+                Please specify your agreement degree with each of the following sentences:
+            </div>
+            <div class="d-flex flex-column mb-2">
+                {% for metric, text in beyondaccuracy.items %}
+                <div class="font-italic">"This recommender helped me discover {{text}}."</div>
+                <ul class='likert list-unstyled mb-4 pb-3 mb-3 border-bottom'>
+                    <li>
+                        <input id="{{metric}}-strong_disagree" type="radio" name="{{metric}}" value="1" required>
+                        <label for="{{metric}}-strong_disagree">Strongly disagree</label>
+                    </li>
+                    <li>
+                        <input id="{{metric}}-disagree" type="radio" name="{{metric}}" value="2">
+                        <label for="{{metric}}-disagree">Disagree</label>
+                    </li>
+                    <li>
+                        <input id="{{metric}}-neutral" type="radio" name="{{metric}}" value="3">
+                        <label for="{{metric}}-neutral">Neutral</label>
+                    </li>
+                    <li>
+                        <input id="{{metric}}-agree" type="radio" name="{{metric}}" value="4">
+                        <label for="{{metric}}-agree">Agree</label>
+                    </li>
+                    <li>
+                        <input id="{{metric}}-strong_agree" type="radio" name="{{metric}}" value="5">
+                        <label for="{{metric}}-strong_agree">Strongly agree</label>
+                    </li>
+                </ul>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-block btn-success py-2">Confirm</button>
+        </div>
     </div>
 {% endblock content %}

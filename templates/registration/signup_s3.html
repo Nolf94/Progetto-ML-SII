@@ -14,7 +14,7 @@
             {% comment %} <div id="preload" hidden>{{preload}}</div> {% endcomment %}
             {% for choice in request.session.poi_choices %}
                 <input type="checkbox" id={{choice.id}} name={{choice.id}} />
-                <label class="m-3" name={{choice.name}} for={{choice.id}}>
+                <label class="imglabel m-3" name={{choice.name}} for={{choice.id}}>
                 <img src="{% static choice.img %}" /></label>
             {% endfor %}
             </div>
