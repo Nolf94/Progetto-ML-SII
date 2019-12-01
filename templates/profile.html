@@ -20,18 +20,18 @@
             </li>
             </ul>
             <p>
+            {% if user.has_social_connect or user.has_demographic or user.has_movies or user.has_books or user.has_artists %}
+            <a class="btn btn-block btn-outline-danger w-25 my-3" href="{% url 'reset' %}">Reset all</a>
+            {% endif %}
             {% comment %} {% if not user.has_social_connect or not user.has_demographic or not user.has_poivector or not user.has_movies  or not user.has_books or not user.has_artists%} {% endcomment %}
             {% if not user.has_social_connect or not user.has_demographic or not user.has_movies or not user.has_books or not user.has_artists%}
             Please resume your registration <a href ="{% url 'resume' %}">here</a>.
             {% else %}
-            You're good to go!
-            <a class="btn btn-success" href="{% url 'recommendation' %}">Start</a>
+            You're good to go! Now you can use the recommendation system.
+            <a class="btn btn-block btn-success w-50 my-3" href="{% url 'recommendation' %}">Start</a>
             {% endif %}
             </p>
             {% comment %} {% if user.has_social_connect or user.has_demographic or user.has_poivector or user.has_movies or use.has_books or user.has_artists  %} {% endcomment %}
-            {% if user.has_social_connect or user.has_demographic or user.has_movies or user.has_books or user.has_artists %}
-            <a class="btn btn-outline-danger" href="{% url 'reset' %}">Reset all</a>
-            {% endif %}
         </div>
     </div>
 

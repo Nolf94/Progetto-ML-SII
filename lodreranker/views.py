@@ -116,7 +116,7 @@ def route(request):
 
 # Handles user creation, automatically logins the new user after submit.
 class SignupS0View(CreateView):
-    template_name = 'registration/signup_s0.html'
+    template_name = 'registration/signup.html'
     form_class = forms.CustomUserCreationForm
 
     def form_valid(self, form):
@@ -131,7 +131,7 @@ class SignupS0View(CreateView):
 # Facebook connect, creates UserSocialAuth object.
 @login_required
 def signup_s1(request):
-    template_name = 'registration/signup_s1.html'
+    template_name = 'registration/social_connect.html'
     user = request.user
     if user.has_social_connect and user.has_social_data:
         return route(request)
@@ -184,7 +184,7 @@ def signup_s1_ajax(request):
 
 # Demographic data form
 class SignupS2View(LoginRequiredMixin, UpdateView):
-    template_name = 'registration/signup_s2.html'
+    template_name = 'registration/demographic_form.html'
     form_class = forms.CustomUserDemographicDataForm
 
     def get_object(self, queryset=None):

@@ -11,7 +11,7 @@ $( document ).ready(function() {
         })
         $numselected = $("#numselected");
         $numselected.text(pre_selected.length);
-        if (pre_selected.length > $numselected.attr('min_choices')) {
+        if (pre_selected.length >= $numselected.attr('min_choices')) {
             $numselected.addClass('text-success');
             $numselected.removeClass('text-danger');
         } else {
@@ -46,7 +46,7 @@ $( document ).ready(function() {
         $("#selected").val(selected);
         $numselected = $("#numselected");
         $numselected.text(selected.length);
-        if (selected.length > $numselected.attr('min_choices')) {
+        if (selected.length >= $numselected.attr('min_choices')) {
             $numselected.addClass('text-success');
             $numselected.removeClass('text-danger');
         } else {

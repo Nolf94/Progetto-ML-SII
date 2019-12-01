@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %} Welcome! {% endblock %}
 {% block content %}
-<div class="d-flex flex-column mx-auto w-50 mb-3 text-center">
+<div class="d-flex flex-column mx-auto w-50 my-3 text-center">
     
     {% if user.is_authenticated %}
         <a class="btn btn-info p-3 mb-3" href="{% url 'profile' %}">View your profile</a>
@@ -10,7 +10,7 @@
     {% endif %}
     
     {% if user.has_artists %}
-        <a class="btn btn-success p-3" href="{% url 'recommendation' %}">Start</a>
+        <a class="btn btn-success p-3 font-weight-bold" href="{% url 'recommendation' %}">Start</a>
         <a class="collapse" href="{% url 'test_clustering' %}">test clustering</a>
     {% endif %}
 </div>
