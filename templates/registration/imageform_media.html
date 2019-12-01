@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load template_extras %}
+{% load static %}
+{% block title %} {{mtype|title}} form {% endblock %}
+{% block content %}
+<form method="post" action="{{submit_url}}" novalidate>
+{% csrf_token %}
+    <div class="d-flex flex-column align-items-center my-4">
+        <div class="mb-3">
+            <i class="fas fa-question-circle text-primary h5 mr-3"></i>
+            Please choose at least {{min_choices}} {{mtype}} you like, 
+            then click on the <span class="text-success">Confirm</span> button down below.
+        </div>
+        {% if error %}<div class="text-danger font-italic h5 my-3">Please choose at least {{min_choices}} {{mtype}}.</div>{% endif %}
+        <div class="form__content portrait d-flex flex-wrap py-3">
+            <input type="hidden" id="selected" name="selected" value="{{selected}}"/>
+            {% for choice in request.session|keyvalue:choices_key %}
+                <input type="checkbox" id={{choice.id}} name={{choice.id}} />
+                <label class="imglabel m-3" name="{{choice.name}}" for={{choice.id}}>
+                <img src="{% static choice.img %}" /></label>
+            {% endfor %}
+        </div>
+        <div class="d-flex flex-column w-25 justify-content-center align-items-center mt-3">
+            <div class="mb-3"><span id="numselected" class="text-danger" min_choices="{{min_choices}}">0</span> {{mtype}} selected.</div>
+            {% if error %}<div class="text-danger font-italic h5 my-3">Please choose at least {{min_choices}} {{mtype}}.</div>{% endif %}
+            <button type="submit" class="btn btn-block btn-success py-3">Confirm</button>
+        </div>
+    </div>
+</form>
+<script src="{% static 'js/imageform.js' %}"></script>
+{% endblock %}

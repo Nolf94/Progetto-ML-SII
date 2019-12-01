@@ -15,3 +15,5 @@ SUPPORTED_LODS = [WIKIDATA, DBPEDIA]
 CLUSTERING_EPS = 0.62
 
 METHODS = ['clustering', 'summarize', 'outdegree']
+
+COLDSTART_MIN_CHOICES = 5

@@ -33,7 +33,7 @@ def social_login(request):
 
 
 # Recap user profile data and social data
-# TODO add more fields (profession)
+
 @login_required
 def profile(request):
     user = request.user
@@ -202,8 +202,8 @@ class SignupS2View(LoginRequiredMixin, UpdateView):
 def signup_s3(request):
     """POI FORM IS DISABLED"""
     return redirect(reverse_lazy('profile'))
-    # template_name = 'registration/signup_s3.html'
-    # result = utils.handle_imgform(request, template_name, 5, 'poi_choices', 'poi')
+    # template_name = 'registration/imageform_places.html'
+    # result = utils.handle_imgform(request, 'signup_s3', 'poi')
     # if result['success']:
     #     selected_images, poi_choices = result['data'][0], result['data'][1]
     #     vectors = utils.get_vectors_from_selection(selected_images, poi_choices)
@@ -219,8 +219,8 @@ def signup_s3(request):
 # Cold-start form #2 (Movies)
 @login_required
 def signup_s4(request):
-    template_name = 'registration/signup_s4.html'
-    result = utils.handle_imgform(request, template_name, 5, 'movie_choices', 'movies')
+    template_name = 'registration/imageform_media.html'
+    result = utils.handle_imgform(request, 'signup_s4', constants.MOVIE)
     if result['success']:
         selected_images, movie_choices = result['data'][0], result['data'][1]
         user = request.user
@@ -236,8 +236,8 @@ def signup_s4(request):
 # Cold-start form #3 (Books)
 @login_required
 def signup_s5(request):
-    template_name = 'registration/signup_s5.html'
-    result = utils.handle_imgform(request, template_name, 5, 'book_choices', 'books')
+    template_name = 'registration/imageform_media.html'
+    result = utils.handle_imgform(request, 'signup_s5', constants.BOOK)
     if result['success']:
         selected_images, book_choices = result['data'][0], result['data'][1]
         user = request.user
@@ -253,8 +253,8 @@ def signup_s5(request):
 # Cold-start form #4 (Artists)
 @login_required
 def signup_s6(request):
-    template_name = 'registration/signup_s6.html'
-    result = utils.handle_imgform(request, template_name, 5, 'artist_choices', 'artists')
+    template_name = 'registration/imageform_media.html'
+    result = utils.handle_imgform(request, 'signup_s6', constants.MUSIC)
     if result['success']:
         selected_images, artist_choices = result['data'][0], result['data'][1]
         user = request.user

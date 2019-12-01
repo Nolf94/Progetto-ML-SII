@@ -1,10 +1,13 @@
-import os
 import json
+import os
 import random
 import sys
 
 import numpy as np
 from django.contrib.staticfiles import finders
+from django.urls import reverse_lazy
+
+from lodreranker import constants
 
 
 class GeoArea(object):
@@ -36,39 +39,44 @@ def get_vectors_from_selection(selection, choices):
     return vectors
 
 
-def handle_imgform(request, template_name, min_choices, session_obj_name, media_type):
+def handle_imgform(request, submit_url_name, media_type,  min_choices=constants.COLDSTART_MIN_CHOICES):
     """Helper function for cold-start form views."""
-    MIN_CHOICES = min_choices if min_choices else 5
-    context = { 'min_choices': MIN_CHOICES }
-
-    # choices are stored in session so that the random chosen order is kept during the process.
-    if session_obj_name in request.session:
-        choices = request.session[session_obj_name]
+    choices_key = f'choices_{media_type}'
+    context = {
+        'submit_url': reverse_lazy(submit_url_name),
+        'mtype': media_type,
+        'min_choices': min_choices,
+        'choices_key': choices_key
+    }
+    # Choices are stored in session so that the random chosen order is kept during the process.
+    if choices_key in request.session.keys():
+        choices = request.session[choices_key]
     else:
-        # get a new random order
+        # Get a new random order
         choices = get_image_choices(media_type)
-        request.session[session_obj_name] = choices
+        request.session[choices_key] = choices
 
-    if request.method == 'POST':
+    if request.method == 'GET':
+        # Load the form with the chosen random order
+        return {'success': False, 'data': context}
+
+    elif request.method == 'POST':
         selected_images = []
         try:
             selected_images = list(request.POST.get('selected').split(','))
-            if len(selected_images) < MIN_CHOICES:
+            if len(selected_images) < min_choices:
                 raise ValueError
         except ValueError:
-            # keep choices in the next attempt
+            # Keep choices in the next attempt
             context['error'] = True
             if selected_images:
                 context['selected'] = ','.join(x for x in selected_images)
             return {'success': False, 'data': context}
 
-        # clear the stored order
-        request.session.pop(session_obj_name)
+        # Clear the stored choices
+        request.session.pop(choices_key)
         request.session.modified = True
         return {'success': True, 'data': (selected_images, choices)}
-    else:
-        # load the form with the chosen random order
-        return {'success': False, 'data': context}
 
 
 def disablePrint():

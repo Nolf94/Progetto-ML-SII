@@ -9,6 +9,15 @@ $( document ).ready(function() {
         pre_selected.forEach(function(id) {
             $("input:checkbox#"+id).prop('checked', true);
         })
+        $numselected = $("#numselected");
+        $numselected.text(pre_selected.length);
+        if (pre_selected.length > $numselected.attr('min_choices')) {
+            $numselected.addClass('text-success');
+            $numselected.removeClass('text-danger');
+        } else {
+            $numselected.addClass('text-danger');
+            $numselected.removeClass('text-success');
+        }
     }
     
     // load selected array with checked items
@@ -35,5 +44,14 @@ $( document ).ready(function() {
         }
         console.log(selected);
         $("#selected").val(selected);
+        $numselected = $("#numselected");
+        $numselected.text(selected.length);
+        if (selected.length > $numselected.attr('min_choices')) {
+            $numselected.addClass('text-success');
+            $numselected.removeClass('text-danger');
+        } else {
+            $numselected.addClass('text-danger');
+            $numselected.removeClass('text-success');
+        }
     });
 });

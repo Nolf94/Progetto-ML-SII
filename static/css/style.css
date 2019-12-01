@@ -118,8 +118,6 @@ input[type="checkbox"] {
 .form__content img {
     position: relative;
     object-fit: contain;
-    width: 15em;
-    height: 13em;
     background-position: 50% 50%;
     background-repeat: no-repeat;
     background-size: cover;
@@ -128,17 +126,12 @@ input[type="checkbox"] {
     transition-duration: 0.05s;
 }
 
-.movie img {
-    width: 10em;
-    height: 15em;
+.form__content.landscape img {
+    width: 15em;
+    height: 13em;
 }
 
-.book img {
-    width: 10em;
-    height: 15em;
-}
-
-.artist img {
+.form__content.portrait img {
     width: 10em;
     height: 15em;
 }
