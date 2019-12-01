@@ -16,7 +16,7 @@ from django.views.generic.edit import CreateView, FormView, UpdateView
 from social_django.models import UserSocialAuth
 
 from lodreranker import constants, forms, utils
-from lodreranker.models import CustomUser, RetrievedItem
+from lodreranker.models import CustomUser, RetrievedItem, RankerMetric, BeyondAccuracyMetric
 from lodreranker.recommendation import (ItemRanker, GeoItemRetriever, Recommender,
                                         SocialItemRetriever)
 
@@ -358,50 +358,57 @@ def recommendation_results(request):
     context = {}
     session = request.session
 
-    # if request.method == 'GET':
-    if 'results' in session.keys():
-        results = session['results']
-    else: 
-        return redirect(reverse_lazy('recommendation'))
+    if request.method == 'GET':
+        if 'results' in session.keys():
+            results = session['results']
+        else: 
+            return redirect(reverse_lazy('recommendation'))
 
-    items = {}
-    for mtype, mtype_data in results.items():
-        if mtype_data:
-            itemids = list(set([el['id'] for ranking in mtype_data.values() for el in ranking]))
-            try:
-                mtype_items = [RetrievedItem.objects.get(wkd_id=itemid) for itemid in itemids]
-            
-                items.update( [(item.wkd_id, item.__dict__) for item in mtype_items] )
-            
-            except RetrievedItem.DoesNotExist:
-                return # it should never ever fire
-            
-    # results['movies'] = {} 
-    # results['books'] = results['movies']
-    # results['artists'] = {}
-    context['has_results'] = any([results[x] for x in results.keys()])
-    context['results'] = results
-    context['items'] = items   
+        items = {}
+        for mtype, mtype_data in results.items():
+            if mtype_data:
+                itemids = list(set([el['id'] for ranking in mtype_data.values() for el in ranking]))
+                try:
+                    mtype_items = [RetrievedItem.objects.get(wkd_id=itemid) for itemid in itemids]
+                
+                    items.update( [(item.wkd_id, item.__dict__) for item in mtype_items] )
+                
+                except RetrievedItem.DoesNotExist:
+                    return # it should never ever fire
 
+        context['has_results'] = any([results[x] for x in results.keys()])
+        context['results'] = results
+        context['items'] = items   
 
-    beyondaccuracy_text = {
-        'rating': 'multimedia content that matched my interests',
-        'novelty': 'multimedia content that I did not know before',
-        'serendipity': 'surprisingly interesting multimedia content that I might not have known in other ways',
-        'diversity': 'multimedia content that are different to each other(among content of the same type)',
-    }
-    context['beyondaccuracy'] = beyondaccuracy_text
+        beyondaccuracy_text = {
+            'rating': 'multimedia content that <b>matched my interests</b>',
+            'novelty': 'multimedia content that <b>I did not know before</b>',
+            'serendipity': 'surprisingly interesting multimedia content that <b>I might not have known in other ways</b>',
+            'diversity': 'multimedia content that <b>are different to each other</b> (among content of the same type)',
+        }
+        context['beyondaccuracy'] = beyondaccuracy_text
 
-
-    # else:
-
-    if request.method == 'POST':
+    elif request.method == 'POST':
         post_dict = request.POST
-        print(session['retriever_name'])
-        for key in filter(lambda x: x.startswith('ranking'), post_dict.keys()):
-            print(key)
 
+        ranker_values = [(key, post_dict[key]) for key in post_dict if key.startswith('ranking')]
+        for ranking_str in ranker_values:
+            ranking = [int(x) for x in ranking_str[1].split(',')]
+            # score=2 if method is 1st position (0)
+            # score=1 if method is 2st position (1)
+            # score=0 if method is 3rd position (2) 
+            scores = [2 if x==0 else 0 if x==2 else x for x in ranking]
+            scores_dict  = { method: scores[i] for i, method in enumerate(constants.METHODS)}
+            scores_dict.update({'retriever': session['retriever_name']})
+            rankermetric = RankerMetric(**scores_dict)
+            rankermetric.save()
 
-        # handle evaluation
+        beyondaccuracy_values = [(key, post_dict[key]) for key in post_dict if key.startswith('beyondaccuracy')]
+        beyondaccuracy_dict = { x[0].split('_')[1]: int(x[1]) for x in beyondaccuracy_values }
+        beyondaccuracy_dict.update({'retriever': session['retriever_name']})
+        beyondaccuracymetric = BeyondAccuracyMetric(**beyondaccuracy_dict)
+        beyondaccuracymetric.save()
+
+        context['evaluation_done'] = True
 
     return render(request, template_name, context)

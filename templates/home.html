@@ -1,22 +1,17 @@
 {% extends 'base.html' %}
 {% block title %} Welcome! {% endblock %}
 {% block content %}
-    <div class="row mb-3">
-        <div class="col-sm-8 mx-auto text-center">
-            {% if user.is_authenticated %}
-            <p> View your profile <a href="{% url 'profile' %}">here</a>.</p>
-            {% else %}
-            Please login or create an account.
-            {% endif %}
-        </div>
-    </div>
-    {% if user.has_artists %}
-    <div class="row mb-3">
-        <div class="col-8 mx-auto text-center social-container">
-            <a class="btn btn-success p-3" href="{% url 'recommendation' %}">Start</a>
-        </div>
-    </div>
-
-    <a href="{% url 'test_clustering' %}">test clustering</a>
+<div class="d-flex flex-column mx-auto w-50 mb-3 text-center">
+    
+    {% if user.is_authenticated %}
+        <a class="btn btn-info p-3 mb-3" href="{% url 'profile' %}">View your profile</a>
+    {% else %}
+        <div class="p-5">Please login or create an account.</div>
     {% endif %}
+    
+    {% if user.has_artists %}
+        <a class="btn btn-success p-3" href="{% url 'recommendation' %}">Start</a>
+        <a class="collapse" href="{% url 'test_clustering' %}">test clustering</a>
+    {% endif %}
+</div>
 {% endblock %}

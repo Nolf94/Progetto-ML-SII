@@ -6,7 +6,7 @@
 
 {% if has_results %}
 {% with panelheight='50vh' %}
-<div class="d-flex my-3 mx-5">
+<div class="d-flex mt-3 mx-5">
     <div>
         <p>We retrieved <span class="text-success">{{ items|length }}</span> different media in the area you've chosen to visit. Here below are shown:</p>
         <ul>
@@ -14,24 +14,24 @@
             <li>The <b>books</b> which are set in the area, or whose authors were born in the area.</li>
             <li>The <b>musical bands</b> which formed in this area and the <b>musicians</b>, <b>singers</b> or <b>composers</b> which were born in the area.</li>
         </ul>
-        <p><span class="text-success">You can click on elements on the lists to read their descriptions!</span></p>
+        <p><i class="fas fa-info-circle text-success h5"></i><span class="ml-3 text-success">You can click on an element to learn more about it!</span></p>
         <p>Based on your profile, we ranked the media using three different methods. For the first two methods (<b>clustering</b> and <b>sum vector</b>),
         each item is ordered by the affinity with your likes and preferences. For the third method (<b>node outgoing degree</b>) the items are simply ordered
         by the amount of information their LOD entities have, which is represented by their node degree count.</p>
-        <p><span class="text-primary">Which method do you prefer for each media type?</span></p>
+        <p>Please take a look at each ranking method for each media type. Click on a <span class="text-primary border border-primary rounded p-1 small">blue button</span> to switch method.</p>
+        <p><i class="fas fa-question-circle text-primary h5"></i><span class="ml-3 text-primary">Which method do you prefer for each media type?</span></p>
     </div>
 </div>
-
-<form id="evaluation" method="post" action="{% url 'recommendation_results' %}" novalidate>
+<form id="evaluation" method="post" action="{% url 'recommendation_results' %}">
 {% csrf_token %}
-<div class="d-flex flex-wrap justify-content-center mb-5">
+<div class="d-flex flex-wrap justify-content-center mb-3">
     {% for mtype, mt_rankings in results.items %}
-        <div class="ranking p-2 m-2" style="flex: 1 1 30vw">
+        <div id="results-{{mtype}}" class="ranking p-2 m-2" style="flex: 1 1 30vw; max-width: 45vw;">
             <nav class="ranking__header d-flex justify-content-between align-content-center" style="min-height: 60px">
                 <div class="align-text-bottom my-auto h4">{{mtype|title}}</div>
                 <div class="nav nav-pills justify-content-end my-auto flex-nowrap" style="font-size: 0.9em" id="nav-tab" role="tablist">
                 {% for method in mt_rankings.keys %}
-                    <a class="nav-item nav-link {% if forloop.counter == 1 %}active{% endif %} px-1 mx-1" id="nav-{{mtype}}-{{method}}-tab" data-toggle="tab" href="#nav-{{mtype}}-{{method}}" role="tab" aria-controls="nav-{{mtype}}-{{method}}" aria-selected="true">{{method|title}}</a>
+                    <a class="nav-item nav-link {% if forloop.counter == 1 %}active{% endif %} mx-1 border border-primary rounded" id="nav-{{mtype}}-{{method}}-tab" data-toggle="tab" href="#nav-{{mtype}}-{{method}}" role="tab" aria-controls="nav-{{mtype}}-{{method}}" aria-selected="true">{{method|title}}</a>
                 {% endfor %}
                 </div>
             </nav>
@@ -72,14 +72,15 @@
 </form>
 
     {% comment %}  The items dictionary, uncomment for debugging only {% endcomment %}
-    {% comment %} <div class="row mb-3">
+    {% comment %} 
+    <div class="row mb-3">
         <div class="col">
         {% for item in items.values %}
             <p> {{item}} </p>
         {% endfor %}
         </div>
-    </div> {% endcomment %}
-
+    </div> 
+    {% endcomment %}
 
 <script src="{% static 'js/results.js' %}"></script>
 <script type="text/javascript">
@@ -88,12 +89,22 @@
 </script>
 {% endwith %}
 {% else %}
-<div class="row my-5 justify-content-center">
-    <div class="col-md-4 social-container mx-5 my-2 text-center">
-        <p>Sorry, we haven't found anything in that area.</p>
-        <a class="btn btn-success p-3" style="display: table-cell" href="{% url 'recommendation' %}">Try again!</a>
+
+
+    <div class="d-flex flex-column m-5 align-items-center">
+        {% if evaluation_done %}
+            <div class="h5 mb-3">Thank you, we really appreciate your feedback!</div>
+            <div class="d-flex w-75 justify-content-center">
+                <a class="btn btn-secondary p-3 m-2 w-50" href="{% url 'home' %}">Back to Home</a>
+                <a class="btn btn-success p-3 m-2 w-50" href="{% url 'recommendation' %}">Repeat</a>
+            </div>
+        {% else %}
+            <div class="mb-3">Sorry, we haven't found anything in that area.</div>
+            <div class="d-flex w-75 justify-content-center">
+                <a class="btn btn-warning p-3" href="{% url 'recommendation' %}">Try again!</a>
+            </div>
+        {% endif %}
     </div>
-</div>
 {% endif %}
 
 

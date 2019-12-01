@@ -23,18 +23,26 @@ class RetrievedItem(models.Model):
 
 
 class RankerMetric(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    retriever = models.CharField(max_length=20)
     clustering = models.PositiveIntegerField()
     summarize = models.PositiveIntegerField()
     outdegree = models.PositiveIntegerField()
-    retriever = models.CharField(max_length=20)
+
+    def __str__(self):
+        return str(self.__dict__)
 
 
 class BeyondAccuracyMetric(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    retriever = models.CharField(max_length=20)
     rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     novelty = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     serendipity = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     diversity = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
-    retriever = models.CharField(max_length=20)
+
+    def __str__(self):
+        return str(self.__dict__)
 
 
 class CustomUser(AbstractUser):

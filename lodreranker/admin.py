@@ -15,8 +15,17 @@ class CustomUserAdmin(UserAdmin):
 class RetrievedItemAdmin(admin.ModelAdmin):
     list_display = ['wkd_id', 'updated', 'media_type', 'name', 'querystring', 'outdegree']
 
+
+class RankerMetricAdmin(admin.ModelAdmin):
+    list_display = ['created','retriever', 'clustering', 'summarize', 'outdegree']
+
+
+class BeyondAccuracyMetricAdmin(admin.ModelAdmin):
+    list_display = ['created','retriever', 'rating', 'novelty', 'serendipity', 'diversity']
+
+
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(RetrievedItem, RetrievedItemAdmin)
 admin.site.unregister(Group)
-admin.site.register(RankerMetric)
-admin.site.register(BeyondAccuracyMetric)
+admin.site.register(RankerMetric, RankerMetricAdmin)
+admin.site.register(BeyondAccuracyMetric, BeyondAccuracyMetricAdmin)

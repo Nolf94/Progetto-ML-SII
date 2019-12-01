@@ -1,4 +1,5 @@
 $('#js-begin').hide();
+$('#js-begin2').hide();
 $("#js-progress").show();
 function doAjax(to_django) {
     $.ajax({
@@ -46,7 +47,7 @@ function doAjax(to_django) {
                 if ($("#js-results").length) { // REDIRECT TO RESULTS VIEW
                     var results_url = $('#js-results').attr('results_url')
                     console.log("Redirecting to results view...")
-                    // TODO SHOW REDIRECT LOADER
+                    // # TODO SHOW REDIRECT LOADER
                     setTimeout(() => {
                         window.location.pathname = results_url
                     }, 2000);

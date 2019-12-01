@@ -1,39 +1,39 @@
 {% block content %}
 {% comment %} {% with evalheight='120px' %} {% endcomment %}
-{% with evalheight='280px' %}
-<div class="mt-3 p-3 border rounded bg-light{% if mt_rankings.keys %} border-primary {% endif %}" style="font-size: 0.9em; {% if mt_rankings.keys %} border-width: 2px !important; {% endif %} height: {{evalheight}}">
+{% with evalheight='300px' %}
+<div class="mt-3 p-3 border rounded bg-light{% if mt_rankings.keys %} border-primary {% endif %}" style="{% if mt_rankings.keys %} border-width: 2px !important; {% endif %} height: {{evalheight}}">
     <div class="d-flex mx-auto">
     {% if mt_rankings.keys %}
         <div class="mr-3 mt-2 h4">
-            <i class="far fa-question-circle text-primary"></i>
+            <i class="fas fa-question-circle text-primary"></i>
         </div>
         <div>
             <div class="d-flex flex-column">
-                <div class="mb-3">Please arrange the ranking methods from the <b>best</b> to the <b>worst</b>, according to your preference.</div>
+                <div class="mb-3 text-primary">Please arrange the ranking methods from the <b>best</b> to the <b>worst</b>, according to your preference:</div>
                 <div class="d-flex mb-2">
                     <div class="list-group mr-2">
-                    {% for method in mt_rankings.keys %}
-                        <div class="list-group-item border-light bg-light text-white mb-1 px-1">
-                            <span class="bg-success border border-success rounded-circle px-2 py-1"> {{forloop.counter}}</span>
-                        </div>
-                    {% endfor %}
+                        {% for method in mt_rankings.keys %}
+                            <div class="list-group-item border-light bg-light text-white mb-1 px-1">
+                                <span class="bg-success border border-success rounded-circle px-2 py-1"> {{forloop.counter}}</span>
+                            </div>
+                        {% endfor %}
                     </div>
-                    <div id="{{mtype}}__preferences" class="sortable list-group" >
-                    {% for method in mt_rankings.keys %}
-                        <div id="{{mtype}}-{{method}}" class="draggable list-group-item mb-1 rounded-pill">
-                            <i class="fas fa-grip-vertical pr-3 h7"></i>
-                            {{ method|title }}
-                        </div>
-                    {% endfor %}
+                    <div id="{{mtype}}__preferences" class="sortable list-group col-md-5 text-center">
+                        {% for method in mt_rankings.keys %}
+                            <div id="{{mtype}}-{{method}}" class="draggable list-group-item mb-1 rounded-pill">
+                                <i class="fas fa-grip-vertical pr-3 h7"></i>
+                                {{ method|title }}
+                            </div>
+                        {% endfor %}
                     </div>
                     <div id="{{mtype}}__preferences_values" class="collapse">
-                    <input type="hidden" id="{{mtype}}__preferences_aggregate" name="ranking_{{mtype}}"/>
-                    {% for method in mt_rankings.keys %}
-                        <input type="hidden" id="{{mtype}}-{{method}}_val" index="{{forloop.counter|add:-1}}"/>
-                    {% endfor %}
+                        <input type="hidden" id="{{mtype}}__preferences_aggregate" name="ranking_{{mtype}}"/>
+                        {% for method in mt_rankings.keys %}
+                            <input type="hidden" id="{{mtype}}-{{method}}_val" index="{{forloop.counter|add:-1}}"/>
+                        {% endfor %}
                     </div>
                 </div>
-                <p class="small">You can drag and drop them!</p>
+                <div class="small font-italic">Drag and drop the pills to arrange them!</div>
             </div>
         </div>
     {% endif %}
