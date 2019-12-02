@@ -73,7 +73,9 @@ def profile(request):
 @login_required
 def social_disconnect(request):
     user = request.user
-    soc_auths = UserSocialAuth.objects.filter(user=user.id)[0].delete()
+    soc_auths = UserSocialAuth.objects.filter(user=user.id)
+    if soc_auths:
+        soc_auths[0].delete()
     user.has_social_connect = False
     user.has_social_data = False
     user.completed = False
@@ -89,6 +91,9 @@ def reset(request):
     user = request.user
     # user.poi_weights = None
     # user.has_poivector = False
+    soc_auths = UserSocialAuth.objects.filter(user=user.id)
+    if soc_auths:
+        soc_auths[0].delete()
     user.form_movies = None
     user.form_books = None
     user.form_artists = None
