@@ -16,7 +16,7 @@ class Sparql(object):
 
     def __init__(self, lod, limit=constants.SPARQL_LIMIT_DEFAULT):
         agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"
-        
+
         if lod in constants.SUPPORTED_LODS:
             sparql = SPARQLWrapper(lod, agent=agent)
             self.lod = lod
@@ -43,12 +43,12 @@ class Sparql(object):
                 FILTER(lang(?queryByTitle) = 'it' || lang(?queryByTitle) = 'en')
                 FILTER(REGEX(?queryByTitle, """f'"{qs}"'""", "i"))
                 SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
-            }    
-            ORDER BY DESC(?sitelinks) 
+            }
+            ORDER BY DESC(?sitelinks)
             LIMIT 1
             """
         return query
-    
+
     """DEPRECATED"""
     def get_query_books_querystring(self, qs):
         query = """
@@ -60,8 +60,8 @@ class Sparql(object):
                 FILTER(lang(?queryByTitle) = 'it' || lang(?queryByTitle) = 'en')
                 FILTER(REGEX(?queryByTitle, """f'"{qs}"'""", "i"))
                 SERVICE wikibase:label { bd:serviceParam wikibase:language "it,en". }
-            }    
-            ORDER BY DESC(?sitelinks) 
+            }
+            ORDER BY DESC(?sitelinks)
             LIMIT 1
             """
         return query
@@ -69,12 +69,12 @@ class Sparql(object):
     """DEPRECATED"""
     def get_query_artists_querystring(self, qs):
         query = """
-            SELECT DISTINCT ?label ?item 
-            WHERE { 
-                    {      
+            SELECT DISTINCT ?label ?item
+            WHERE {
+                    {
                         ?item wdt:P106 ?type.
                         ?type wdt:P279 wd:Q2643890.
-                    }       
+                    }
                     UNION
                     {
                         ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q215380.
@@ -89,7 +89,7 @@ class Sparql(object):
             """
         return query
 
-    
+
     # LIGHT QUERIES --------------------------------------------------------------------------------------
     # They only check the type of a wikidata item, given its id (fast).
     # If found, the item is returned (1 item per query)
@@ -144,7 +144,7 @@ class Sparql(object):
 
     def get_query_movies_geolocalized(self, geoarea):
         query = """
-        SELECT DISTINCT ?item ?itemLabel ?linkCount (count(distinct ?entity) as ?outDegree) 
+        SELECT DISTINCT ?item ?itemLabel ?linkCount (count(distinct ?entity) as ?outDegree)
         WHERE {
             ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q11424; # item has type which (is subclass of)* film
                 ?placePred ?place;                      # item has a placePred relation with place
@@ -170,14 +170,14 @@ class Sparql(object):
 
     def get_query_books_geolocalized(self, geoarea):
         query = """
-        SELECT DISTINCT ?item ?itemLabel ?linkCount (count(distinct ?entity) as ?outDegree) 
+        SELECT DISTINCT ?item ?itemLabel ?linkCount (count(distinct ?entity) as ?outDegree)
         WHERE {
             ?item (p:P31/ps:P31/(wdt:P279*)) wd:Q47461344;  # item has type which (is subclass of)* written work
                 rdfs:label ?itemLabel;
                 wikibase:sitelinks ?linkCount;
                 ?p ?entity.
             {
-                ?item wdt:P840 ?place.   # item narrative location is place 
+                ?item wdt:P840 ?place.   # item narrative location is place
             }
             UNION
             {
@@ -203,7 +203,7 @@ class Sparql(object):
 
     def get_query_artists_geolocalized(self, geoarea):
         query = """
-        SELECT DISTINCT ?item ?itemLabel ?linkCount (count(distinct ?entity) as ?outDegree) 
+        SELECT DISTINCT ?item ?itemLabel ?linkCount (count(distinct ?entity) as ?outDegree)
         WHERE {
             # two cases because -types- of humans are expressed using occupation (P106)
             {
@@ -229,7 +229,7 @@ class Sparql(object):
             }
             FILTER((LANG(?itemLabel)) = "it")
             FILTER(STRSTARTS(STR(?entity), "http://www.wikidata.org/entity/"))
-        }    
+        }
         GROUP BY ?item ?itemLabel ?linkCount ?outDegree
         # ORDER BY DESC (?linkCount) # for external wikibase links (wikipedia, wikiquote etc.)
         ORDER BY DESC (?outDegree) # for internal (wikidata) links between entities
@@ -250,9 +250,9 @@ class Sparql(object):
                 rdfs:label ?label;
                 dbo:abstract ?abstract;
                 owl:sameAs ?wkditem.
-            FILTER langMatches(lang(?abstract),"en")    
-            FILTER langMatches(lang(?label),"en")       
-            FILTER (strstarts(str(?wkditem), "http://www.wikidata.org/entity/"))            
+            FILTER langMatches(lang(?abstract),"en")
+            FILTER langMatches(lang(?label),"en")
+            FILTER (strstarts(str(?wkditem), "http://www.wikidata.org/entity/"))
         }
         GROUP BY ?label
         """
@@ -261,34 +261,34 @@ class Sparql(object):
     def get_query_books_poi(self, qs):
         query = """
         SELECT DISTINCT ?wkditem ?label ?abstract
-        WHERE { 
+        WHERE {
             ?item rdfs:label ?label;
                 dbo:abstract ?abstract;
-                owl:sameAs ?wkditem. 
+                owl:sameAs ?wkditem.
             ?poi rdfs:label """f'"{qs}"'"""@it.
-            ?o dbo:wikiPageWikiLink ?poi.      
+            ?o dbo:wikiPageWikiLink ?poi.
             {
                 ?o rdf:type schema:Book.
                 BIND (?o as ?item)
             }
-            UNION 
+            UNION
             {
                 ?o rdf:type dbo:Writer.
                 ?book dbo:author ?o.
-                BIND (?book as ?item)           
+                BIND (?book as ?item)
             }
-            FILTER langMatches(lang(?abstract),"en")    
-            FILTER langMatches(lang(?label),"en")  
-            FILTER (strstarts(str(?wkditem), "http://www.wikidata.org/entity/"))   
+            FILTER langMatches(lang(?abstract),"en")
+            FILTER langMatches(lang(?label),"en")
+            FILTER (strstarts(str(?wkditem), "http://www.wikidata.org/entity/"))
         }
         GROUP BY ?label
         """
         return query
-            
+
     def get_query_artists_poi(self, qs):
         query = """
         SELECT DISTINCT ?wkditem ?label ?abstract
-        WHERE { 
+        WHERE {
             ?item rdfs:label ?label;
                 dbo:abstract ?abstract;
                 owl:sameAs ?wkditem.
@@ -303,11 +303,11 @@ class Sparql(object):
             {
                 ?o rdf:type dbo:MusicalWork;
                     dbo:artist ?artist.
-                BIND (?artist as ?item)       
-            } 
-            FILTER langMatches(lang(?abstract),"en")  
-            FILTER langMatches(lang(?label),"en")     
-            FILTER (strstarts(str(?wkditem), "http://www.wikidata.org/entity/"))       
+                BIND (?artist as ?item)
+            }
+            FILTER langMatches(lang(?abstract),"en")
+            FILTER langMatches(lang(?label),"en")
+            FILTER (strstarts(str(?wkditem), "http://www.wikidata.org/entity/"))
         }
         GROUP BY ?label
         """
@@ -387,7 +387,7 @@ class Wikibase(object):
                     # Parameters:
                     #   exintro      -> return only the content before the first section (our abstract)
                     #   explaintext  -> extract plain text instead of HTML
-                    #   indexpageids -> include additional page ids section listing all returned page IDS 
+                    #   indexpageids -> include additional page ids section listing all returned page IDS
                     #                   (useful since we don't want to know the page ID).
                 wiki_extracts_query_params = urlencode({
                     'action': 'query',

@@ -17,6 +17,7 @@ class Candidate(object):
         self.item = item
         self.score = 0
 
+
 class ItemRanker(object):
     """Interface for ranking a list of items according to different strategies."""
 
@@ -262,6 +263,49 @@ class GeoItemRetriever(ItemRetriever):
                 item.abstract = abstract
                 item.vector = json.dumps(d2v.create_vector(abstract, self.mtype).tolist())
                 item.save() # update item adding abstract and vector
+        if item.vector:
+            self.retrieved_items.append(item.wkd_id)
+
+
+class PoiItemRetriever(ItemRetriever):
+    def __init__(self, media_type, limit=None):
+        self.limit = limit
+        super().__init__(media_type)
+
+    def initialize(self, poi_name):
+        self.input_set = []
+        print(f'{type(self).__name__} for {self.mtype}: initializing...')
+        spql = lod_queries.Sparql(constants.DBPEDIA, limit=self.limit)
+        try:
+            bindings = spql.execute(spql.get_query(self.mtype, 'poi', poi_name))
+            self.input_set = list(map(lambda x: {
+                'id': re.sub('http: // www.wikidata.org/entity/', '', x['wkditem']['value']),
+                'name': x['label']['value'],
+                'abstract': re.sub('\n', ' ', x['abstract']['value'])
+            }, bindings))
+
+        except Exception as e:
+            print(f'{type(self).__name__} for {self.mtype}: {e}')
+        return super().initialize()
+
+    def retrieve_next(self):
+        return super().retrieve_next()
+        try: # use cached item
+            item = RetrievedItem.objects.get(wkd_id=self.current['id'])
+            print(f'\t\"{self.current["name"]}\" found cached: {item.wkd_id}.')
+
+        except RetrievedItem.DoesNotExist: # create new item
+            item = RetrievedItem(
+                wkd_id=self.current['id'],
+                media_type=self.mtype,
+                name=self.current['name'],
+                abstract=self.current['abstract'],
+            )
+            item.save()
+        
+        if item.abstract:
+            item.vector = json.dumps(d2v.create_vector(item.abstract, self.mtype).tolist())
+            item.save()  # update item adding vector
         if item.vector:
             self.retrieved_items.append(item.wkd_id)
 
