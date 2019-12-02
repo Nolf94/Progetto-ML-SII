@@ -36,4 +36,5 @@ urlpatterns = [
 
 
     path('tests/clustering', test_views.test_clustering, name='test_clustering'),
+    path('tests/poiqueries', test_views.test_poiqueries, name='test_poiqueries'),
 ]

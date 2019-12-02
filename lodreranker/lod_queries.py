@@ -242,16 +242,17 @@ class Sparql(object):
 
     def get_query_movies_poi(self, qs):
         query = """
-        SELECT DISTINCT ?label ?abstract 
-        FROM <http://dbpedia.org/page_links>
+        SELECT DISTINCT ?wkditem ?label ?abstract
         WHERE {
             ?poi rdfs:label """f'"{qs}"'"""@it.
             ?item dbo:wikiPageWikiLink ?poi;
                 rdf:type schema:Movie;
                 rdfs:label ?label;
-                dbo:abstract ?abstract.
+                dbo:abstract ?abstract;
+                owl:sameAs ?wkditem.
             FILTER langMatches(lang(?abstract),"en")    
-            FILTER langMatches(lang(?label),"en")                   
+            FILTER langMatches(lang(?label),"en")       
+            FILTER (strstarts(str(?wkditem), "http://www.wikidata.org/entity/"))            
         }
         GROUP BY ?label
         """
@@ -259,25 +260,26 @@ class Sparql(object):
 
     def get_query_books_poi(self, qs):
         query = """
-        SELECT DISTINCT ?label ?abstract 
-        FROM <http://dbpedia.org/page_links>
+        SELECT DISTINCT ?wkditem ?label ?abstract
         WHERE { 
+            ?item rdfs:label ?label;
+                dbo:abstract ?abstract;
+                owl:sameAs ?wkditem. 
             ?poi rdfs:label """f'"{qs}"'"""@it.
-            ?item dbo:wikiPageWikiLink ?poi.
+            ?o dbo:wikiPageWikiLink ?poi.      
             {
-                ?item rdf:type  schema:Book;
-                    rdfs:label ?label;
-                    dbo:abstract ?abstract.             
+                ?o rdf:type schema:Book.
+                BIND (?o as ?item)
             }
             UNION 
             {
-                ?item rdf:type  dbo:Writer.
-                ?book dbo:author ?item;
-                    rdfs:label ?label;
-                    dbo:abstract ?abstract.            
+                ?o rdf:type dbo:Writer.
+                ?book dbo:author ?o.
+                BIND (?book as ?item)           
             }
             FILTER langMatches(lang(?abstract),"en")    
-            FILTER langMatches(lang(?label),"en")    
+            FILTER langMatches(lang(?label),"en")  
+            FILTER (strstarts(str(?wkditem), "http://www.wikidata.org/entity/"))   
         }
         GROUP BY ?label
         """
@@ -285,25 +287,27 @@ class Sparql(object):
             
     def get_query_artists_poi(self, qs):
         query = """
-        SELECT DISTINCT ?label ?abstract 
-        FROM <http://dbpedia.org/page_links>
+        SELECT DISTINCT ?wkditem ?label ?abstract
         WHERE { 
-            ?o  dbo:wikiPageWikiLink ?poi.
+            ?item rdfs:label ?label;
+                dbo:abstract ?abstract;
+                owl:sameAs ?wkditem.
             ?poi rdfs:label """f'"{qs}"'"""@it.
+            ?o dbo:wikiPageWikiLink ?poi.
             {
-                ?o  rdf:type  dbo:MusicalWork.
-                ?o  dbo:artist  ?artist.
-                ?artist  rdfs:label ?label.
-                ?artist  dbo:abstract ?abstract                  
+                ?o rdf:type ?artist.
+                VALUES ?artist { dbo:MusicalArtist schema:MusicGroup }
+                BIND (?o as ?item)
             }
             UNION
             {
-                ?o  rdf:type  schema:MusicGroup.
-                ?o  rdfs:label ?label.
-                ?o  dbo:abstract ?abstract          
-            }
-            FILTER langMatches(lang(?abstract),"en")    
-            FILTER langMatches(lang(?label),"en") 
+                ?o rdf:type dbo:MusicalWork;
+                    dbo:artist ?artist.
+                BIND (?artist as ?item)       
+            } 
+            FILTER langMatches(lang(?abstract),"en")  
+            FILTER langMatches(lang(?label),"en")     
+            FILTER (strstarts(str(?wkditem), "http://www.wikidata.org/entity/"))       
         }
         GROUP BY ?label
         """
