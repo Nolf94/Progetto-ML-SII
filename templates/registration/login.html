@@ -2,25 +2,22 @@
 {% load crispy_forms_tags %}
 {% block title %} Login {% endblock %}
 {% block content %}
-<div class="row my-auto">
-    <div class="col-md-6 mx-auto my-auto social-container my-2 text-center">
-        <a class="btn btn-primary" href="{% url 'social_login' %}?skip=1&next={{request.path}}">Login with Facebook</a>
-        <p class="mt-1 small">(only works if you have connected your Facebook account)</p>
+<div class="d-flex flex-column mx-auto align-items-strech my-3">
+    <a class="btn btn-primary w-75 mx-auto p-3" href="{% url 'social_login' %}?skip=1&next={{request.path}}">
+        <span class="fab fa-facebook mr-1" style="font-size: 2rem; vertical-align: middle"></span> 
+        <span style="vertical-align: middle; font-weight: bold">Login with Facebook</span>
+    </a>    
+    <p class="mt-1 small">(only works if you have connected your Facebook account beforehand)</p>
+    {% if request.session.not_existing %} <p class="small text-danger text-center">Facebook login failed.</p>{% endif %}
+
+    <div class="my-4 text-center">
+        Or sign in using your credentials
     </div>
-</div>
-<div class="row my-auto">
-    <div class="col-md-6 mx-auto my-auto social-container my-2 p-3 text-center">
-        or sign in directly
-    </div>
-</div>
-<div class="row my-auto">
-    <div class="col-md-6 mx-auto my-auto social-container my-2 pb-2 border">
+    <div class="border rounded p-3 flex-grow-1">
         <form method="post">
             {% csrf_token %}
             {{ form|crispy }}
-            <div class="text-center">
-                <button type="submit" class="btn btn-block btn-success py-2">Login</button>
-            </div>
+            <button type="submit" class="btn btn-block btn-success py-2 font-weight-bold">Login</button>
         </form>
     </div>
 </div>

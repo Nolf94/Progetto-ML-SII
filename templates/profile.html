@@ -25,7 +25,7 @@
             {% endif %}
             {% comment %} {% if not user.has_social_connect or not user.has_demographic or not user.has_poivector or not user.has_movies  or not user.has_books or not user.has_artists%} {% endcomment %}
             {% if not user.has_social_connect or not user.has_demographic or not user.has_movies or not user.has_books or not user.has_artists%}
-            Please resume your registration <a href ="{% url 'resume' %}">here</a>.
+            Please resume your registration <a href="{% url 'resume' %}">here</a>.
             {% else %}
             You're good to go! Now you can use the recommendation system.
             <a class="btn btn-block btn-success w-50 my-3" href="{% url 'recommendation' %}">Start</a>

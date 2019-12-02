@@ -36,6 +36,10 @@ def is_skip(strategy, backend, user, response, *args, **kwargs):
             return redirect(reverse_lazy('profile'))
         else:
             # TODO add a parameter to render the error in the login page
+            from pprint import pprint
+            import inspect
+            # pprint(dir(strategy))
+            strategy.session_set('not_existing', True)
             return redirect(reverse_lazy('login')) 
     else:
         return # continue the pipeline

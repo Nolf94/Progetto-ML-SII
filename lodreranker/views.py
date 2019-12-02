@@ -33,9 +33,11 @@ def social_login(request):
 
 
 # Recap user profile data and social data
-
 @login_required
 def profile(request):
+    if 'not_existing' in request.session.keys():
+        request.session.pop('not_existing')
+
     user = request.user
     try:
         facebook_login = user.social_auth.get(provider='facebook')
@@ -45,7 +47,6 @@ def profile(request):
     def get_info(mtype):
         return list(map(lambda x: f'{x.name}  ({x.wkd_id}, {len(x.abstract)} chars.)', user.social_items.filter(media_type=mtype)))
 
-    # TODO improve context variables 
     can_disconnect = (user.social_auth.count() > 1 or user.has_usable_password())
     return render(request, 'profile.html', {
         'facebook_login': facebook_login,
