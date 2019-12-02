@@ -1,3 +1,4 @@
+local/
 env.config*
 .vscode/
 .idea/
