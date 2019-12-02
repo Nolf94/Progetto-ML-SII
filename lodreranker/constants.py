@@ -17,3 +17,6 @@ CLUSTERING_EPS = 0.62
 METHODS = ['clustering', 'summarize', 'outdegree']
 
 COLDSTART_MIN_CHOICES = 5
+
+MODE_GEO = 'geo'
+MODE_POI = 'poi'

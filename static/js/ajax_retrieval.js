@@ -56,4 +56,4 @@ function doAjax(to_django) {
         }
     });
 };
-doAjax({})
+doAjax({ 'mode': $("input[name='mode']").val()})

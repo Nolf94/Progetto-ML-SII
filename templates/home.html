@@ -23,7 +23,7 @@
         {% else %}
             <div class="p-5 border border-primary rounded text-primary">Click on the buttons above to Login or register.</div>
         {% endif %}
-        
+
         {% if user.completed %}
             <a class="btn btn-success w-50 p-3 font-weight-bold" href="{% url 'recommendation' %}?mode=geo">Start</a>            
             <a class="collapse" href="{% url 'test_clustering' %}">test clustering</a>
@@ -32,6 +32,12 @@
         {% endif %}
     </div>
 </div>
+{% if user.completed %}
+<div class="d-flex flex-column align-items-center p-3 border border-danger text-center">
+    <div class="mb-3 rounded text-danger"><b>Beta:</b> try POI-based recommendation! </div>        
+    <a class="btn btn-block btn-danger w-50 p-2 font-weight-bold" href="{% url 'recommendation' %}?mode=poi">Start</a>
+</div>
+{% endif %}
 <script type="text/javascript">
     $('.card').css('width','1vw');
 </script>

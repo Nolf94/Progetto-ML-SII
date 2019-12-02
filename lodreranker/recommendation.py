@@ -217,6 +217,7 @@ class GeoItemRetriever(ItemRetriever):
 
     def initialize(self, geoarea):
         self.input_set = []
+        print(f'{type(self).__name__} for {self.mtype}: initializing...')
         spql = lod_queries.Sparql(constants.WIKIDATA, limit=self.limit)
         try:
             bindings = spql.execute(spql.get_query(self.mtype, 'geolocalized', geoarea))
