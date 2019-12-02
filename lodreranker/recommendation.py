@@ -125,8 +125,10 @@ class ItemRetriever(object):
         self.current = self.input_set.pop(0)
         self.next = self.input_set[0] if self.input_set else None
         self.i += 1
-
-        current_toprint = self.current if 'abstract' not in self.current.keys() else list(filter(lambda x: x[0] != 'abstract', self.current.items()))
+        if type(self.current) is dict and 'abstract' not in self.current.keys():
+            current_toprint = list(filter(lambda x: x[0] != 'abstract', self.current.items()))
+        else:
+            current_toprint = self.current
         print(f'[{self.i}/{self.tot}] {current_toprint}')
 
 

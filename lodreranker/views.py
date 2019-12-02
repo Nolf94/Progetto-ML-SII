@@ -76,6 +76,7 @@ def social_disconnect(request):
     soc_auths = UserSocialAuth.objects.filter(user=user.id)[0].delete()
     user.has_social_connect = False
     user.has_social_data = False
+    user.completed = False
     user.social_items.clear()
     user.save()
     return redirect(reverse_lazy('profile'))
@@ -97,6 +98,7 @@ def reset(request):
     for name in {f.name: None for f in user._meta.fields if f.null}:
         setattr(user, name, None)
     user.has_demographic = False
+    user.completed = False
     user.save()
     return redirect(reverse_lazy('social_disconnect'))
 

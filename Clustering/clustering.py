@@ -1,4 +1,3 @@
-from gensim.models import Doc2Vec
 from sklearn.cluster import DBSCAN
 import numpy as np
 import matplotlib.pyplot as plt
