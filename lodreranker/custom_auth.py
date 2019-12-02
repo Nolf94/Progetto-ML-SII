@@ -1,10 +1,12 @@
+from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.backends import ModelBackend
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from social_django.models import UserSocialAuth
 
-from .models import CustomUser
+from lodreranker.models import CustomUser
+
 
 # Custom backend used for authentication in the is_skip pipeline step. 
 # since django's ModelBackend only works with raw password but retrieved password from model is hashed.
@@ -33,7 +35,7 @@ def is_skip(strategy, backend, user, response, *args, **kwargs):
             hashed_pwd = user.password # password from model is hashed
             authenticated_user = HashedPasswordAuthBackend().authenticate(username, hashed_pwd)
             login(strategy.request, authenticated_user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect(reverse_lazy('profile'))
+            return redirect(settings.LOGIN_REDIRECT_URL)
         else:
             strategy.session_set('not_existing', True)
             return redirect(reverse_lazy('login')) 
