@@ -16,8 +16,10 @@ from django.views.generic.edit import CreateView, FormView, UpdateView
 from social_django.models import UserSocialAuth
 
 from lodreranker import constants, forms, utils
-from lodreranker.models import CustomUser, RetrievedItem, RankerMetric, BeyondAccuracyMetric
-from lodreranker.recommendation import (ItemRanker, GeoItemRetriever, Recommender,
+from lodreranker.models import (BeyondAccuracyMetric, CustomUser, RankerMetric,
+                                RetrievedItem)
+from lodreranker.recommendation import (GeoItemRetriever, ItemRanker,
+                                        PoiItemRetriever, Recommender,
                                         SocialItemRetriever)
 
 
@@ -150,8 +152,7 @@ def signup_s1(request):
         session = request.session
         if 'retriever' in session.keys():
             request.session.pop('retriever')
-        # if 'list_mediatype' in session.keys():
-        #     request.session.pop('list_mediatype')
+
         return render(request, template_name)
 
 # Retrieve user media likes from UserSocialAuth.
@@ -286,22 +287,22 @@ def recommendation_view(request):
     session = request.session
     context = {}
 
-    if 'mode' in session.keys():
-        session.pop('mode')
-    if 'retriever' in session.keys():
-        session.pop('retriever')
-    if 'retriever_name' in session.keys():
-        session.pop('retriever_name')
-    # if 'list_mediatype' in session.keys():
-    #     session.pop('list_mediatype')
-
     if mode == constants.MODE_GEO:
         context['GOOGLE_MAPS_KEY'] = settings.GOOGLE_MAPS_KEY
 
     if request.method == 'GET':
         if 'results' in session.keys():
-            session.pop('results')
-            # return redirect(reverse_lazy('recommendation_results'))
+            if constants.REQUIRE_EVALUATION:
+                return redirect(reverse_lazy('recommendation_results'))
+            else:
+                session.pop('results')
+        else:
+            if 'retriever' in session.keys():
+                session.pop('retriever')
+            if 'mode' in session.keys():
+                session.pop('mode')
+            if 'retriever_name' in session.keys():
+                session.pop('retriever_name')
 
         if mode == constants.MODE_GEO:
             if 'area' in session.keys():
@@ -355,11 +356,9 @@ def recommendation_view_ajax(request):
                 retriever.initialize(area)
 
             elif session['mode'] == constants.MODE_POI:
-                pass
-                # retriever = PoiItemRetriever(...)
-                # TODO
+                retriever = PoiItemRetriever(mediatype, limit=100)
+                retriever.initialize("Colosseo") # TODO HARDCODED
 
-    
         encoded_retriever = jsonpickle.encode(retriever)
         session['retriever'] = encoded_retriever
 
@@ -368,9 +367,15 @@ def recommendation_view_ajax(request):
             session['retriever_name'] = type(retriever).__name__
             recommender = Recommender(retriever.mtype, user, retriever)
 
+            mode = session['mode']
+            if mode == constants.MODE_GEO:
+                methods = constants.METHODS
+            elif mode == constants.MODE_POI:
+                methods = constants.METHODS[:2]
+
             mtype_results = {}
             try:
-                for method in constants.METHODS:
+                for method in methods:
                     mtype_results[method] = recommender.recommend(method=method, strip=True)
             except utils.RetrievalError:
                 # mtype_results will be empty
@@ -380,7 +385,6 @@ def recommendation_view_ajax(request):
                 session['results'][retriever.mtype] = mtype_results
             else:
                 session['results'] = {retriever.mtype: mtype_results}
-            # session[f'results_{retriever.mtype}'] = mtype_results
 
     return JsonResponse(json.loads(encoded_retriever))
 
@@ -403,15 +407,14 @@ def recommendation_results(request):
                 itemids = list(set([el['id'] for ranking in mtype_data.values() for el in ranking]))
                 try:
                     mtype_items = [RetrievedItem.objects.get(wkd_id=itemid) for itemid in itemids]
-
                     items.update( [(item.wkd_id, item.__dict__) for item in mtype_items] )
-
                 except RetrievedItem.DoesNotExist:
                     return # it should never ever fire
 
         context['has_results'] = any([results[x] for x in results.keys()])
         context['results'] = results
         context['items'] = items
+        context['mode'] = session['mode']
 
         beyondaccuracy_text = {
             'rating': 'multimedia content that <b>matched my interests</b>',
@@ -424,6 +427,12 @@ def recommendation_results(request):
     elif request.method == 'POST':
         post_dict = request.POST
 
+        mode = session['mode']
+        if mode == constants.MODE_GEO:
+            methods = constants.METHODS
+        elif mode == constants.MODE_POI:
+            methods = constants.METHODS[:2]
+
         ranker_values = [(key, post_dict[key]) for key in post_dict if key.startswith('ranking')]
         for ranking_str in ranker_values:
             ranking = [int(x) for x in ranking_str[1].split(',')]
@@ -431,7 +440,7 @@ def recommendation_results(request):
             # score=1 if method is 2st position (1)
             # score=0 if method is 3rd position (2)
             scores = [2 if x==0 else 0 if x==2 else x for x in ranking]
-            scores_dict  = { method: scores[i] for i, method in enumerate(constants.METHODS)}
+            scores_dict  = { method: scores[i] for i, method in enumerate(methods)}
             scores_dict.update({'retriever': session['retriever_name']})
             rankermetric = RankerMetric(**scores_dict)
             rankermetric.save()
@@ -443,5 +452,7 @@ def recommendation_results(request):
         beyondaccuracymetric.save()
 
         context['evaluation_done'] = True
+        if 'results' in session.keys():
+            session.pop('results')
 
     return render(request, template_name, context)

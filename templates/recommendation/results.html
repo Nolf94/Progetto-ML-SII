@@ -1,23 +1,35 @@
 {% extends 'base.html' %}
 {% load template_extras %}
 {% load static %}
-{% block title %} Results {% endblock %}
+{% block title %} Results ({% if mode == 'geo' %}<span class="text-success">Geographic{% elif mode == 'poi' %}<span class="text-danger">POI-based{% endif %}</span> recommendation){% endblock %} 
 {% block content %}
 
 {% if has_results %}
 {% with panelheight='50vh' %}
 <div class="d-flex mt-3 mx-5">
     <div>
-        <p>We retrieved <span class="text-success">{{ items|length }}</span> different media in the area you've chosen to visit. Here below are shown:</p>
+        <p>We retrieved <span class="text-success">{{ items|length }}</span> different media 
+        {% if mode == 'geo' %} in the <b>area</b> {% elif mode == 'poi' %} related to the <b>place</b> {% endif %} you've chosen to visit. Here below are shown:</p>
         <ul>
-            <li>The <b>movies</b> which were filmed in the area, or which are set in the area.</li>
-            <li>The <b>books</b> which are set in the area, or whose authors were born in the area.</li>
-            <li>The <b>musical bands</b> which formed in this area and the <b>musicians</b>, <b>singers</b> or <b>composers</b> which were born in the area.</li>
+            {% if mode == 'geo' %} 
+                <li>The <b>movies</b> which were filmed in the area, or which are set in the area.</li>
+                <li>The <b>books</b> which are set in the area, or whose authors were born in the area.</li>
+                <li>The <b>musical bands</b> which formed in this area and the <b>musicians</b>, <b>singers</b> or <b>composers</b> which were born in the area.</li>
+            {% elif mode == 'poi' %}
+                <li>The <b>movies</b> related in some ways to the place.</li>
+                <li>The <b>books</b> related in some ways to the place, or whose <b>author</b> is related to the place.</li>
+                <li>The <b>musical bands</b>, <b>musicians</b>, <b>singers</b> or <b>composers</b> which are related in some ways to the place.</li>
+            {% endif %}
         </ul>
         <p><i class="fas fa-info-circle text-success h5"></i><span class="ml-3 text-success">You can click on an element to learn more about it!</span></p>
-        <p>Based on your profile, we ranked the media using three different methods. For the first two methods (<b>clustering</b> and <b>sum vector</b>),
-        each item is ordered by the affinity with your likes and preferences. For the third method (<b>node outgoing degree</b>) the items are simply ordered
-        by the amount of information their LOD entities have, which is represented by their node degree count.</p>
+        {% if mode == 'geo' %}
+            <p>Based on your profile, we ranked the media using three different methods. For the first two methods (<b>clustering</b> and <b>sum vector</b>),
+            each item is ordered by the affinity with your likes and preferences. For the third method (<b>node outgoing degree</b>) the items are simply ordered
+            by the amount of information their LOD entities have, which is represented by their node degree count.</p>
+        {% elif mode == 'poi' %}
+            <p>Based on your profile, we ranked the media using two different methods. For both methods (<b>clustering</b> and <b>sum vector</b>),
+            each item is ordered by the affinity with your likes and preferences.</p>
+        {% endif %}
         <p>Please take a look at each ranking method for each media type. Click on a <span class="text-primary border border-primary rounded p-1 small">blue button</span> to switch method.</p>
         <p><i class="fas fa-question-circle text-primary h5"></i><span class="ml-3 text-primary">Which method do you prefer for each media type?</span></p>
     </div>
@@ -99,7 +111,7 @@
         {% else %}
             <div class="mb-3">Sorry, we haven't found anything in that area.</div>
             <div class="d-flex w-75 justify-content-center">
-                <a class="btn btn-warning p-3" href="{% url 'recommendation' %}">Try again!</a>
+                <a class="btn btn-warning p-3" href="{% url 'recommendation' %}?mode={{mode}}">Try again!</a>
             </div>
         {% endif %}
     </div>

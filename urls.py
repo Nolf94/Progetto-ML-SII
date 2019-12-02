@@ -29,11 +29,8 @@ urlpatterns = [
     path('recommendation/', views.recommendation_view, name='recommendation'),
     path('recommendation/results', views.recommendation_results, name='recommendation_results'),
 
-    # path('poi_recommendation_beta/results', views.recommendation_results, name='poi_recommendation_beta_results'),
-
     path('ajax/social_connect/', views.signup_s1_ajax, name='signup_s1_ajax'),
     path('ajax/recommendation/', views.recommendation_view_ajax, name='recommendation_view_ajax'),
-
 
     path('tests/clustering', test_views.test_clustering, name='test_clustering'),
     path('tests/poiqueries', test_views.test_poiqueries, name='test_poiqueries'),

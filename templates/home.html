@@ -20,16 +20,15 @@
     <div class="d-flex flex-column align-items-center my-3">
         {% if user.is_authenticated %}
             <a class="btn btn-info w-50 p-3 mb-3" href="{% url 'profile' %}">View your profile</a>
+            {% if user.completed %}
+                <a class="btn btn-success w-50 p-3 font-weight-bold" href="{% url 'recommendation' %}?mode=geo">Start</a>            
+                <a class="collapse" href="{% url 'test_clustering' %}">test clustering</a>
+                <a class="collapse" href="{% url 'test_poiqueries' %}">test poi queries</a>
+            {% else %}
+                <div class="p-5 border border-danger rounded text-danger">You must complete your registration first.<br> Please visit your profile and complete the missing steps.</div>
+            {% endif %}
         {% else %}
             <div class="p-5 border border-primary rounded text-primary">Click on the buttons above to Login or register.</div>
-        {% endif %}
-
-        {% if user.completed %}
-            <a class="btn btn-success w-50 p-3 font-weight-bold" href="{% url 'recommendation' %}?mode=geo">Start</a>            
-            <a class="collapse" href="{% url 'test_clustering' %}">test clustering</a>
-            <a class="" href="{% url 'test_poiqueries' %}">test poi queries</a>
-        {% else %}
-            <div class="p-5 border border-danger rounded text-danger">You must complete your registration first.<br> Please visit your profile and complete the missing steps.</div>
         {% endif %}
     </div>
 </div>

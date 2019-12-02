@@ -25,9 +25,9 @@ class RetrievedItem(models.Model):
 class RankerMetric(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     retriever = models.CharField(max_length=20)
-    clustering = models.PositiveIntegerField()
-    summarize = models.PositiveIntegerField()
-    outdegree = models.PositiveIntegerField()
+    clustering = models.PositiveIntegerField(null=True)
+    summarize = models.PositiveIntegerField(null=True)
+    outdegree = models.PositiveIntegerField(null=True)
 
 class BeyondAccuracyMetric(models.Model):
     created = models.DateTimeField(auto_now_add=True)

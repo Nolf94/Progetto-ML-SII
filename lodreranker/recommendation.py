@@ -125,7 +125,9 @@ class ItemRetriever(object):
         self.current = self.input_set.pop(0)
         self.next = self.input_set[0] if self.input_set else None
         self.i += 1
-        print(f'[{self.i}/{self.tot}] {self.current}')
+
+        current_toprint = self.current if 'abstract' not in self.current.keys() else list(filter(lambda x: x[0] != 'abstract', self.current.items()))
+        print(f'[{self.i}/{self.tot}] {current_toprint}')
 
 
 class SocialItemRetriever(ItemRetriever):
@@ -279,17 +281,17 @@ class PoiItemRetriever(ItemRetriever):
         try:
             bindings = spql.execute(spql.get_query(self.mtype, 'poi', poi_name))
             self.input_set = list(map(lambda x: {
-                'id': re.sub('http: // www.wikidata.org/entity/', '', x['wkditem']['value']),
+                'id': re.sub('http://www.wikidata.org/entity/', '', x['wkditem']['value']),
                 'name': x['label']['value'],
                 'abstract': re.sub('\n', ' ', x['abstract']['value'])
             }, bindings))
 
         except Exception as e:
             print(f'{type(self).__name__} for {self.mtype}: {e}')
-        return super().initialize()
+        super().initialize()
 
     def retrieve_next(self):
-        return super().retrieve_next()
+        super().retrieve_next()
         try: # use cached item
             item = RetrievedItem.objects.get(wkd_id=self.current['id'])
             print(f'\t\"{self.current["name"]}\" found cached: {item.wkd_id}.')
@@ -305,7 +307,7 @@ class PoiItemRetriever(ItemRetriever):
         
         if item.abstract:
             item.vector = json.dumps(d2v.create_vector(item.abstract, self.mtype).tolist())
-            item.save()  # update item adding vector
+            item.save() # update item adding vector
         if item.vector:
             self.retrieved_items.append(item.wkd_id)
 

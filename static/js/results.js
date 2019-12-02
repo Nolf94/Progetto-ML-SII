@@ -1,19 +1,16 @@
 $(document).ready(function () {
-
     // reset ranking values and initialize aggregators
     $("[id$='__preferences']").each(function () {
         prefix_id = $(this).attr("id");
 
-        var ranking = [0, 1, 2];
-
         $children = $("#" + prefix_id + "_values").children($("input[id$='_val']"));
+        var ranking = [...Array($children.length - 1).keys()]
         $children.each(function () {
             $(this).val(ranking[$(this).attr("index")]);
         });
         $("#" + prefix_id + "_aggregate").val(ranking);
     });
 });
-
 $(".sortable").sortable({
     animation: 150,
 
