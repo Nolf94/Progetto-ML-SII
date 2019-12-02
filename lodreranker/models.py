@@ -59,4 +59,5 @@ class CustomUser(AbstractUser):
     has_artists = models.BooleanField(default=False)
     form_artists = JSONField(blank=True, null=True)
 
+    completed = models.BooleanField(default=False)
     social_items = models.ManyToManyField(RetrievedItem)

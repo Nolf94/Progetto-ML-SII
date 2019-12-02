@@ -19,19 +19,17 @@
                 {% if user.has_artists %}<span> <a href="{% url 'signup_s6' %}">(repeat)</a></span>{% endif %}
             </li>
             </ul>
-            <p>
-            {% if user.has_social_connect or user.has_demographic or user.has_movies or user.has_books or user.has_artists %}
-            <a class="btn btn-block btn-outline-danger w-25 my-3" href="{% url 'reset' %}">Reset all</a>
-            {% endif %}
-            {% comment %} {% if not user.has_social_connect or not user.has_demographic or not user.has_poivector or not user.has_movies  or not user.has_books or not user.has_artists%} {% endcomment %}
-            {% if not user.has_social_connect or not user.has_demographic or not user.has_movies or not user.has_books or not user.has_artists%}
-            Please resume your registration <a href="{% url 'resume' %}">here</a>.
-            {% else %}
-            You're good to go! Now you can use the recommendation system.
-            <a class="btn btn-block btn-success w-50 my-3" href="{% url 'recommendation' %}">Start</a>
-            {% endif %}
-            </p>
-            {% comment %} {% if user.has_social_connect or user.has_demographic or user.has_poivector or user.has_movies or use.has_books or user.has_artists  %} {% endcomment %}
+            <div class="d-flex flex-column align-items-center">
+                {% if not user.completed %}
+                <a class="btn btn-block btn-outline-primary w-75 my-3 p-3 border border-primary rounded" href="{% url 'resume' %}">Click here to resume your registration.</a>
+                {% else %}
+                You're good to go! Now you can use the recommendation system.
+                <a class="btn btn-block btn-info w-50 my-3 p-3" href="{% url 'home' %}">Back to Home</a>
+                {% endif %}
+                {% if user.has_social_connect or user.has_demographic or user.has_movies or user.has_books or user.has_artists %}
+                <a class="btn btn-block btn-outline-danger w-25 mb-3" href="{% url 'reset' %}">Reset all data</a>
+                {% endif %}
+            </div>
         </div>
     </div>
 

@@ -4,7 +4,7 @@
 {% block content %}
 <div class="d-flex flex-column m-3">
     <div class="mx-auto">
-        AILab @ <img style="width: 8vw" src="{% static '800px-Logo_Roma_Tre.jpg' %}">
+        <i>AILab @</i><img style="width: 8vw" src="{% static '800px-Logo_Roma_Tre.jpg' %}">
     </div>
     <div class="d-flex my-3">
         <div class="mx-auto">
@@ -24,9 +24,11 @@
             <div class="p-5 border border-primary rounded text-primary">Click on the buttons above to Login or register.</div>
         {% endif %}
         
-        {% if user.has_artists %}
-            <a class="btn btn-success w-50 p-3 font-weight-bold" href="{% url 'recommendation' %}">Start</a>
+        {% if user.completed %}
+            <a class="btn btn-success w-50 p-3 font-weight-bold" href="{% url 'recommendation' %}?mode=geo">Start</a>            
             <a class="collapse" href="{% url 'test_clustering' %}">test clustering</a>
+        {% else %}
+            <div class="p-5 border border-danger rounded text-danger">You must complete your registration first.<br> Please visit your profile and complete the missing steps.</div>
         {% endif %}
     </div>
 </div>

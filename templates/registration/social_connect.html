@@ -7,7 +7,8 @@
     <div class="d-flex flex-column w-75 align-items-center mx-auto my-auto my-2">
         <div class="mb-3">
             <p>Let's connect your Facebook account, so that we can retrieve media objects from your liked movies, books and music artists.</p>
-            <p><span class="text-danger font-weight-bold">NOTE</span>: we will only use this information to recommend you media matching your interests.<br>We won't share those data in any way, nor your personal data or preferences will appear in any form in the project's final report.</p>
+            <p>We will use this information to recommend you media matching your interests.</p>
+            <p><span class="text-danger font-weight-bold">NOTE</span>: we won't share those data in any way, nor your personal data or preferences will appear in any form in the project's final report.</p>
         </div>
         <a class="btn btn-primary w-50 p-3" href="{% url 'social_login' %}">
             <span class="fab fa-facebook mr-1" style="font-size: 2rem; vertical-align: middle"></span> 
@@ -34,8 +35,8 @@
 <div id="js-done" class="collapse text-center">
 
     <div class="d-flex flex-column">
-        <div class="mx-auto my-3">We retrieved the following media from your Facebook profile:</div>
-        <ul class="my-3">
+        <div class="mx-auto mb-3">We retrieved the following media from your Facebook profile:</div>
+        <ul class="mb-3">
             <li id="js-done--movies" class="collapse"><span class="numretrieved text-success"></span> movies</span></li>
             <li id="js-done--books" class="collapse"><span class="numretrieved text-success"></span> books</span></li>
             <li id="js-done--artists" class="collapse"><span class="numretrieved text-success"></span> artists</span></li>

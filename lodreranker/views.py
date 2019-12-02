@@ -39,6 +39,16 @@ def profile(request):
         request.session.pop('not_existing')
 
     user = request.user
+    if not user.completed and all([
+            user.has_social_data, 
+            user.has_demographic, 
+            user.has_movies, 
+            user.has_books, 
+            user.has_artists
+        ]):
+        user.completed = True
+        user.save()
+
     try:
         facebook_login = user.social_auth.get(provider='facebook')
     except UserSocialAuth.DoesNotExist:
