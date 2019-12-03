@@ -368,7 +368,7 @@ def recommendation_view_ajax(request):
             mediatype = session['mtypes'][0]
 
             if session['mode'] == constants.MODE_GEO:
-                retriever = GeoItemRetriever(mediatype, limit=15)
+                retriever = GeoItemRetriever(mediatype, limit=30)
                 if 'area' in session.keys():
                     area = jsonpickle.decode(session['area'])
                 retriever.initialize(area)
