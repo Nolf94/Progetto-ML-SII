@@ -48,6 +48,9 @@ class ItemRanker(object):
             ranking = [dict(id=candidate.item.wkd_id, score=round(candidate.score, 3)) for candidate in ranking]
         return ranking
 
+    def __scale01(self, val, lst):
+        return (val - min(lst)) / (max(lst) - min(lst))
+
     def rank_items_using_clusters(self, clusters):
         """
         Ranks using the clustering method.
@@ -68,16 +71,13 @@ class ItemRanker(object):
             score(i) = Σ(partial_score(i,k) for each k.
         """
 
-        def scale01(val, lst):
-            return (val - min(lst)) / (max(lst) - min(lst))
-
         for cluster in clusters:
             relative_sims = {}
             for candidate in self.candidates:
                 item = candidate.item
                 similarity = self.__cosine_similarity(cluster["centroid"], json.loads(item.vector))
                 relative_sims[item.wkd_id] = similarity     
-            normalized_sims = {itemid: scale01(similarity, relative_sims.values()) for itemid, similarity in relative_sims.items()}
+            normalized_sims = {itemid: self.__scale01(similarity, relative_sims.values()) for itemid, similarity in relative_sims.items()}
 
             for candidate in self.candidates:
                 candidate.score += (normalized_sims[candidate.item.wkd_id]) * cluster['weight']
@@ -91,6 +91,11 @@ class ItemRanker(object):
         """
         for candidate in self.candidates:
             candidate.score = self.__cosine_similarity(sum_vec, json.loads(candidate.item.vector))
+
+        # normalize scores between 0 and 1
+        scores_tmp = [candidate.score for candidate in self.candidates]
+        for candidate in self.candidates:
+            candidate.score = self.__scale01(candidate.score, scores_tmp)
 
         return self.__get_ranking()
 

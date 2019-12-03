@@ -36,7 +36,7 @@ def extract(value):
 
 @register.filter
 def percent(value):
-    if value<1:
+    if value<=1:
         return f'{round(value*100,2)}%'
     else:
         return value
