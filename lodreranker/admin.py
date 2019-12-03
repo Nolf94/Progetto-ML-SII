@@ -9,7 +9,7 @@ class CustomUserAdmin(UserAdmin):
     model = CustomUser
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
-    list_display = ['username', 'gender', 'age', 'profession', 'has_social_connect', 'has_social_data', 'has_demographic', 'has_movies', 'has_books', 'has_artists']
+    list_display = ['username', 'gender', 'age', 'profession', 'social_movies_count', 'social_books_count', 'social_artists_count', 'has_social_connect', 'has_social_data', 'has_demographic', 'has_movies', 'has_books', 'has_artists']
     fieldsets = ((('User'), {'fields': ('gender', 'age', 'profession', 'form_movies', 'form_books', 'form_artists', 'social_items')}),) + UserAdmin.fieldsets
 
 class RetrievedItemAdmin(admin.ModelAdmin):

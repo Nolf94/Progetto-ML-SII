@@ -39,11 +39,9 @@ class BeyondAccuracyMetric(models.Model):
 
 
 class CustomUser(AbstractUser):
-    # first_name = models.CharField(max_length=180, blank=True, null=True)
-    # last_name = models.CharField(max_length=180, blank=True, null=True)
     GENDER_CHOICES = [('M', 'Male'), ('F', 'Female')]
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True)
-    age = models.SmallIntegerField(null=True)
+    age = models.PositiveSmallIntegerField(null=True)
     PROFESSION_CHOICES = [('S', 'Student'),('T', 'Teacher'),('E', 'Employee'),('F', 'Freelancer'),('U','Unemployed')]
     profession = models.CharField(max_length=10, choices=PROFESSION_CHOICES, null=True)
     has_social_connect = models.BooleanField(default=False)
@@ -60,4 +58,9 @@ class CustomUser(AbstractUser):
     form_artists = JSONField(blank=True, null=True)
 
     completed = models.BooleanField(default=False)
-    social_items = models.ManyToManyField(RetrievedItem)
+    social_items = models.ManyToManyField(RetrievedItem, blank=True)
+
+    social_movies_count = models.PositiveIntegerField(null=True)
+    social_books_count = models.PositiveIntegerField(null=True)
+    social_artists_count = models.PositiveIntegerField(null=True) 
+

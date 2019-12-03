@@ -42,10 +42,10 @@ def profile(request):
 
     user = request.user
     if not user.completed and all([
-            user.has_social_data, 
-            user.has_demographic, 
-            user.has_movies, 
-            user.has_books, 
+            user.has_social_data,
+            user.has_demographic,
+            user.has_movies,
+            user.has_books,
             user.has_artists
         ]):
         user.completed = True
@@ -119,7 +119,7 @@ def route(request):
     s6 = reverse_lazy('signup_s6')
     profile = reverse_lazy('profile')
 
-    if not user.has_social_connect:
+    if not user.has_social_connect or not user.has_social_data:
         return redirect(s1)
     elif not user.has_demographic:
         return redirect(s2)
@@ -158,7 +158,9 @@ def signup_s1(request):
     else:
         session = request.session
         if 'retriever' in session.keys():
-            request.session.pop('retriever')
+            session.pop('retriever')
+        if 'mtypes' in session.keys():
+            session.pop('mtypes')
 
         return render(request, template_name)
 
@@ -176,6 +178,8 @@ def signup_s1_ajax(request):
                 session['mtypes'].pop(0)
                 if not session['mtypes']:
                     session.pop('mtypes')
+                    user.has_social_data = True
+                    user.save()
                     return JsonResponse({'retrieval_done': True})
         else:
             session['mtypes'] = [ constants.MOVIE, constants.BOOK, constants.MUSIC ]
@@ -194,7 +198,7 @@ def signup_s1_ajax(request):
         if not retriever.next:
             for itemid in retriever.retrieved_items:
                 user.social_items.add(RetrievedItem.objects.get(wkd_id=itemid))
-            user.has_social_data = True
+            exec(f'user.social_{retriever.mtype}_count = len(retriever.retrieved_items)')
             user.save()
             session.pop('retriever')
 
@@ -211,6 +215,9 @@ class SignupS2View(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         user = self.request.user
+        user.gender = form.cleaned_data['gender']
+        user.age = form.cleaned_data['age']
+        user.profession = form.cleaned_data['profession']
         user.has_demographic = True
         user.save()
         return route(self.request)
