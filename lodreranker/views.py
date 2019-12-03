@@ -332,6 +332,10 @@ def recommendation_view(request):
                 request.POST.get('radius')
             )
             session['area'] = jsonpickle.encode(area)
+            # context variables for freezing the map
+            context['map_enabled'] = 0
+            context['latitude'] = request.POST.get('latitude')
+            context['longitude'] = request.POST.get('longitude')
 
     return render(request, template_name, context)
 

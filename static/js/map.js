@@ -73,12 +73,23 @@ function init() {
     $('#sliderLabel').text(initialRadius);
     currentRad = initialRadius * 1000;
 
-    map = new google.maps.Map(document.getElementById('map'), {
+    var args = {
         zoom: 8,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         streetViewControl: false,
         clickableIcons: false,
-    });
+    }
+
+    var map_enabled = true;
+    if ($("#js-map_enabled").attr('map_enabled') == 0)
+        map_enabled = false;
+
+    if (!map_enabled) {
+        args.disableDefaultUI = true
+        args.panControl = false
+    }
+
+    map = new google.maps.Map($('#map')[0], args);
     infoWindow = new google.maps.InfoWindow;
     
     if (navigator.geolocation) {
@@ -88,12 +99,20 @@ function init() {
                 lng: position.coords.longitude
             };
             map.setCenter(latLng);
-            updateMarker(latLng);
-            updateCircle(currentRad);
-            infoWindow.setContent('You are here.');
-            infoWindow.open(map, marker);
-            $("#status").show().addClass('alert-success').text("We have placed you on the map based on your geolocation.")
-            addListeners()
+            if (map_enabled) {
+                updateMarker(latLng);
+                updateCircle(currentRad);
+                infoWindow.setContent('You are here.');
+                infoWindow.open(map, marker);
+                $("#status").show().addClass('alert-success').text("We have placed you on the map based on your geolocation.")
+                addListeners()
+            } else {
+                latLng.lat = parseFloat($("#js-map_enabled").attr('latitude'));
+                latLng.lng = parseFloat($("#js-map_enabled").attr('longitude'));
+                updateMarker(latLng);
+                map.setOptions({ draggable: false, zoomControl: false, scrollwheel: false, disableDoubleClickZoom: true });
+                map.setCenter(latLng);
+            }
         }, function () {
             handleLocationError(true);
         });

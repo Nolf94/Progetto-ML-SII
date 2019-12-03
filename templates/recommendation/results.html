@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load template_extras %}
 {% load static %}
-{% block title %} Results ({% if mode == 'geo' %}<span class="text-success">Geographic{% elif mode == 'poi' %}<span class="text-danger">POI-based{% endif %}</span> recommendation){% endblock %} 
+{% block title %} {% if not evaluation_done %}Results ({% if mode == 'geo' %}<span class="text-success">Geographic{% elif mode == 'poi' %}<span class="text-danger">POI-based{% endif %}</span> recommendation){% endif %}{% endblock %} 
 {% block content %}
 
 {% if has_results %}
@@ -106,7 +106,6 @@
             <div class="h5 mb-3">Thank you, we really appreciate your feedback!</div>
             <div class="d-flex w-75 justify-content-center">
                 <a class="btn btn-secondary p-3 m-2 w-50" href="{% url 'home' %}">Back to Home</a>
-                <a class="btn btn-success p-3 m-2 w-50" href="{% url 'recommendation' %}">Repeat</a>
             </div>
         {% else %}
             <div class="mb-3">Sorry, we haven't found anything in that area.</div>
