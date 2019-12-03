@@ -111,7 +111,9 @@ AUTHENTICATION_BACKENDS = [
 SOCIAL_AUTH_FACEBOOK_SCOPE = [
     'email',
     'public_profile',
-    'user_friends','user_gender', 'user_hometown', 'user_likes', 'user_link', 'user_location', 'user_photos', 'user_posts', 'user_tagged_places', 'user_videos',
+    'user_likes',
+    # UNCOMMENT WHEN NEEDED
+    # 'user_friends','user_gender', 'user_hometown', 'user_likes', 'user_link', 'user_location', 'user_photos', 'user_posts', 'user_tagged_places', 'user_videos',
 ]
 
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
