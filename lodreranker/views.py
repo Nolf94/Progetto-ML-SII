@@ -191,6 +191,10 @@ def signup_s1_ajax(request):
             mediatype = session['mtypes'][0]
             retriever = SocialItemRetriever(mediatype)
             retriever.initialize(social_auth.extra_data[mediatype])
+            raw_data = []
+            if mediatype in social_auth.extra_data.keys():
+                raw_data = social_auth.extra_data[mediatype]
+            retriever.initialize(raw_data)
 
         encoded_retriever = jsonpickle.encode(retriever)
         session['retriever'] = encoded_retriever
@@ -306,7 +310,7 @@ def recommendation_view(request):
 
     if request.method == 'GET':
         if 'results' in session.keys():
-            if constants.REQUIRE_EVALUATION:
+            if constants.REQUIRE_EVALUATION and not 'restart' in request.GET.keys():
                 return redirect(reverse_lazy('recommendation_results'))
             else:
                 session.pop('results')

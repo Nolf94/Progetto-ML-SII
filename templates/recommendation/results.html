@@ -110,7 +110,7 @@
         {% else %}
             <div class="mb-3">Sorry, we haven't found anything in that area.</div>
             <div class="d-flex w-75 justify-content-center">
-                <a class="btn btn-warning p-3" href="{% url 'recommendation' %}?mode={{mode}}">Try again!</a>
+                <a class="btn btn-warning p-3" href="{% url 'recommendation' %}?mode={{mode}}&restart=true">Try again!</a>
             </div>
         {% endif %}
     </div>

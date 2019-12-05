@@ -7,6 +7,8 @@
             <ul class="list-unstyled">
             <li><span class="fa fa-{% if user.has_social_connect %}check text-success{% else %}times text-danger{% endif %}"></span> Connected to Facebook
                 {% if user.has_social_connect %}<span> <a href="{% url 'social_disconnect' %}">(disconnect)</a></span>{% endif %}</li>
+            <li><span class="fa fa-{% if user.has_social_data %}check text-success{% else %}times text-danger{% endif %}"></span> Collected Facebook likes
+                {% if user.has_social_data %}{% endif %}</li>
             <li><span class="fa fa-{% if user.has_demographic %}check text-success{% else %}times text-danger{% endif %}"></span> Compiled demographic form
                 {% if user.has_demographic %}<span> <a href="{% url 'signup_s2' %}">(edit)</a></span>{% endif %}</li>
             {% comment %} <li><span class="fa fa-{% if user.has_poivector %}check text-success{% else %}times text-danger{% endif %}"></span> Compiled images form
