@@ -12,6 +12,6 @@ setup(
     scripts=['bgm_lodreranker/manage.py'],
 
     install_requires=(
-        'django==2.2.5',
+        'django==2.2.8',
     )
 )
