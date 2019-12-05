@@ -190,8 +190,7 @@ def signup_s1_ajax(request):
         else:
             mediatype = session['mtypes'][0]
             retriever = SocialItemRetriever(mediatype)
-            retriever.initialize(social_auth.extra_data[mediatype])
-            raw_data = []
+            raw_data = {}
             if mediatype in social_auth.extra_data.keys():
                 raw_data = social_auth.extra_data[mediatype]
             retriever.initialize(raw_data)

@@ -143,22 +143,24 @@ class SocialItemRetriever(ItemRetriever):
 
     def initialize(self, extra_data_media):
         self.input_set = []
-        media = extra_data_media['data']
+        media = []
+        if extra_data_media and 'data' in extra_data_media.keys():
+            media = extra_data_media['data']
 
-        def has_next(page):
-            return 'next' in page['paging'].keys()
+            def has_next(page):
+                return 'next' in page['paging'].keys()
 
-        # if data is split across multiple pages, keep fetching from pages until page limit is reached.
-        if has_next(extra_data_media):
-            print(f'FB {self.mtype} are on more than one page, fetching (max: {constants.FB_FETCH_PAGE_LIMIT})')
-            i=2
-            current_page = extra_data_media
-            while has_next(current_page) and i <= constants.FB_FETCH_PAGE_LIMIT:
-                print(f'FB {self.mtype}: fetching next page ({i})')
-                next_page_url = current_page['paging']['next']
-                current_page = json.loads(urlopen(next_page_url).read().decode('utf-8'))
-                media.extend(current_page['data'])
-                i+=1
+            # if data is split across multiple pages, keep fetching from pages until page limit is reached.
+            if has_next(extra_data_media):
+                print(f'FB {self.mtype} are on more than one page, fetching (max: {constants.FB_FETCH_PAGE_LIMIT})')
+                i=2
+                current_page = extra_data_media
+                while has_next(current_page) and i <= constants.FB_FETCH_PAGE_LIMIT:
+                    print(f'FB {self.mtype}: fetching next page ({i})')
+                    next_page_url = current_page['paging']['next']
+                    current_page = json.loads(urlopen(next_page_url).read().decode('utf-8'))
+                    media.extend(current_page['data'])
+                    i+=1
 
         if media:
             self.input_set = list(map(lambda x: x['name'], media))
