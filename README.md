@@ -1,3 +1,12 @@
+Project report
+---
+
+https://docs.google.com/document/d/1YEYNwQREIahdgi1RX9FeGhKmEHfBMltQuceAgzPNkc8/edit?usp=sharing
+
+
+Setup
+---
+
 * Django environment setup:
 		https://developer.mozilla.org/it/docs/Learn/Server-side/Django/development_environment
 
