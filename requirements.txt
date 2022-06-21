@@ -5,7 +5,7 @@ social-auth-app-django==3.1.0
 django-sslserver==0.21
 SPARQLWrapper==1.8.4
 django-crispy-forms==1.7.2
-numpy==1.17.2
+numpy==1.22.0
 gensim==3.8.1
 scikit-learn==0.21.3
 matplotlib==3.1.1
